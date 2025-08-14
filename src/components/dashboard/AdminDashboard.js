@@ -39,6 +39,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useNavigate, Link } from 'react-router-dom';
 import { API_ENDPOINTS } from '../../config/api';
+import ExcelJS from 'exceljs';
 import eventService from '../../config/eventService';
 
 const AdminHeader = ({ onMenuClick }) => {
@@ -426,16 +427,57 @@ const AdminDashboard = () => {
         throw new Error('User not found');
       }
 
-      // Convert to Excel-like CSV format
-      const excelContent = convertToExcelFormat(records, user);
-      const blob = new Blob([excelContent], { type: 'text/csv;charset=utf-8;' });
-      const url = window.URL.createObjectURL(blob);
+      // Build formatted Excel workbook
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('Attendance');
+      const monthName = months[selectedMonth - 1];
+      ws.mergeCells('A1:F1');
+      ws.getCell('A1').value = 'DCM Infotech';
+      ws.getCell('A1').alignment = { horizontal: 'center' };
+      ws.getCell('A1').font = { bold: true };
+      ws.mergeCells('A2:F2');
+      ws.getCell('A2').value = 'Department Name - Telecom Service Department';
+      ws.getCell('A3').value = 'Employee Name';
+      ws.getCell('B3').value = user.full_name;
+      ws.getCell('A4').value = 'Employee Code';
+      ws.getCell('B4').value = user.employee_code || '';
+      const headerRowIndex = 5;
+      ws.getRow(headerRowIndex).values = ['DATE', 'DAY', 'ATTENDANCE', 'IN-Time', 'OUT-Time', 'Total Hours'];
+      ws.getRow(headerRowIndex).font = { bold: true };
+      const diff = (inT, outT) => {
+        if (!inT || !outT) return '';
+        const [ih, im] = inT.split(':').map(Number);
+        const [oh, om] = outT.split(':').map(Number);
+        if ([ih, im, oh, om].some((n) => isNaN(n))) return '';
+        let mins = (oh * 60 + om) - (ih * 60 + im);
+        if (mins < 0) mins += 24 * 60;
+        const h = String(Math.floor(mins / 60)).padStart(2, '0');
+        const m = String(mins % 60).padStart(2, '0');
+        return `${h}:${m} hrs`;
+      };
+      const sorted = [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
+      let rowPtr = headerRowIndex + 1;
+      sorted.forEach((r) => {
+        const d = new Date(r.date);
+        const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()];
+        const formattedDate = `${d.getDate()}-${months[d.getMonth()].substr(0, 3)}-${d.getFullYear().toString().substr(-2)}`;
+        const status = r.status === 'present' ? 'PRESENT' : r.status === 'absent' ? 'ABSENT' : 'OFF';
+        const inT = r.in_time || '';
+        const outT = r.out_time || '';
+        ws.getRow(rowPtr).values = [formattedDate, dayName, status, inT, outT, diff(inT, outT)];
+        rowPtr += 1;
+      });
+      ws.eachRow((row) => {
+        row.eachCell((cell) => {
+          cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+        });
+      });
+      ws.columns = [ { width: 14 }, { width: 14 }, { width: 14 }, { width: 12 }, { width: 12 }, { width: 14 } ];
+      const blob = await wb.xlsx.writeBuffer();
+      const url = window.URL.createObjectURL(new Blob([blob]));
       const a = document.createElement('a');
       a.href = url;
-      
-      const monthName = months[selectedMonth - 1];
-      a.download = `${user.full_name.replace(/\s+/g, '_')}_${monthName}_${selectedYear}_Attendance.csv`;
-      
+      a.download = `${user.full_name.replace(/\s+/g, '_')}_${monthName}_${selectedYear}_Attendance.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

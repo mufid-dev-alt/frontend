@@ -34,6 +34,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import Header from '../common/Header';
 import { API_ENDPOINTS } from '../../config/api';
+import ExcelJS from 'exceljs';
 import eventService from '../../config/eventService';
 
 const AttendancePage = () => {
@@ -276,16 +277,77 @@ const AttendancePage = () => {
           return;
         }
         
-        // Convert to Excel-like CSV format
-        const excelContent = convertToExcelFormat(records, userData);
-        const blob = new Blob([excelContent], { type: 'text/csv;charset=utf-8;' });
-        const url = window.URL.createObjectURL(blob);
+        // Create nicely formatted Excel workbook
+        const wb = new ExcelJS.Workbook();
+        const ws = wb.addWorksheet('Attendance');
+        const monthName = months[selectedMonth - 1];
+        // Title row
+        ws.mergeCells('A1:F1');
+        ws.getCell('A1').value = 'DCM Infotech';
+        ws.getCell('A1').alignment = { horizontal: 'center' };
+        ws.getCell('A1').font = { bold: true };
+        // Dept row
+        ws.mergeCells('A2:F2');
+        ws.getCell('A2').value = 'Department Name - Telecom Service Department';
+        // Employee rows
+        ws.getCell('A3').value = 'Employee Name';
+        ws.getCell('B3').value = userData.full_name;
+        ws.getCell('A4').value = 'Employee Code';
+        ws.getCell('B4').value = userData.employee_code || '';
+        // Header
+        const headerRowIndex = 5;
+        ws.getRow(headerRowIndex).values = ['DATE', 'DAY', 'ATTENDANCE', 'IN-Time', 'OUT-Time', 'Total Hours'];
+        ws.getRow(headerRowIndex).font = { bold: true };
+        // Data
+        const diff = (inT, outT) => {
+          if (!inT || !outT) return '';
+          const [ih, im] = inT.split(':').map(Number);
+          const [oh, om] = outT.split(':').map(Number);
+          if ([ih, im, oh, om].some((n) => isNaN(n))) return '';
+          let mins = (oh * 60 + om) - (ih * 60 + im);
+          if (mins < 0) mins += 24 * 60;
+          const h = String(Math.floor(mins / 60)).padStart(2, '0');
+          const m = String(mins % 60).padStart(2, '0');
+          return `${h}:${m} hrs`;
+        };
+        const sorted = [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
+        let rowPtr = headerRowIndex + 1;
+        sorted.forEach((r) => {
+          const d = new Date(r.date);
+          const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()];
+          const formattedDate = `${d.getDate()}-${months[d.getMonth()].substr(0, 3)}-${d.getFullYear().toString().substr(-2)}`;
+          const status = r.status === 'present' ? 'PRESENT' : r.status === 'absent' ? 'ABSENT' : 'OFF';
+          const inT = r.in_time || '';
+          const outT = r.out_time || '';
+          ws.getRow(rowPtr).values = [formattedDate, dayName, status, inT, outT, diff(inT, outT)];
+          rowPtr += 1;
+        });
+        // Borders for all used cells
+        const range = ws.getCell(`F${rowPtr - 1}`).$col$row; // not used; iterate rows instead
+        ws.eachRow((row, rowNumber) => {
+          row.eachCell((cell) => {
+            cell.border = {
+              top: { style: 'thin' },
+              left: { style: 'thin' },
+              bottom: { style: 'thin' },
+              right: { style: 'thin' },
+            };
+          });
+        });
+        // Column widths
+        ws.columns = [
+          { width: 14 },
+          { width: 14 },
+          { width: 14 },
+          { width: 12 },
+          { width: 12 },
+          { width: 14 },
+        ];
+        const blob = await wb.xlsx.writeBuffer();
+        const url = window.URL.createObjectURL(new Blob([blob]));
         const a = document.createElement('a');
         a.href = url;
-        
-        const monthName = months[selectedMonth - 1];
-        a.download = `${userData.full_name.replace(/\s+/g, '_')}_${monthName}_${selectedYear}_Attendance.csv`;
-        
+        a.download = `${userData.full_name.replace(/\s+/g, '_')}_${monthName}_${selectedYear}_Attendance.xlsx`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
