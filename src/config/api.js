@@ -1,5 +1,5 @@
 // API endpoints configuration with improved error handling and logging
-const BASE_URL = (process.env.REACT_APP_API_URL || 'https://office-attendance-track-backend.onrender.com').replace(/\/+$/, '');
+const BASE_URL = (process.env.REACT_APP_API_URL || 'https://backend-9z1y.onrender.com').replace(/\/+$/, '');
 
 // Log the base URL being used (for debugging in development only)
 if (process.env.NODE_ENV === 'development') {
