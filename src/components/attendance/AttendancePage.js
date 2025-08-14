@@ -155,10 +155,36 @@ const AttendancePage = () => {
     setTimeDialog({ open: true, date, in_time: existing?.in_time || '', out_time: existing?.out_time || '' });
   };
 
+  const normalizeTime = (value) => {
+    if (!value) return '';
+    const digits = value.replace(/\D/g, '').slice(0, 4);
+    if (digits.length === 0) return '';
+    const hh = digits.slice(0, 2);
+    const mm = digits.slice(2, 4);
+    let hour = parseInt(hh, 10);
+    if (isNaN(hour)) hour = 0;
+    if (hour > 23) hour = 23;
+    let minute = parseInt(mm || '0', 10);
+    if (isNaN(minute)) minute = 0;
+    if (minute > 59) minute = 59;
+    const hhs = String(hour).padStart(2, '0');
+    const mms = String(minute).padStart(2, '0');
+    return `${hhs}:${mms}`;
+  };
+
+  const handleTimeChange = (field) => (e) => {
+    const raw = e.target.value || '';
+    // Auto-insert ':'
+    const formatted = normalizeTime(raw);
+    setTimeDialog((prev) => ({ ...prev, [field]: formatted }));
+  };
+
   const saveTimeEntry = async () => {
     try {
       const userData = JSON.parse(localStorage.getItem('user'));
-      const { date, in_time, out_time } = timeDialog;
+      const { date } = timeDialog;
+      const in_time = normalizeTime(timeDialog.in_time);
+      const out_time = normalizeTime(timeDialog.out_time);
       const response = await fetch(API_ENDPOINTS.attendance.create, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -167,9 +193,26 @@ const AttendancePage = () => {
       if (!response.ok) throw new Error('Failed to save time');
       setTimeDialog({ open: false, date: null, in_time: '', out_time: '' });
       await fetchAttendance();
-      setMessage('Time updated');
+      setMessage('Time updated successfully');
     } catch (e) {
       setMessage('Error saving time');
+    }
+  };
+
+  const updateStatusForDate = async (date, status) => {
+    try {
+      const userData = JSON.parse(localStorage.getItem('user'));
+      const response = await fetch(API_ENDPOINTS.attendance.create, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ user_id: userData.id, status, date, notes: `Marked ${status} via dialog` })
+      });
+      if (!response.ok) throw new Error('Failed to update status');
+      await fetchAttendance();
+      setMessage(`Attendance marked as ${status} successfully!`);
+      setTimeDialog({ open: false, date: null, in_time: '', out_time: '' });
+    } catch (e) {
+      setMessage('Error updating attendance status');
     }
   };
 
@@ -259,24 +302,34 @@ const AttendancePage = () => {
   };
 
   const convertToExcelFormat = (data, userData) => {
-    // Create header rows
-    let csv = `USERNAME - ${userData.full_name}\n`;
-    csv += `USER-EMAIL - ${userData.email}\n`;
-    csv += `DATE,DAY,ATTENDANCE\n`;
-    
-    // Sort data by date
-    const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
-    
-    // Add data rows
-    sortedData.forEach(record => {
-      const date = new Date(record.date);
-      const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()];
-      const formattedDate = `${date.getDate()}-${months[date.getMonth()].substr(0, 3)}-${date.getFullYear().toString().substr(-2)}`;
-      const status = record.status === 'present' ? 'PRESENT' : record.status === 'absent' ? 'ABSENT' : 'OFF';
-      
-      csv += `${formattedDate},${dayName},${status}\n`;
+    // New single-user export format with IN/OUT and total hours
+    const header = ['DCM Infotech', '', ''].join(',');
+    let csv = `${header}\n`;
+    csv += `Department Name - Telecom Service Department\n`;
+    csv += `Employee Name,${userData.full_name}\n`;
+    csv += `Employee Code,${userData.employee_code || ''}\n`;
+    csv += `DATE,DAY,ATTENDANCE,IN-Time,OUT-Time,Total Hours\n`;
+    const sorted = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const diffHours = (inT, outT) => {
+      if (!inT || !outT) return '';
+      const [ih, im] = inT.split(':').map(Number);
+      const [oh, om] = outT.split(':').map(Number);
+      if ([ih, im, oh, om].some((n) => isNaN(n))) return '';
+      let mins = (oh * 60 + om) - (ih * 60 + im);
+      if (mins < 0) mins += 24 * 60;
+      const h = String(Math.floor(mins / 60)).padStart(2, '0');
+      const m = String(mins % 60).padStart(2, '0');
+      return `${h}:${m} hrs`;
+    };
+    sorted.forEach((r) => {
+      const d = new Date(r.date);
+      const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()];
+      const formattedDate = `${d.getDate()}-${months[d.getMonth()].substr(0, 3)}-${d.getFullYear().toString().substr(-2)}`;
+      const status = r.status === 'present' ? 'PRESENT' : r.status === 'absent' ? 'ABSENT' : 'OFF';
+      const inT = r.in_time || '';
+      const outT = r.out_time || '';
+      csv += `${formattedDate},${dayName},${status},${inT},${outT},${diffHours(inT, outT)}\n`;
     });
-    
     return csv;
   };
 
@@ -413,7 +466,7 @@ const AttendancePage = () => {
             
             {message && (
               <Alert 
-                severity={message.includes('successfully') ? 'success' : 'error'} 
+                severity={/success|updated|downloaded|synced/i.test(message) ? 'success' : 'error'} 
                 sx={{ mb: 2 }}
                 onClose={() => setMessage('')}
                 >
@@ -646,7 +699,7 @@ const AttendancePage = () => {
                 label="In Time (HH:MM)"
                 placeholder="09:30"
                 value={timeDialog.in_time}
-                onChange={(e) => setTimeDialog(prev => ({ ...prev, in_time: e.target.value }))}
+                onChange={handleTimeChange('in_time')}
                 fullWidth
               />
             </Grid>
@@ -655,13 +708,21 @@ const AttendancePage = () => {
                 label="Out Time (HH:MM)"
                 placeholder="18:00"
                 value={timeDialog.out_time}
-                onChange={(e) => setTimeDialog(prev => ({ ...prev, out_time: e.target.value }))}
+                onChange={handleTimeChange('out_time')}
                 fullWidth
               />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
+          <Box sx={{ flex: 1, display: 'flex', gap: 1, alignItems: 'center', pl: 1 }}>
+            <Button size="small" color="success" variant="outlined" startIcon={<PresentIcon />} onClick={() => updateStatusForDate(timeDialog.date, 'present')}>
+              Mark Present
+            </Button>
+            <Button size="small" color="error" variant="outlined" startIcon={<AbsentIcon />} onClick={() => updateStatusForDate(timeDialog.date, 'absent')}>
+              Mark Absent
+            </Button>
+          </Box>
           <Button onClick={() => setTimeDialog({ open: false, date: null, in_time: '', out_time: '' })}>Cancel</Button>
           <Button onClick={saveTimeEntry} variant="contained">Save</Button>
         </DialogActions>

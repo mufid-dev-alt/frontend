@@ -498,24 +498,39 @@ const AdminDashboard = () => {
   };
 
   const convertToExcelFormat = (data, userData) => {
-    // Create header rows matching the My Attendance format
-    let csv = `USERNAME - ${userData.full_name}\n`;
-    csv += `USER-EMAIL - ${userData.email}\n`;
-    csv += `DATE,DAY,ATTENDANCE\n`;
-    
-    // Sort data by date
-    const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
-    
-    // Add data rows
-    sortedData.forEach(record => {
-      const date = new Date(record.date);
-      const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()];
-      const formattedDate = `${date.getDate()}-${months[date.getMonth()].substr(0, 3)}-${date.getFullYear().toString().substr(-2)}`;
-      const status = record.status === 'present' ? 'PRESENT' : record.status === 'absent' ? 'ABSENT' : 'OFF';
-      
-      csv += `${formattedDate},${dayName},${status}\n`;
+    // New format per sample: headers + in/out + total hours
+    const header = [
+      'DCM Infotech',
+      '',
+      '',
+    ].join(',');
+    let csv = `${header}\n`;
+    csv += `Department Name - Telecom Service Department\n`;
+    csv += `Employee Name,${userData.full_name}\n`;
+    csv += `Employee Code,${userData.employee_code || ''}\n`;
+    csv += `DATE,DAY,ATTENDANCE,IN-Time,OUT-Time,Total Hours\n`;
+    const sorted = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const toHM = (t) => t || '';
+    const diffHours = (inT, outT) => {
+      if (!inT || !outT) return '';
+      const [ih, im] = inT.split(':').map(Number);
+      const [oh, om] = outT.split(':').map(Number);
+      if ([ih, im, oh, om].some((n) => isNaN(n))) return '';
+      let mins = (oh * 60 + om) - (ih * 60 + im);
+      if (mins < 0) mins += 24 * 60;
+      const h = String(Math.floor(mins / 60)).padStart(2, '0');
+      const m = String(mins % 60).padStart(2, '0');
+      return `${h}:${m} hrs`;
+    };
+    sorted.forEach((r) => {
+      const d = new Date(r.date);
+      const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()];
+      const formattedDate = `${d.getDate()}-${months[d.getMonth()].substr(0, 3)}-${d.getFullYear().toString().substr(-2)}`;
+      const status = r.status === 'present' ? 'PRESENT' : r.status === 'absent' ? 'ABSENT' : 'OFF';
+      const inT = toHM(r.in_time);
+      const outT = toHM(r.out_time);
+      csv += `${formattedDate},${dayName},${status},${inT},${outT},${diffHours(inT, outT)}\n`;
     });
-    
     return csv;
   };
 
