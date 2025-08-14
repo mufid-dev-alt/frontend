@@ -609,6 +609,7 @@ const AttendancePage = () => {
                             }
                           }}
                            title={`${dayData.date}${dayData.status ? `: ${dayData.status}` : ''}`}
+                           onClick={() => { if (!dayData.isWeekend) { openTimeDialog(dayData.date, dayData); } }}
                         >
                           <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
                             {dayData.day}
@@ -619,9 +620,11 @@ const AttendancePage = () => {
                               {dayData.status.charAt(0)}
                             </Typography>
                           )}
-                           <Typography variant="caption" sx={{ fontSize: '0.55rem', mt: 0.5 }}>
-                             {(attendanceRecord && attendanceRecord.in_time) ? `IN ${attendanceRecord.in_time}` : ''} {(attendanceRecord && attendanceRecord.out_time) ? `OUT ${attendanceRecord.out_time}` : ''}
-                           </Typography>
+                           {(dayData.in_time || dayData.out_time) && (
+                             <Typography variant="caption" sx={{ fontSize: '0.55rem', mt: 0.5 }}>
+                               {dayData.in_time ? `IN ${dayData.in_time}` : ''} {dayData.out_time ? `OUT ${dayData.out_time}` : ''}
+                             </Typography>
+                           )}
                         </Box>
                       )}
                     </Grid>
