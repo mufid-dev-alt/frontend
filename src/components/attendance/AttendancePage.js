@@ -886,7 +886,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                 {/* Weekday Headers */}
                 <Grid container spacing={1} sx={{ mb: 1 }}>
                   {weekDays.map((day, index) => (
-                    <Grid item xs={12/7} key={day}>
+                    <Grid item xs={1} key={day}>
                       <Box
                         sx={{
                           display: 'flex',
@@ -898,7 +898,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                           borderRadius: 1,
                           fontWeight: 600
                         }}
-      >
+                      >
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
                           {day}
                         </Typography>
@@ -910,7 +910,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                 {/* Calendar Days */}
                 <Grid container spacing={1}>
                   {calendarData.map((dayData, index) => (
-                    <Grid item xs={12/7} key={dayData.isEmpty ? `empty-${index}` : dayData.day}>
+                    <Grid item xs={1} key={dayData.isEmpty ? `empty-${index}` : dayData.day}>
                       {dayData.isEmpty ? (
                         <Box sx={{ minHeight: 60 }} />
                       ) : (
