@@ -30,11 +30,14 @@ import LogoutIcon from '@mui/icons-material/ExitToApp';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import PersonIcon from '@mui/icons-material/Person';
+import ChatIcon from '@mui/icons-material/Chat';
+import GroupIcon from '@mui/icons-material/Group';
 // Removed Todo navigation
 import DownloadIcon from '@mui/icons-material/Download';
 import { useNavigate, Link } from 'react-router-dom';
 import { API_ENDPOINTS } from '../../config/api';
 import eventService from '../../config/eventService';
+import NotificationDropdown from '../common/NotificationDropdown';
 
 const Header = ({ onMenuClick }) => {
   const navigate = useNavigate();
@@ -88,6 +91,7 @@ const Header = ({ onMenuClick }) => {
         </Typography>
         {user && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <NotificationDropdown currentUser={user} />
             <Typography 
               variant="subtitle1" 
               sx={{ 
@@ -135,7 +139,9 @@ const Sidebar = ({ open, onClose }) => {
 
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-    { text: 'Attendance', icon: <EventAvailableIcon />, path: '/attendance' }
+    { text: 'Attendance', icon: <EventAvailableIcon />, path: '/attendance' },
+    { text: 'Chat', icon: <ChatIcon />, path: '/chat' },
+    { text: 'Team', icon: <GroupIcon />, path: '/team' }
   ];
 
   const drawerWidth = 240;

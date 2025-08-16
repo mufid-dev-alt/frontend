@@ -34,6 +34,19 @@ export const API_ENDPOINTS = {
     update: (todoId) => `${BASE_URL}/api/todos/${todoId}`,
     delete: (todoId) => `${BASE_URL}/api/todos/${todoId}`,
   },
+  messages: {
+    list: `${BASE_URL}/api/messages`,
+    create: `${BASE_URL}/api/messages`,
+    getByUser: (userId) => `${BASE_URL}/api/messages?user_id=${userId}`,
+    getConversation: (senderId, receiverId) => `${BASE_URL}/api/messages?sender_id=${senderId}&receiver_id=${receiverId}`,
+  },
+  notifications: {
+    list: (userId) => `${BASE_URL}/api/notifications?user_id=${userId}`,
+    unread: (userId) => `${BASE_URL}/api/notifications?user_id=${userId}&unread_only=true`,
+    create: `${BASE_URL}/api/notifications`,
+    markAsRead: (notificationId) => `${BASE_URL}/api/notifications/${notificationId}/read`,
+    markAllAsRead: `${BASE_URL}/api/notifications/read-all`,
+  },
 };
 
 // Log the login endpoint for debugging in development only

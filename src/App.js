@@ -6,6 +6,8 @@ import AdminDashboard from './components/dashboard/AdminDashboard';
 import AttendancePage from './components/attendance/AttendancePage';
 import AttendanceRecords from './components/admin/AttendanceRecords';
 import ManageUsers from './components/admin/ManageUsers';
+import ChatPage from './components/chat/ChatPage';
+import TeamPage from './components/team/TeamPage';
 import { ThemeProvider, createTheme } from '@mui/material';
 
 const theme = createTheme({
@@ -109,6 +111,22 @@ const App = () => {
               <AdminRoute>
                 <ManageUsers />
               </AdminRoute>
+            }
+      />
+      <Route
+            path="/chat"
+            element={
+              <PrivateRoute>
+                <ChatPage />
+              </PrivateRoute>
+            }
+      />
+      <Route
+            path="/team"
+            element={
+              <PrivateRoute>
+                <TeamPage />
+              </PrivateRoute>
             }
       />
       {/* Catch-all route for handling deep links and page refresh */}
