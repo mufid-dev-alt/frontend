@@ -575,7 +575,7 @@ const ChatPage = () => {
                   </List>
                 )}
               </CardContent>
-            </Card>
+          </Card>
 
             {/* Chat Messages */}
             <Card sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -594,7 +594,7 @@ const ChatPage = () => {
                       ) : (
                         messages.map((message) => (
                           <Box
-                            key={message.id}
+                          key={message.id} 
                             sx={{
                               display: 'flex',
                               justifyContent: message.sender_id === currentUser.id ? 'flex-end' : 'flex-start',
@@ -626,9 +626,9 @@ const ChatPage = () => {
                               </Typography>
                             </Paper>
                           </Box>
-                        ))
-                      )}
-                      <div ref={messagesEndRef} />
+                      ))
+                    )}
+                    <div ref={messagesEndRef} />
                     </Box>
                     <Divider />
                     <Box sx={{ p: 2 }}>
@@ -654,8 +654,8 @@ const ChatPage = () => {
                         }}
                       />
                     </Box>
-                  </>
-                ) : (
+                </>
+              ) : (
                   <Box sx={{ 
                     flex: 1, 
                     display: 'flex', 
@@ -667,9 +667,9 @@ const ChatPage = () => {
                   </Box>
                 )}
               </CardContent>
-            </Card>
+          </Card>
           </Box>
-        </Container>
+    </Container>
       </Box>
     </Box>
   );
