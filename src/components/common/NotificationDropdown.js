@@ -1,33 +1,70 @@
 import React, { useState, useEffect } from 'react';
-import { Dropdown, Badge, Button } from 'react-bootstrap';
-import { API_ENDPOINTS, apiRequest } from '../../config/api';
-import './NotificationDropdown.css';
+import {
+  IconButton,
+  Badge,
+  Menu,
+  MenuItem,
+  Typography,
+  Box,
+  Divider,
+  Button,
+  CircularProgress,
+  Chip,
+  useTheme
+} from '@mui/material';
+import {
+  Notifications as NotificationsIcon,
+  NotificationsActive as NotificationsActiveIcon,
+  CheckCircle as CheckCircleIcon,
+  Group as GroupIcon,
+  Chat as ChatIcon,
+  AdminPanelSettings as AdminIcon
+} from '@mui/icons-material';
+import { API_ENDPOINTS } from '../../config/api';
 
-const NotificationDropdown = ({ currentUser }) => {
+const NotificationDropdown = ({ currentUser, onNewNotification }) => {
+  const theme = useTheme();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [previousCount, setPreviousCount] = useState(0);
 
   useEffect(() => {
     if (currentUser?.id) {
       fetchNotifications();
       
       // Set up polling for new notifications
-      const interval = setInterval(fetchNotifications, 30000); // Check every 30 seconds
+      const interval = setInterval(fetchNotifications, 10000); // Check every 10 seconds
       
       return () => clearInterval(interval);
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    // Show toast notification for new messages
+    if (unreadCount > previousCount && onNewNotification) {
+      const newNotifications = notifications.filter(n => n.status === 'unread').slice(0, unreadCount - previousCount);
+      newNotifications.forEach(notification => {
+        onNewNotification(notification);
+      });
+    }
+    setPreviousCount(unreadCount);
+  }, [unreadCount, notifications, previousCount, onNewNotification]);
 
   const fetchNotifications = async () => {
     if (!currentUser?.id) return;
     
     setLoading(true);
     try {
-      const response = await apiRequest(API_ENDPOINTS.notifications.list(currentUser.id));
-      if (response.success) {
-        setNotifications(response.notifications || []);
-        setUnreadCount(response.notifications.filter(n => !n.is_read).length);
+      const response = await fetch(API_ENDPOINTS.notifications.list(currentUser.id));
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          const newNotifications = data.notifications || [];
+          setNotifications(newNotifications);
+          setUnreadCount(newNotifications.filter(n => n.status === 'unread').length);
+        }
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -38,14 +75,15 @@ const NotificationDropdown = ({ currentUser }) => {
 
   const markAsRead = async (notificationId) => {
     try {
-      const response = await apiRequest(API_ENDPOINTS.notifications.markAsRead(notificationId), {
-        method: 'PUT'
+      const response = await fetch(API_ENDPOINTS.notifications.markAsRead(notificationId), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' }
       });
       
-      if (response.success) {
+      if (response.ok) {
         // Update local state
         setNotifications(notifications.map(n => 
-          n.id === notificationId ? { ...n, is_read: true } : n
+          n.id === notificationId ? { ...n, status: 'read' } : n
         ));
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
@@ -56,14 +94,15 @@ const NotificationDropdown = ({ currentUser }) => {
 
   const markAllAsRead = async () => {
     try {
-      const response = await apiRequest(API_ENDPOINTS.notifications.markAllAsRead, {
+      const response = await fetch(API_ENDPOINTS.notifications.markAllAsRead, {
         method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: currentUser.id })
       });
       
-      if (response.success) {
+      if (response.ok) {
         // Update local state
-        setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+        setNotifications(notifications.map(n => ({ ...n, status: 'read' })));
         setUnreadCount(0);
       }
     } catch (error) {
@@ -89,64 +128,114 @@ const NotificationDropdown = ({ currentUser }) => {
     return date.toLocaleDateString();
   };
 
-  return (
-    <Dropdown align="end" className="notification-dropdown">
-      <Dropdown.Toggle variant="light" id="notification-dropdown">
-        <i className="bi bi-bell"></i>
-        {unreadCount > 0 && (
-          <Badge bg="danger" pill className="notification-badge">
-            {unreadCount}
-          </Badge>
-        )}
-      </Dropdown.Toggle>
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'chat':
+        return <ChatIcon fontSize="small" />;
+      case 'team':
+        return <GroupIcon fontSize="small" />;
+      case 'admin':
+        return <AdminIcon fontSize="small" />;
+      default:
+        return <NotificationsIcon fontSize="small" />;
+    }
+  };
 
-      <Dropdown.Menu className="notification-menu">
-        <div className="notification-header d-flex justify-content-between align-items-center">
-          <h6 className="mb-0">Notifications</h6>
-          {unreadCount > 0 && (
-            <Button 
-              variant="link" 
-              size="sm" 
-              className="p-0 text-primary" 
-              onClick={markAllAsRead}
-            >
-              Mark all as read
-            </Button>
-          )}
-        </div>
-        <Dropdown.Divider />
-        
-        <div className="notification-list">
-          {loading && notifications.length === 0 ? (
-            <div className="text-center py-3">
-              <div className="spinner-border spinner-border-sm" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            </div>
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  return (
+    <>
+      <IconButton
+        color="inherit"
+        onClick={handleClick}
+        sx={{ 
+          position: 'relative',
+          '&:hover': {
+            backgroundColor: 'rgba(255,255,255,0.1)'
+          }
+        }}
+      >
+        <Badge badgeContent={unreadCount} color="error">
+          {unreadCount > 0 ? <NotificationsActiveIcon /> : <NotificationsIcon />}
+        </Badge>
+      </IconButton>
+
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+        PaperProps={{
+          sx: {
+            width: 350,
+            maxHeight: 400,
+            overflow: 'auto'
+          }
+        }}
+      >
+        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Notifications
+            </Typography>
+            {unreadCount > 0 && (
+              <Button size="small" onClick={markAllAsRead}>
+                Mark all read
+              </Button>
+            )}
+          </Box>
+        </Box>
+
+        <Box sx={{ maxHeight: 300, overflow: 'auto' }}>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress size={24} />
+            </Box>
           ) : notifications.length === 0 ? (
-            <div className="text-center text-muted py-3">
-              No notifications
-            </div>
+            <Box sx={{ textAlign: 'center', p: 3, color: 'text.secondary' }}>
+              <Typography>No notifications</Typography>
+            </Box>
           ) : (
-            notifications.map(notification => (
-              <Dropdown.Item 
-                key={notification.id} 
-                className={`notification-item ${!notification.is_read ? 'unread' : ''}`}
+            notifications.map((notification) => (
+              <MenuItem
+                key={notification.id}
                 onClick={() => markAsRead(notification.id)}
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  p: 2,
+                  borderBottom: 1,
+                  borderColor: 'divider',
+                  backgroundColor: notification.status === 'unread' ? 'action.hover' : 'transparent',
+                  '&:hover': {
+                    backgroundColor: 'action.hover'
+                  }
+                }}
               >
-                <div className="d-flex justify-content-between align-items-start">
-                  <div className="notification-content">
-                    <div className="notification-text">{notification.content}</div>
-                    <div className="notification-time">{formatTime(notification.timestamp)}</div>
-                  </div>
-                  {!notification.is_read && <div className="unread-indicator"></div>}
-                </div>
-              </Dropdown.Item>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%', mb: 1 }}>
+                  {getNotificationIcon(notification.type)}
+                  <Typography variant="body2" sx={{ fontWeight: notification.status === 'unread' ? 600 : 400 }}>
+                    {notification.content}
+                  </Typography>
+                  {notification.status === 'unread' && (
+                    <Chip label="New" size="small" color="primary" />
+                  )}
+                </Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  {formatTime(notification.timestamp)}
+                </Typography>
+              </MenuItem>
             ))
           )}
-        </div>
-      </Dropdown.Menu>
-    </Dropdown>
+        </Box>
+      </Menu>
+    </>
   );
 };
 

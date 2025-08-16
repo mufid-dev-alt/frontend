@@ -30,6 +30,7 @@ import {
   Download as DownloadIcon,
   Undo as UndoIcon,
   Refresh as RefreshIcon,
+  AccessTime as TimeIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Header from '../common/Header';
@@ -179,6 +180,34 @@ const AttendancePage = () => {
     const formatted = normalizeTime(raw);
     setTimeDialog((prev) => ({ ...prev, [field]: formatted }));
   };
+
+  // Enhanced time picker with quick selection
+  const TimePickerField = ({ label, value, onChange, placeholder }) => (
+    <Box>
+      <TextField
+        label={label}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        fullWidth
+        InputProps={{
+          startAdornment: <TimeIcon sx={{ mr: 1, color: 'action.active' }} />,
+        }}
+      />
+      <Box sx={{ mt: 1, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+        {['09:00', '09:30', '10:00', '10:30', '11:00', '11:30'].map((time) => (
+          <Chip
+            key={time}
+            label={time}
+            size="small"
+            variant="outlined"
+            onClick={() => onChange({ target: { value: time } })}
+            sx={{ cursor: 'pointer' }}
+          />
+        ))}
+      </Box>
+    </Box>
+  );
 
   const saveTimeEntry = async () => {
     try {
@@ -659,6 +688,81 @@ const AttendancePage = () => {
             </Grid>
           </Grid>
 
+          {/* Mark Today's Attendance Section */}
+          <Paper sx={{ p: 3, mb: 3 }}>
+            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CalendarIcon color="primary" />
+              Mark Today's Attendance
+            </Typography>
+            
+            {isWeekend() ? (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                You cannot mark attendance on Saturday and Sunday
+              </Alert>
+            ) : (
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={12} sm={3}>
+                  <TextField
+                    label="In Time (HH:MM)"
+                    placeholder="09:30"
+                    fullWidth
+                    InputProps={{
+                      startAdornment: <TimeIcon sx={{ mr: 1, color: 'action.active' }} />,
+                    }}
+                    onChange={(e) => {
+                      const formatted = normalizeTime(e.target.value);
+                      setTimeDialog(prev => ({ ...prev, in_time: formatted }));
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={3}>
+                  <TextField
+                    label="Out Time (HH:MM)"
+                    placeholder="18:00"
+                    fullWidth
+                    InputProps={{
+                      startAdornment: <TimeIcon sx={{ mr: 1, color: 'action.active' }} />,
+                    }}
+                    onChange={(e) => {
+                      const formatted = normalizeTime(e.target.value);
+                      setTimeDialog(prev => ({ ...prev, out_time: formatted }));
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      startIcon={<PresentIcon />}
+                      onClick={() => {
+                        const today = new Date().toISOString().split('T')[0];
+                        updateStatusForDate(today, 'present');
+                      }}
+                      disabled={markingAttendance}
+                      sx={{ flex: 1 }}
+                    >
+                      Mark Present
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="error"
+                      startIcon={<AbsentIcon />}
+                      onClick={() => {
+                        const today = new Date().toISOString().split('T')[0];
+                        updateStatusForDate(today, 'absent');
+                      }}
+                      disabled={markingAttendance}
+                      sx={{ flex: 1 }}
+                    >
+                      Mark Absent
+                    </Button>
+                  </Box>
+                </Grid>
+              </Grid>
+            )}
+          </Paper>
+
           {/* Monthly Calendar */}
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
@@ -751,37 +855,54 @@ const AttendancePage = () => {
           
         </Container>
     </Box>
-      <Dialog open={timeDialog.open} onClose={() => setTimeDialog({ open: false, date: null, in_time: '', out_time: '' })}>
-        <DialogTitle>Set In/Out Time</DialogTitle>
+      <Dialog open={timeDialog.open} onClose={() => setTimeDialog({ open: false, date: null, in_time: '', out_time: '' })} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <TimeIcon color="primary" />
+            <Typography variant="h6">Set In/Out Time</Typography>
+          </Box>
+        </DialogTitle>
         <DialogContent>
-          <Typography variant="body2" sx={{ mb: 2 }}>Date: {timeDialog.date}</Typography>
-          <Grid container spacing={2}>
+          <Typography variant="body2" sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+            <strong>Date:</strong> {timeDialog.date}
+          </Typography>
+          <Grid container spacing={3}>
             <Grid item xs={12} sm={6}>
-              <TextField
+              <TimePickerField
                 label="In Time (HH:MM)"
                 placeholder="09:30"
                 value={timeDialog.in_time}
                 onChange={handleTimeChange('in_time')}
-                fullWidth
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField
+              <TimePickerField
                 label="Out Time (HH:MM)"
                 placeholder="18:00"
                 value={timeDialog.out_time}
                 onChange={handleTimeChange('out_time')}
-                fullWidth
               />
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
-          <Box sx={{ flex: 1, display: 'flex', gap: 1, alignItems: 'center', pl: 1 }}>
-            <Button size="small" color="success" variant="outlined" startIcon={<PresentIcon />} onClick={() => updateStatusForDate(timeDialog.date, 'present')}>
+        <DialogActions sx={{ p: 3, pt: 0 }}>
+          <Box sx={{ flex: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
+            <Button 
+              size="small" 
+              color="success" 
+              variant="outlined" 
+              startIcon={<PresentIcon />} 
+              onClick={() => updateStatusForDate(timeDialog.date, 'present')}
+            >
               Mark Present
             </Button>
-            <Button size="small" color="error" variant="outlined" startIcon={<AbsentIcon />} onClick={() => updateStatusForDate(timeDialog.date, 'absent')}>
+            <Button 
+              size="small" 
+              color="error" 
+              variant="outlined" 
+              startIcon={<AbsentIcon />} 
+              onClick={() => updateStatusForDate(timeDialog.date, 'absent')}
+            >
               Mark Absent
             </Button>
           </Box>
