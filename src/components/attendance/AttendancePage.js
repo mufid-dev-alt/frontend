@@ -683,7 +683,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
             <Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
               {readOnly ? 'Attendance Records' : 'My Attendance'}
-        </Typography>
+            </Typography>
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               {!readOnly && (
                 <Button
@@ -727,7 +727,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                 </Select>
               </FormControl>
             </Box>
-              </Box>
+          </Box>
 
           {/* Today's Attendance Marking */}
           {!readOnly && (
@@ -793,6 +793,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
               )}
             </Box>
           </Paper>
+          )}
 
           {/* Statistics Cards */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
