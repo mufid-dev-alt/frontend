@@ -1,126 +1,447 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, ListGroup, Badge } from 'react-bootstrap';
-import { API_ENDPOINTS, apiRequest } from '../../config/api';
-import './TeamPage.css';
+import {
+  Box,
+  Container,
+  Typography,
+  Card,
+  CardContent,
+  CardHeader,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Avatar,
+  Chip,
+  CircularProgress,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Drawer,
+  List as MuiList,
+  ListItem as MuiListItem,
+  ListItemIcon,
+  ListItemText as MuiListItemText,
+  useTheme,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Grid,
+  Paper
+} from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import LogoutIcon from '@mui/icons-material/ExitToApp';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import PersonIcon from '@mui/icons-material/Person';
+import ChatIcon from '@mui/icons-material/Chat';
+import GroupIcon from '@mui/icons-material/Group';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { API_ENDPOINTS } from '../../config/api';
+import AttendancePage from '../attendance/AttendancePage';
 
-const TeamPage = ({ currentUser }) => {
-  const [users, setUsers] = useState([]);
-  const [departments, setDepartments] = useState([]);
+const Header = ({ onMenuClick }) => {
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user'));
+  const theme = useTheme();
+
+  const handleLogout = async () => {
+    try {
+      localStorage.removeItem('user');
+      navigate('/');
+    } catch (error) {
+      localStorage.removeItem('user');
+      navigate('/');
+    }
+  };
+
+  return (
+    <AppBar 
+      position="fixed" 
+      sx={{ 
+        zIndex: theme.zIndex.drawer + 1,
+        borderRadius: 0,
+        boxShadow: 'none',
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      }}
+    >
+      <Toolbar sx={{ minHeight: '64px !important' }}>
+        <IconButton
+          color="inherit"
+          edge="start"
+          onClick={onMenuClick}
+          sx={{ mr: 2 }}
+        >
+          <MenuIcon />
+        </IconButton>
+        <Typography 
+          variant="h6" 
+          component="div" 
+          sx={{ 
+            flexGrow: 1, 
+            fontFamily: "'Poppins', sans-serif",
+            fontWeight: 600,
+            color: 'white'
+          }}
+        >
+          Team Members
+        </Typography>
+        {user && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography 
+              variant="subtitle1" 
+              sx={{ 
+                fontFamily: "'Poppins', sans-serif",
+                color: 'white',
+                fontWeight: 500,
+                display: { xs: 'none', sm: 'inline' }
+              }}
+            >
+              Welcome, {user.full_name}
+            </Typography>
+            <Button
+              color="inherit"
+              onClick={handleLogout}
+              startIcon={<LogoutIcon />}
+              sx={{ 
+                fontFamily: "'Poppins', sans-serif",
+                color: 'white',
+                borderRadius: '24px',
+                px: 3,
+                py: 1,
+                background: 'rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                }
+              }}
+            >
+              Logout
+            </Button>
+          </Box>
+        )}
+      </Toolbar>
+    </AppBar>
+  );
+};
+
+const Sidebar = ({ open, onClose }) => {
+  const theme = useTheme();
+  const navigate = useNavigate();
+
+  const menuItems = [
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
+    { text: 'Attendance', icon: <EventAvailableIcon />, path: '/attendance' },
+    { text: 'Chat', icon: <ChatIcon />, path: '/chat' },
+    { text: 'Team', icon: <GroupIcon />, path: '/team' }
+  ];
+
+  const drawerWidth = 240;
+
+  return (
+    <>
+      <Drawer
+        variant="temporary"
+        open={open}
+        onClose={onClose}
+        ModalProps={{
+          keepMounted: true,
+        }}
+        sx={{
+          display: { xs: 'block', sm: 'none' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+          },
+        }}
+      >
+        <Toolbar />
+        <Box sx={{ overflow: 'auto' }}>
+          <MuiList>
+            {menuItems.map((item) => (
+              <MuiListItem
+                button
+                key={item.text}
+                onClick={() => {
+                  navigate(item.path);
+                  onClose();
+                }}
+                sx={{
+                  mb: 1,
+                  mx: 1,
+                  borderRadius: 1,
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.light,
+                    '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
+                      color: theme.palette.primary.main
+                    }
+                  }
+                }}
+              >
+                <ListItemIcon sx={{ color: theme.palette.text.secondary }}>
+                  {item.icon}
+                </ListItemIcon>
+                <MuiListItemText 
+                  primary={item.text} 
+                  sx={{ 
+                    '& .MuiTypography-root': { 
+                      fontFamily: "'Poppins', sans-serif",
+                      fontWeight: 500
+                    } 
+                  }} 
+                />
+              </MuiListItem>
+            ))}
+          </MuiList>
+        </Box>
+      </Drawer>
+      
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: 'none', sm: 'block' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+          },
+        }}
+        open
+      >
+        <Toolbar />
+        <Box sx={{ overflow: 'auto' }}>
+          <MuiList>
+            {menuItems.map((item) => (
+              <MuiListItem
+                button
+                key={item.text}
+                onClick={() => navigate(item.path)}
+                sx={{
+                  mb: 1,
+                  mx: 1,
+                  borderRadius: 1,
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.light,
+                    '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
+                      color: theme.palette.primary.main
+                    }
+                  }
+                }}
+              >
+                <ListItemIcon sx={{ color: theme.palette.text.secondary }}>
+                  {item.icon}
+                </ListItemIcon>
+                <MuiListItemText 
+                  primary={item.text} 
+                  sx={{ 
+                    '& .MuiTypography-root': { 
+                      fontFamily: "'Poppins', sans-serif",
+                      fontWeight: 500
+                    } 
+                  }} 
+                />
+              </MuiListItem>
+            ))}
+          </MuiList>
+        </Box>
+      </Drawer>
+    </>
+  );
+};
+
+const TeamPage = () => {
+  const theme = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [userDepartment, setUserDepartment] = useState('');
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
+  const [currentUser] = useState(JSON.parse(localStorage.getItem('user')));
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchTeamData = async () => {
       setLoading(true);
       try {
-        const response = await apiRequest(API_ENDPOINTS.users.list);
-        if (response.success) {
-          setUsers(response.users);
-          
-          // Extract unique departments
-          const deptSet = new Set();
-          response.users.forEach(user => {
-            if (user.department) {
-              deptSet.add(user.department);
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (!userData) {
+          navigate('/');
+          return;
+        }
+
+        // Get user's department
+        const deptResponse = await fetch(`${API_ENDPOINTS.teams.userDepartment.replace('{user_id}', userData.id)}`);
+        if (deptResponse.ok) {
+          const deptData = await deptResponse.json();
+          if (deptData.success) {
+            setUserDepartment(deptData.department);
+            
+            // Get team members
+            const teamResponse = await fetch(`${API_ENDPOINTS.teams.departmentMembers.replace('{department}', encodeURIComponent(deptData.department))}`);
+            if (teamResponse.ok) {
+              const teamData = await teamResponse.json();
+              if (teamData.success) {
+                setTeamMembers(teamData.members);
+              }
             }
-          });
-          setDepartments(Array.from(deptSet));
+          }
         }
       } catch (error) {
-        console.error('Error fetching users:', error);
+        console.error('Error fetching team data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUsers();
-  }, []);
+    fetchTeamData();
+  }, [navigate]);
 
-  const getUsersByDepartment = (department) => {
-    return users.filter(user => user.department === department);
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
   };
 
-  const getUsersWithoutDepartment = () => {
-    return users.filter(user => !user.department);
+  const handleMemberClick = (member) => {
+    setSelectedMember(member);
+    setAttendanceDialogOpen(true);
   };
+
+  const handleCloseAttendanceDialog = () => {
+    setAttendanceDialogOpen(false);
+    setSelectedMember(null);
+  };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
-    <Container className="mt-4">
-      <h2 className="mb-4">Team Members</h2>
-      
-      {loading ? (
-        <div className="text-center my-5">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      ) : (
-        <>
-          {departments.map(department => (
-            <Card key={department} className="mb-4">
-              <Card.Header className="d-flex justify-content-between align-items-center">
-                <h5 className="mb-0">{department}</h5>
-                <Badge bg="primary" pill>
-                  {getUsersByDepartment(department).length}
-                </Badge>
-              </Card.Header>
-              <ListGroup variant="flush">
-                {getUsersByDepartment(department).map(user => (
-                  <ListGroup.Item 
-                    key={user.id}
-                    className={`d-flex justify-content-between align-items-center ${user.id === currentUser?.id ? 'current-user' : ''}`}
-                  >
-                    <div>
-                      <div className="fw-bold">{user.full_name}</div>
-                      <div className="text-muted small">{user.email}</div>
-                    </div>
-                    <div className="d-flex align-items-center">
-                      <Badge bg={user.role === 'admin' ? 'danger' : 'info'} className="me-2">
-                        {user.role}
-                      </Badge>
-                      <Badge bg="secondary" pill>
-                        {user.employee_code}
-                      </Badge>
-                    </div>
-                  </ListGroup.Item>
-                ))}
-              </ListGroup>
-            </Card>
-          ))}
-          
-          {getUsersWithoutDepartment().length > 0 && (
-            <Card className="mb-4">
-              <Card.Header className="d-flex justify-content-between align-items-center">
-                <h5 className="mb-0">No Department</h5>
-                <Badge bg="secondary" pill>
-                  {getUsersWithoutDepartment().length}
-                </Badge>
-              </Card.Header>
-              <ListGroup variant="flush">
-                {getUsersWithoutDepartment().map(user => (
-                  <ListGroup.Item 
-                    key={user.id}
-                    className={`d-flex justify-content-between align-items-center ${user.id === currentUser?.id ? 'current-user' : ''}`}
-                  >
-                    <div>
-                      <div className="fw-bold">{user.full_name}</div>
-                      <div className="text-muted small">{user.email}</div>
-                    </div>
-                    <div className="d-flex align-items-center">
-                      <Badge bg={user.role === 'admin' ? 'danger' : 'info'} className="me-2">
-                        {user.role}
-                      </Badge>
-                      <Badge bg="secondary" pill>
-                        {user.employee_code}
-                      </Badge>
-                    </div>
-                  </ListGroup.Item>
-                ))}
-              </ListGroup>
-            </Card>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+      <Header onMenuClick={handleDrawerToggle} />
+      <Sidebar open={mobileOpen} onClose={handleDrawerToggle} />
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          mt: 8,
+          width: { sm: `calc(100% - 240px)` },
+          ml: { sm: '240px' },
+          backgroundColor: theme.palette.grey[50]
+        }}
+      >
+        <Container maxWidth="lg">
+          <Typography 
+            variant="h4" 
+            sx={{ 
+              mb: 3,
+              fontFamily: "'Poppins', sans-serif",
+              fontWeight: 600,
+              color: theme.palette.text.primary
+            }}
+          >
+            {userDepartment} Team
+          </Typography>
+
+          <Grid container spacing={3}>
+            {teamMembers.map((member) => (
+              <Grid item xs={12} sm={6} md={4} key={member.id}>
+                <Card 
+                  sx={{ 
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: theme.shadows[8]
+                    }
+                  }}
+                  onClick={() => handleMemberClick(member)}
+                >
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                      <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
+                        {member.full_name.charAt(0)}
+                      </Avatar>
+                      <Box>
+                        <Typography 
+                          variant="h6" 
+                          sx={{ 
+                            fontFamily: "'Poppins', sans-serif",
+                            fontWeight: 600
+                          }}
+                        >
+                          {member.full_name}
+                        </Typography>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: theme.palette.text.secondary,
+                            fontFamily: "'Poppins', sans-serif"
+                          }}
+                        >
+                          {member.email}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                      <Chip 
+                        label={`Emp Code: ${member.employee_code}`}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                      {member.id === currentUser?.id && (
+                        <Chip 
+                          label="You"
+                          size="small"
+                          color="secondary"
+                        />
+                      )}
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* Attendance Dialog */}
+      <Dialog
+        open={attendanceDialogOpen}
+        onClose={handleCloseAttendanceDialog}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle>
+          {selectedMember?.full_name} - Attendance Records
+        </DialogTitle>
+        <DialogContent>
+          {selectedMember && (
+            <AttendancePage 
+              userId={selectedMember.id}
+              readOnly={true}
+              onClose={handleCloseAttendanceDialog}
+            />
           )}
-        </>
-      )}
-    </Container>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseAttendanceDialog}>Close</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 

@@ -336,6 +336,8 @@ const UserDashboard = () => {
     completedTasks: 0,
     pendingTasks: 0
   });
+  const [userDepartment, setUserDepartment] = useState('');
+  const [teamMembers, setTeamMembers] = useState([]);
   const [notification, setNotification] = useState({
     open: false,
     message: '',
@@ -500,6 +502,24 @@ const UserDashboard = () => {
           completedTasks: completedTasks,
           pendingTasks: pendingTasks
         });
+
+        // Fetch user department
+        const deptResponse = await fetch(`${API_ENDPOINTS.teams.userDepartment.replace('{user_id}', userData.id)}`);
+        if (deptResponse.ok) {
+          const deptData = await deptResponse.json();
+          if (deptData.success) {
+            setUserDepartment(deptData.department);
+            
+            // Fetch team members
+            const teamResponse = await fetch(`${API_ENDPOINTS.teams.departmentMembers.replace('{department}', encodeURIComponent(deptData.department))}`);
+            if (teamResponse.ok) {
+              const teamData = await teamResponse.json();
+              if (teamData.success) {
+                setTeamMembers(teamData.members);
+              }
+            }
+          }
+        }
       } catch (error) {
         console.error('Error fetching stats:', error);
         showNotification(`Error fetching data: ${error.message}`, 'error');
@@ -641,46 +661,88 @@ const UserDashboard = () => {
               />
             </Grid>
 
-            <Grid item xs={12}>
-              <Paper 
-                sx={{ 
-                  p: 3,
-                  mt: 3,
-                  backgroundColor: theme.palette.background.paper,
-                  boxShadow: theme.shadows[2]
-                }}
-              >
-                <Typography 
-                  variant="h6" 
+            {/* Department Information */}
+            {userDepartment && (
+              <Grid item xs={12}>
+                <Paper 
                   sx={{ 
-                    mb: 2,
-                    fontFamily: "'Poppins', sans-serif",
-                    fontWeight: 600
+                    p: 3,
+                    mt: 3,
+                    backgroundColor: theme.palette.background.paper,
+                    boxShadow: theme.shadows[2]
                   }}
                 >
-                  Quick Actions
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      color="primary"
-                      startIcon={<EventAvailableIcon />}
-                      onClick={() => navigate('/attendance')}
-                      sx={{ 
-                        py: 2,
-                        fontFamily: "'Poppins', sans-serif",
-                        fontWeight: 500
-                      }}
-                    >
-                      Mark Attendance
-                    </Button>
-                  </Grid>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      mb: 2,
+                      fontFamily: "'Poppins', sans-serif",
+                      fontWeight: 600
+                    }}
+                  >
+                    Department: {userDepartment}
+                  </Typography>
                   
-                </Grid>
-              </Paper>
-            </Grid>
+                  {teamMembers.length > 0 && (
+                    <>
+                      <Typography 
+                        variant="subtitle1" 
+                        sx={{ 
+                          mb: 2,
+                          fontFamily: "'Poppins', sans-serif",
+                          fontWeight: 500,
+                          color: theme.palette.text.secondary
+                        }}
+                      >
+                        Team Members ({teamMembers.length})
+                      </Typography>
+                      <Grid container spacing={2}>
+                        {teamMembers.map((member) => (
+                          <Grid item xs={12} sm={6} md={4} key={member.id}>
+                            <Card 
+                              sx={{ 
+                                p: 2,
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                  transform: 'translateY(-2px)',
+                                  boxShadow: theme.shadows[4]
+                                }
+                              }}
+                              onClick={() => navigate(`/team?member=${member.id}`)}
+                            >
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <PersonIcon sx={{ color: theme.palette.primary.main }} />
+                                <Box>
+                                  <Typography 
+                                    variant="subtitle2" 
+                                    sx={{ 
+                                      fontFamily: "'Poppins', sans-serif",
+                                      fontWeight: 600
+                                    }}
+                                  >
+                                    {member.full_name}
+                                  </Typography>
+                                  <Typography 
+                                    variant="caption" 
+                                    sx={{ 
+                                      color: theme.palette.text.secondary,
+                                      fontFamily: "'Poppins', sans-serif"
+                                    }}
+                                  >
+                                    Emp Code: {member.employee_code}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </Card>
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </>
+                  )}
+                </Paper>
+              </Grid>
+            )}
           </Grid>
         </Container>
       </Box>

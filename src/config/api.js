@@ -37,12 +37,16 @@ export const API_ENDPOINTS = {
   messages: {
     list: `${BASE_URL}/api/messages`,
     create: `${BASE_URL}/api/messages`,
-    getByUser: (userId) => `${BASE_URL}/api/messages?user_id=${userId}`,
+    getByUser: (userId) => `${BASE_URL}/api/messages/${userId}`,
     getConversation: (senderId, receiverId) => `${BASE_URL}/api/messages?sender_id=${senderId}&receiver_id=${receiverId}`,
   },
+  teams: {
+    departmentMembers: `${BASE_URL}/api/teams/department/{department}`,
+    userDepartment: `${BASE_URL}/api/teams/user/{user_id}/department`,
+  },
   notifications: {
-    list: (userId) => `${BASE_URL}/api/notifications?user_id=${userId}`,
-    unread: (userId) => `${BASE_URL}/api/notifications?user_id=${userId}&unread_only=true`,
+    list: (userId) => `${BASE_URL}/api/notifications/${userId}`,
+    unread: (userId) => `${BASE_URL}/api/notifications/${userId}?unread_only=true`,
     create: `${BASE_URL}/api/notifications`,
     markAsRead: (notificationId) => `${BASE_URL}/api/notifications/${notificationId}/read`,
     markAllAsRead: `${BASE_URL}/api/notifications/read-all`,
