@@ -26,7 +26,18 @@ import {
   Snackbar,
   Alert,
   TextField,
-  InputAdornment
+  InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/ExitToApp';
@@ -37,6 +48,12 @@ import PersonIcon from '@mui/icons-material/Person';
 import DownloadIcon from '@mui/icons-material/Download';
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import BusinessIcon from '@mui/icons-material/Business';
+import GroupsIcon from '@mui/icons-material/Groups';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import PhoneIcon from '@mui/icons-material/Phone';
+import CloseIcon from '@mui/icons-material/Close';
+import ChatIcon from '@mui/icons-material/Chat';
 import { useNavigate, Link } from 'react-router-dom';
 import { API_ENDPOINTS } from '../../config/api';
 import ExcelJS from 'exceljs';
@@ -142,7 +159,8 @@ const Sidebar = ({ open, onClose }) => {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin' },
     { text: 'Attendance Records', icon: <EventAvailableIcon />, path: '/admin/attendance-records' },
-    { text: 'Manage Users', icon: <PersonIcon />, path: '/admin/manage-users' }
+    { text: 'Manage Users', icon: <PersonIcon />, path: '/admin/manage-users' },
+    { text: 'Chat', icon: <ChatIcon />, path: '/admin/chat' }
   ];
 
   const drawerWidth = 240;
@@ -283,6 +301,10 @@ const AdminDashboard = () => {
     message: '',
     severity: 'info'
   });
+  const [departments, setDepartments] = useState([]);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [departmentMembers, setDepartmentMembers] = useState([]);
+  const [departmentDialogOpen, setDepartmentDialogOpen] = useState(false);
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -436,7 +458,7 @@ const AdminDashboard = () => {
       ws.getCell('A1').alignment = { horizontal: 'center' };
       ws.getCell('A1').font = { bold: true };
       ws.mergeCells('A2:F2');
-      ws.getCell('A2').value = 'Department Name - Telecom Service Department';
+      ws.getCell('A2').value = `Department Name - ${user.department || 'General'}`;
       ws.getCell('A3').value = 'Employee Name';
       ws.getCell('B3').value = user.full_name;
       ws.getCell('A4').value = 'Employee Code';
@@ -547,7 +569,7 @@ const AdminDashboard = () => {
       '',
     ].join(',');
     let csv = `${header}\n`;
-    csv += `Department Name - Telecom Service Department\n`;
+    csv += `Department Name - ${userData.department || 'General'}\n`;
     csv += `Employee Name,${userData.full_name}\n`;
     csv += `Employee Code,${userData.employee_code || ''}\n`;
     csv += `DATE,DAY,ATTENDANCE,IN-Time,OUT-Time,Total Hours\n`;
@@ -582,6 +604,45 @@ const AdminDashboard = () => {
       .map(part => part[0])
       .join('')
       .toUpperCase();
+  };
+
+  const getDepartmentIcon = (departmentName) => {
+    if (departmentName.includes('Technical')) return <BusinessIcon />;
+    if (departmentName.includes('HR')) return <GroupsIcon />;
+    if (departmentName.includes('Account')) return <AccountBalanceIcon />;
+    if (departmentName.includes('Telecom')) return <PhoneIcon />;
+    return <GroupsIcon />;
+  };
+
+  const fetchDepartments = useCallback(async () => {
+    try {
+      // Extract unique departments from users
+      const departmentGroups = {};
+      users.forEach(user => {
+        if (user.department) {
+          if (!departmentGroups[user.department]) {
+            departmentGroups[user.department] = [];
+          }
+          departmentGroups[user.department].push(user);
+        }
+      });
+      
+      const deptList = Object.keys(departmentGroups).map(dept => ({
+        name: dept,
+        memberCount: departmentGroups[dept].length,
+        members: departmentGroups[dept]
+      }));
+      
+      setDepartments(deptList);
+    } catch (error) {
+      console.error('Error organizing departments:', error);
+    }
+  }, [users]);
+
+  const handleDepartmentClick = async (department) => {
+    setSelectedDepartment(department);
+    setDepartmentMembers(department.members);
+    setDepartmentDialogOpen(true);
   };
 
   const getAttendanceRate = (userId) => {
@@ -624,6 +685,13 @@ const AdminDashboard = () => {
     };
   }, [navigate, selectedMonth, selectedYear]);
 
+  // Update departments when users change
+  useEffect(() => {
+    if (users.length > 0) {
+      fetchDepartments();
+    }
+  }, [users, fetchDepartments]);
+
   const handleRefresh = async () => {
     setLoading(true);
     try {
@@ -658,7 +726,9 @@ const AdminDashboard = () => {
           mt: 8,
           width: { sm: `calc(100% - 240px)` },
           ml: { sm: '240px' },
-          backgroundColor: theme.palette.grey[50]
+          backgroundColor: theme.palette.grey[50],
+          overflow: 'hidden',
+          maxWidth: '100vw'
         }}
       >
         <Container maxWidth="lg">
@@ -754,6 +824,97 @@ const AdminDashboard = () => {
             </Box>
           </Box>
 
+          {/* Department Cards Section */}
+          <Typography 
+            variant="h5" 
+            sx={{ 
+              mb: 3,
+              fontFamily: "'Poppins', sans-serif",
+              fontWeight: 600,
+              color: theme.palette.text.primary
+            }}
+          >
+            Departments Overview
+          </Typography>
+          
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            {departments.map((department) => (
+              <Grid item xs={12} sm={6} md={3} key={department.name}>
+                <Card 
+                  sx={{ 
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: theme.shadows[4]
+                    }
+                  }}
+                  onClick={() => handleDepartmentClick(department)}
+                >
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Box 
+                        sx={{ 
+                          p: 1, 
+                          borderRadius: 1, 
+                          backgroundColor: theme.palette.primary.light + '22',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          mr: 2
+                        }}
+                      >
+                        {getDepartmentIcon(department.name)}
+                      </Box>
+                      <Typography 
+                        variant="h6" 
+                        sx={{ 
+                          fontFamily: "'Poppins', sans-serif",
+                          fontWeight: 600,
+                          fontSize: '1rem'
+                        }}
+                      >
+                        {department.name}
+                      </Typography>
+                    </Box>
+                    <Typography 
+                      variant="h4" 
+                      sx={{ 
+                        fontFamily: "'Poppins', sans-serif",
+                        fontWeight: 700,
+                        color: theme.palette.primary.main,
+                        mb: 1
+                      }}
+                    >
+                      {department.memberCount}
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: theme.palette.text.secondary,
+                        fontFamily: "'Poppins', sans-serif"
+                      }}
+                    >
+                      Team Members
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+
+          <Typography 
+            variant="h5" 
+            sx={{ 
+              mb: 3,
+              fontFamily: "'Poppins', sans-serif",
+              fontWeight: 600,
+              color: theme.palette.text.primary
+            }}
+          >
+            All Employees
+          </Typography>
+
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
               <CircularProgress />
@@ -763,9 +924,9 @@ const AdminDashboard = () => {
               <Typography variant="h6">No employees found</Typography>
             </Paper>
           ) : (
-            <Paper sx={{ p: 2 }}>
-              <Box sx={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <Paper sx={{ p: 2, overflow: 'hidden' }}>
+              <Box sx={{ overflowX: 'auto', width: '100%' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 800 }}>
                   <thead>
                     <tr>
                       <th style={{ textAlign: 'left', padding: 8 }}>Emp Code</th>
@@ -807,6 +968,92 @@ const AdminDashboard = () => {
           )}
         </Container>
       </Box>
+
+      {/* Department Members Dialog */}
+      <Dialog 
+        open={departmentDialogOpen} 
+        onClose={() => setDepartmentDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {selectedDepartment && getDepartmentIcon(selectedDepartment.name)}
+              <Typography variant="h6">
+                {selectedDepartment?.name} - Team Members
+              </Typography>
+            </Box>
+            <IconButton onClick={() => setDepartmentDialogOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          {departmentMembers.length > 0 ? (
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Employee Code</TableCell>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Email</TableCell>
+                    <TableCell>Present Days</TableCell>
+                    <TableCell>Absent Days</TableCell>
+                    <TableCell>Attendance Rate</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {departmentMembers.map((member) => {
+                    const stats = userStats[member.id] || { present_days: 0, absent_days: 0 };
+                    const attendanceRate = getAttendanceRate(member.id);
+                    return (
+                      <TableRow key={member.id}>
+                        <TableCell>{member.employee_code || '-'}</TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar sx={{ width: 32, height: 32, bgcolor: theme.palette.primary.main }}>
+                              {getUserInitials(member.full_name)}
+                            </Avatar>
+                            {member.full_name}
+                          </Box>
+                        </TableCell>
+                        <TableCell>{member.email}</TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={stats.present_days || 0} 
+                            color="success" 
+                            size="small" 
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={stats.absent_days || 0} 
+                            color="error" 
+                            size="small" 
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={`${attendanceRate}%`} 
+                            color={attendanceRate >= 80 ? 'success' : attendanceRate >= 60 ? 'warning' : 'error'}
+                            size="small" 
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <Typography>No team members found for this department.</Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDepartmentDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={notification.open}

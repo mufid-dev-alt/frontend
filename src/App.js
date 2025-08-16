@@ -6,6 +6,7 @@ import AdminDashboard from './components/dashboard/AdminDashboard';
 import AttendancePage from './components/attendance/AttendancePage';
 import AttendanceRecords from './components/admin/AttendanceRecords';
 import ManageUsers from './components/admin/ManageUsers';
+import AdminChatPage from './components/admin/AdminChatPage';
 import ChatPage from './components/chat/ChatPage';
 import TeamPage from './components/team/TeamPage';
 import { ThemeProvider, createTheme } from '@mui/material';
@@ -110,6 +111,14 @@ const App = () => {
             element={
               <AdminRoute>
                 <ManageUsers />
+              </AdminRoute>
+            }
+      />
+      <Route
+            path="/admin/chat"
+            element={
+              <AdminRoute>
+                <AdminChatPage />
               </AdminRoute>
             }
       />

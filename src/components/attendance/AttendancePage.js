@@ -185,199 +185,96 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
     setTimeDialog((prev) => ({ ...prev, [field]: formatted }));
   };
 
-  // Custom time picker with separate hour and minute blocks
+  // Modern time picker with direct input
   const TimePickerField = ({ label, value, onChange, placeholder }) => {
-    const [hours, setHours] = useState('');
-    const [minutes, setMinutes] = useState('');
-
-    // Parse initial value
-    useEffect(() => {
-      if (value) {
-        const [h, m] = value.split(':');
-        setHours(h || '');
-        setMinutes(m || '');
+    const handleTimeInput = (e) => {
+      let inputValue = e.target.value.replace(/[^\d:]/g, ''); // Only allow digits and colon
+      
+      // Auto-format time as user types
+      if (inputValue.length <= 2 && !inputValue.includes(':')) {
+        // Just hours
+        if (inputValue.length === 2) {
+          const hours = parseInt(inputValue);
+          if (hours > 23) inputValue = '23';
+          inputValue = inputValue + ':';
+        }
+      } else if (inputValue.includes(':')) {
+        const parts = inputValue.split(':');
+        if (parts.length === 2) {
+          let [hours, minutes] = parts;
+          
+          // Validate and format hours
+          if (hours.length === 0) hours = '00';
+          else if (hours.length === 1) hours = '0' + hours;
+          else if (parseInt(hours) > 23) hours = '23';
+          
+          // Validate and format minutes
+          if (minutes.length > 2) minutes = minutes.substring(0, 2);
+          if (minutes.length === 2 && parseInt(minutes) > 59) minutes = '59';
+          
+          inputValue = hours + ':' + minutes;
+        }
       }
-    }, [value]);
-
-    // Update parent when hours or minutes change
-    useEffect(() => {
-      if (hours !== '' && minutes !== '') {
-        const timeValue = `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
-        onChange({ target: { value: timeValue } });
+      
+      // Limit to HH:MM format
+      if (inputValue.length > 5) {
+        inputValue = inputValue.substring(0, 5);
       }
-    }, [hours, minutes, onChange]);
-
-    const incrementHours = () => {
-      const newHours = parseInt(hours) || 0;
-      setHours(String((newHours + 1) % 24).padStart(2, '0'));
-    };
-
-    const decrementHours = () => {
-      const newHours = parseInt(hours) || 0;
-      setHours(String((newHours - 1 + 24) % 24).padStart(2, '0'));
-    };
-
-    const incrementMinutes = () => {
-      const newMinutes = parseInt(minutes) || 0;
-      setMinutes(String((newMinutes + 1) % 60).padStart(2, '0'));
-    };
-
-    const decrementMinutes = () => {
-      const newMinutes = parseInt(minutes) || 0;
-      setMinutes(String((newMinutes - 1 + 60) % 60).padStart(2, '0'));
-    };
-
-    const handleHoursChange = (e) => {
-      let val = e.target.value.replace(/\D/g, ''); // Only allow numbers
-      if (val === '') {
-        setHours('');
-        return;
-      }
-      let numVal = parseInt(val);
-      if (numVal > 23) numVal = 23;
-      if (numVal < 0) numVal = 0;
-      setHours(String(numVal).padStart(2, '0'));
-    };
-
-    const handleMinutesChange = (e) => {
-      let val = e.target.value.replace(/\D/g, ''); // Only allow numbers
-      if (val === '') {
-        setMinutes('');
-        return;
-      }
-      let numVal = parseInt(val);
-      if (numVal > 59) numVal = 59;
-      if (numVal < 0) numVal = 0;
-      setMinutes(String(numVal).padStart(2, '0'));
+      
+      onChange({ target: { value: inputValue } });
     };
 
     return (
-      <Box>
-        <Typography variant="body2" sx={{ mb: 1, fontWeight: 500, color: 'text.secondary' }}>
+      <Box sx={{ mb: 2 }}>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            mb: 1, 
+            fontWeight: 500, 
+            color: 'text.secondary',
+            fontFamily: "'Poppins', sans-serif"
+          }}
+        >
           {label}
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {/* Hours Block */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <IconButton
-              size="small"
-              onClick={incrementHours}
-              sx={{ 
-                p: 0.5, 
-                mb: 0.5,
-                color: theme.palette.primary.main,
-                '&:hover': { backgroundColor: theme.palette.primary.light }
-              }}
-            >
-              <Typography variant="h6" sx={{ lineHeight: 1 }}>^</Typography>
-            </IconButton>
-            <TextField
-              value={hours}
-              onChange={handleHoursChange}
-              placeholder="00"
-              inputProps={{
-                style: { 
-                  textAlign: 'center',
-                  fontSize: '18px',
-                  fontWeight: 'bold',
-                  padding: '8px 4px',
-                  width: '40px'
-                },
-                maxLength: 2
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '& fieldset': {
-                    borderColor: theme.palette.primary.main,
-                    borderWidth: '2px'
-                  },
-                  '&:hover fieldset': {
-                    borderColor: theme.palette.primary.dark,
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: theme.palette.primary.dark,
-                    borderWidth: '2px'
-                  }
-                }
-              }}
-            />
-            <IconButton
-              size="small"
-              onClick={decrementHours}
-              sx={{ 
-                p: 0.5, 
-                mt: 0.5,
-                color: theme.palette.primary.main,
-                '&:hover': { backgroundColor: theme.palette.primary.light }
-              }}
-            >
-              <Typography variant="h6" sx={{ lineHeight: 1 }}>v</Typography>
-            </IconButton>
-          </Box>
-
-          {/* Colon Separator */}
-          <Typography variant="h4" sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}>
-            :
-          </Typography>
-
-          {/* Minutes Block */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <IconButton
-              size="small"
-              onClick={incrementMinutes}
-              sx={{ 
-                p: 0.5, 
-                mb: 0.5,
-                color: theme.palette.primary.main,
-                '&:hover': { backgroundColor: theme.palette.primary.light }
-              }}
-            >
-              <Typography variant="h6" sx={{ lineHeight: 1 }}>^</Typography>
-            </IconButton>
-            <TextField
-              value={minutes}
-              onChange={handleMinutesChange}
-              placeholder="00"
-              inputProps={{
-                style: { 
-                  textAlign: 'center',
-                  fontSize: '18px',
-                  fontWeight: 'bold',
-                  padding: '8px 4px',
-                  width: '40px'
-                },
-                maxLength: 2
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '& fieldset': {
-                    borderColor: theme.palette.primary.main,
-                    borderWidth: '2px'
-                  },
-                  '&:hover fieldset': {
-                    borderColor: theme.palette.primary.dark,
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: theme.palette.primary.dark,
-                    borderWidth: '2px'
-                  }
-                }
-              }}
-            />
-            <IconButton
-              size="small"
-              onClick={decrementMinutes}
-              sx={{ 
-                p: 0.5, 
-                mt: 0.5,
-                color: theme.palette.primary.main,
-                '&:hover': { backgroundColor: theme.palette.primary.light }
-              }}
-            >
-              <Typography variant="h6" sx={{ lineHeight: 1 }}>v</Typography>
-            </IconButton>
-          </Box>
-        </Box>
+        <TextField
+          fullWidth
+          type="text"
+          value={value || ''}
+          onChange={handleTimeInput}
+          placeholder={placeholder || "HH:MM"}
+          variant="outlined"
+          size="medium"
+          inputProps={{
+            maxLength: 5,
+            style: { 
+              fontSize: '16px',
+              fontWeight: 500,
+              textAlign: 'center',
+              fontFamily: "'Poppins', sans-serif"
+            }
+          }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+              backgroundColor: theme.palette.background.paper,
+              '& fieldset': {
+                borderColor: theme.palette.divider,
+                borderWidth: '1px'
+              },
+              '&:hover fieldset': {
+                borderColor: theme.palette.primary.main,
+                borderWidth: '2px'
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: theme.palette.primary.main,
+                borderWidth: '2px',
+                boxShadow: `0 0 0 3px ${theme.palette.primary.main}22`
+              }
+            }
+          }}
+          helperText="Format: HH:MM (24-hour)"
+        />
       </Box>
     );
   };

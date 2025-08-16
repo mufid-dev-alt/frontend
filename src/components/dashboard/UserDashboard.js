@@ -425,22 +425,38 @@ const UserDashboard = () => {
   };
 
   const convertToExcelFormat = (data, userData) => {
-    // Create header rows matching the My Attendance format
-    let csv = `USERNAME - ${userData.full_name}\n`;
-    csv += `USER-EMAIL - ${userData.email}\n`;
-    csv += `DATE,DAY,ATTENDANCE\n`;
+    // Create header rows matching the My Attendance format with department
+    let csv = `DCM Infotech\n`;
+    csv += `Department Name - ${userData.department || 'General'}\n`;
+    csv += `Employee Name,${userData.full_name}\n`;
+    csv += `Employee Code,${userData.employee_code || ''}\n`;
+    csv += `DATE,DAY,ATTENDANCE,IN-Time,OUT-Time,Total Hours\n`;
     
     // Sort data by date
     const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
     
-    // Add data rows
+    // Add data rows with in/out times and total hours
+    const diffHours = (inT, outT) => {
+      if (!inT || !outT) return '';
+      const [ih, im] = inT.split(':').map(Number);
+      const [oh, om] = outT.split(':').map(Number);
+      if ([ih, im, oh, om].some((n) => isNaN(n))) return '';
+      let mins = (oh * 60 + om) - (ih * 60 + im);
+      if (mins < 0) mins += 24 * 60;
+      const h = String(Math.floor(mins / 60)).padStart(2, '0');
+      const m = String(mins % 60).padStart(2, '0');
+      return `${h}:${m} hrs`;
+    };
+    
     sortedData.forEach(record => {
       const date = new Date(record.date);
       const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()];
       const formattedDate = `${date.getDate()}-${months[date.getMonth()].substr(0, 3)}-${date.getFullYear().toString().substr(-2)}`;
       const status = record.status === 'present' ? 'PRESENT' : record.status === 'absent' ? 'ABSENT' : 'OFF';
+      const inT = record.in_time || '';
+      const outT = record.out_time || '';
       
-      csv += `${formattedDate},${dayName},${status}\n`;
+      csv += `${formattedDate},${dayName},${status},${inT},${outT},${diffHours(inT, outT)}\n`;
     });
     
     return csv;
@@ -572,7 +588,9 @@ const UserDashboard = () => {
           mt: 8,
           width: { sm: `calc(100% - 240px)` },
           ml: { sm: '240px' },
-          backgroundColor: theme.palette.grey[50]
+          backgroundColor: theme.palette.grey[50],
+          overflow: 'hidden',
+          maxWidth: '100vw'
         }}
       >
 
