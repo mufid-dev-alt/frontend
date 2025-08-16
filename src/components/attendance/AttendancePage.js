@@ -663,7 +663,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
       case 'present': return <PresentIcon sx={{ fontSize: 16, color: 'white' }} />;
       case 'absent': return <AbsentIcon sx={{ fontSize: 16, color: 'white' }} />;
       default: return null;
-  }
+    }
   };
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -821,10 +821,10 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                     <Box>
                       <Typography color="textSecondary" gutterBottom variant="h6">
                         Absent Days
-                </Typography>
+                      </Typography>
                       <Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.error.main }}>
                         {absentDays}
-                    </Typography>
+                      </Typography>
                     </Box>
                     <AbsentIcon sx={{ fontSize: 40, color: theme.palette.error.main }} />
                   </Box>
@@ -842,7 +842,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                       </Typography>
                       <Typography variant="h4" sx={{ fontWeight: 600 }}>
                         {totalMarkedDays}
-                    </Typography>
+                      </Typography>
                     </Box>
                     <CalendarIcon sx={{ fontSize: 40, color: theme.palette.primary.main }} />
                   </Box>
