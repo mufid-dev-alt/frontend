@@ -32,7 +32,8 @@
     "react-router-dom": "^6.20.1",
     "exceljs": "^4.4.0",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "react-bootstrap": "^2.10.2"
   },
   "devDependencies": {
     "@babel/plugin-transform-class-properties": "^7.23.3",
