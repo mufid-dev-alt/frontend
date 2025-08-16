@@ -437,7 +437,11 @@ const AdminChatPage = () => {
               maxHeight: { xs: '300px', md: '500px' }
             }}>
               <CardHeader title="Users" />
-              <CardContent sx={{ p: 0, maxHeight: 400, overflow: 'auto' }}>
+              <CardContent sx={{ 
+                p: 0, 
+                maxHeight: { xs: 250, md: 400 }, 
+                overflow: 'auto' 
+              }}>
                 <List>
                   {users.map((user) => (
                     <ListItem 

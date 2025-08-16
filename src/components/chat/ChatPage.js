@@ -459,16 +459,27 @@ const ChatPage = () => {
             Team Chat
           </Typography>
 
-          <Box sx={{ display: 'flex', gap: 3, height: 'calc(100vh - 200px)' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: 3, 
+            height: { xs: 'auto', md: 'calc(100vh - 200px)' },
+            flexDirection: { xs: 'column', md: 'row' }
+          }}>
             {/* Chat Types Tabs */}
-            <Card sx={{ width: 300, height: 'fit-content' }}>
+            <Card sx={{ 
+              width: { xs: '100%', md: 300 }, 
+              height: 'fit-content',
+              maxHeight: { xs: '200px', md: 'auto' }
+            }}>
               <CardHeader title="Chat Types" />
               <CardContent sx={{ p: 0 }}>
                 <Tabs 
                   value={chatType} 
                   onChange={handleChatTypeChange}
-                  orientation="vertical"
-                  sx={{ borderRight: 1, borderColor: 'divider' }}
+                  orientation={{ xs: 'horizontal', md: 'vertical' }}
+                  variant={{ xs: 'scrollable', md: 'standard' }}
+                  scrollButtons={{ xs: 'auto', md: false }}
+                  sx={{ borderRight: { md: 1 }, borderColor: 'divider' }}
                 >
                   <Tab 
                     label={
@@ -505,13 +516,20 @@ const ChatPage = () => {
             </Card>
 
             {/* Chat List */}
-            <Card sx={{ width: 300 }}>
+            <Card sx={{ 
+              width: { xs: '100%', md: 300 },
+              maxHeight: { xs: '300px', md: 'auto' }
+            }}>
               <CardHeader title={
                 chatType === 'group' ? 'Department Members' :
                 chatType === 'personal' ? 'Team Members' :
                 'Admin'
               } />
-              <CardContent sx={{ p: 0, maxHeight: 400, overflow: 'auto' }}>
+              <CardContent sx={{ 
+                p: 0, 
+                maxHeight: { xs: 250, md: 400 }, 
+                overflow: 'auto' 
+              }}>
                 {chatType === 'group' && (
                   <List>
                     <ListItem 
@@ -580,15 +598,30 @@ const ChatPage = () => {
           </Card>
 
             {/* Chat Messages */}
-            <Card sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <Card sx={{ 
+              flex: 1, 
+              display: 'flex', 
+              flexDirection: 'column',
+              height: { xs: '500px', md: 'auto' }
+            }}>
               <CardHeader 
                 title={selectedChat ? selectedChat.name || selectedChat.full_name : 'Select a chat'}
                 subheader={selectedChat ? `Chat Type: ${chatType}` : ''}
               />
-              <CardContent sx={{ flex: 1, p: 0, display: 'flex', flexDirection: 'column' }}>
+              <CardContent sx={{ 
+                flex: 1, 
+                p: 0, 
+                display: 'flex', 
+                flexDirection: 'column' 
+              }}>
                 {selectedChat ? (
                   <>
-                    <Box sx={{ flex: 1, p: 2, overflow: 'auto', maxHeight: 400 }}>
+                    <Box sx={{ 
+                      flex: 1, 
+                      p: 2, 
+                      overflow: 'auto', 
+                      maxHeight: { xs: '300px', md: '400px' }
+                    }}>
                       {messages.length === 0 ? (
                         <Box sx={{ textAlign: 'center', color: 'text.secondary', mt: 4 }}>
                           <Typography>No messages yet. Start the conversation!</Typography>

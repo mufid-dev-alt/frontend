@@ -781,36 +781,47 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
               </Box>
             ) : (
               <Box>
-                {/* Weekday Headers */}
-                <Grid container spacing={1} sx={{ mb: 1 }}>
+                {/* Weekday Headers - Responsive */}
+                <Box sx={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(7, 1fr)', 
+                  gap: { xs: 0.5, sm: 1 },
+                  mb: 1 
+                }}>
                   {weekDays.map((day, index) => (
-                    <Grid item xs={1} key={day}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: index === 0 || index === 6 ? theme.palette.grey[100] : theme.palette.primary.main,
-                          color: index === 0 || index === 6 ? theme.palette.text.primary : 'white',
-                          py: 1,
-                          borderRadius: 1,
-                          fontWeight: 600
-                        }}
-                      >
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {day}
-                        </Typography>
-                      </Box>
-                    </Grid>
+                    <Box
+                      key={day}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: index === 0 || index === 6 ? theme.palette.grey[100] : theme.palette.primary.main,
+                        color: index === 0 || index === 6 ? theme.palette.text.primary : 'white',
+                        py: { xs: 0.5, sm: 1 },
+                        borderRadius: 1,
+                        fontWeight: 600
+                      }}
+                    >
+                      <Typography variant="body2" sx={{ 
+                        fontWeight: 600,
+                        fontSize: { xs: '0.7rem', sm: '0.875rem' }
+                      }}>
+                        {day}
+                      </Typography>
+                    </Box>
                   ))}
-                </Grid>
+                </Box>
 
-                {/* Calendar Days */}
-                <Grid container spacing={1}>
+                {/* Calendar Days - Responsive Grid */}
+                <Box sx={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(7, 1fr)', 
+                  gap: { xs: 0.5, sm: 1 }
+                }}>
                   {calendarData.map((dayData, index) => (
-                    <Grid item xs={1} key={dayData.isEmpty ? `empty-${index}` : dayData.day}>
+                    <Box key={dayData.isEmpty ? `empty-${index}` : dayData.day}>
                       {dayData.isEmpty ? (
-                        <Box sx={{ minHeight: 60 }} />
+                        <Box sx={{ minHeight: { xs: 45, sm: 55, md: 65 } }} />
                       ) : (
                         <Box
           sx={{ 
@@ -824,7 +835,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                             border: `2px solid ${theme.palette.divider}`,
                             borderRadius: 2,
                             position: 'relative',
-                            minHeight: 60,
+                            minHeight: { xs: 45, sm: 55, md: 65 },
                              cursor: readOnly ? 'default' : 'pointer',
                             boxShadow: dayData.status ? theme.shadows[2] : theme.shadows[1],
                             '&:hover': {
@@ -836,7 +847,11 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                            title={`${dayData.date}${dayData.status ? `: ${dayData.status}` : ''}`}
                            onClick={() => { if (!dayData.isWeekend && !readOnly) { openTimeDialog(dayData.date, dayData); } }}
                         >
-                          <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                          <Typography variant="body2" sx={{ 
+                            fontWeight: 600, 
+                            mb: 0.5,
+                            fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' }
+                          }}>
                             {dayData.day}
                           </Typography>
                           {getStatusIcon(dayData.status)}
@@ -852,9 +867,9 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                            )}
                         </Box>
                       )}
-                    </Grid>
+                    </Box>
                   ))}
-                </Grid>
+                </Box>
               </Box>
             )}
           </Paper>
