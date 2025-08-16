@@ -334,11 +334,35 @@ const ChatPage = () => {
     if (!selectedChat) return;
 
     try {
-      const response = await fetch(`${API_ENDPOINTS.messages.getByUser(currentUser.id)}?chat_type=${chatType}`);
+      let url = `${API_ENDPOINTS.messages.getByUser(currentUser.id)}?chat_type=${chatType}`;
+      
+      // For personal chats, filter by specific recipient
+      if (chatType === 'personal' && selectedChat.id) {
+        url += `&receiver_id=${selectedChat.id}`;
+      }
+      
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          setMessages(data.messages || []);
+          // Filter messages based on chat type and recipient
+          let filteredMessages = data.messages || [];
+          
+          if (chatType === 'personal' && selectedChat.id) {
+            // For personal chats, only show messages between current user and selected user
+            filteredMessages = filteredMessages.filter(msg => 
+              (msg.sender_id === currentUser.id && msg.receiver_id === selectedChat.id) ||
+              (msg.sender_id === selectedChat.id && msg.receiver_id === currentUser.id)
+            );
+          } else if (chatType === 'group') {
+            // For group chats, show all group messages
+            filteredMessages = filteredMessages.filter(msg => msg.type === 'group');
+          } else if (chatType === 'admin') {
+            // For admin chats, show all admin messages
+            filteredMessages = filteredMessages.filter(msg => msg.type === 'admin');
+          }
+          
+          setMessages(filteredMessages);
         }
       }
     } catch (error) {

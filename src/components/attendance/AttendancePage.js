@@ -38,7 +38,7 @@ import { API_ENDPOINTS } from '../../config/api';
 import ExcelJS from 'exceljs';
 import eventService from '../../config/eventService';
 
-const AttendancePage = () => {
+const AttendancePage = ({ userId, readOnly = false, onClose }) => {
   const theme = useTheme();
   const navigate = useNavigate();
   const [attendanceData, setAttendanceData] = useState([]);
@@ -51,6 +51,9 @@ const AttendancePage = () => {
   const [todayAttendanceId, setTodayAttendanceId] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const [timeDialog, setTimeDialog] = useState({ open: false, date: null, in_time: '', out_time: '' });
+
+  // Use provided userId or get from localStorage
+  const currentUserId = userId || JSON.parse(localStorage.getItem('user'))?.id;
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -90,13 +93,14 @@ const AttendancePage = () => {
   const fetchAttendance = useCallback(async () => {
     setLoading(true);
     try {
-      const userData = JSON.parse(localStorage.getItem('user'));
-      if (!userData) {
-        navigate('/');
+      if (!currentUserId) {
+        if (!readOnly) {
+          navigate('/');
+        }
         return;
       }
 
-      const response = await fetch(`${API_ENDPOINTS.attendance.list}?user_id=${userData.id}`, {
+      const response = await fetch(`${API_ENDPOINTS.attendance.list}?user_id=${currentUserId}`, {
         headers: { 'Accept': 'application/json' }
       });
 
@@ -181,7 +185,7 @@ const AttendancePage = () => {
     setTimeDialog((prev) => ({ ...prev, [field]: formatted }));
   };
 
-  // Enhanced time picker with quick selection
+  // Enhanced time picker with modern design
   const TimePickerField = ({ label, value, onChange, placeholder }) => (
     <Box>
       <TextField
@@ -190,19 +194,48 @@ const AttendancePage = () => {
         value={value}
         onChange={onChange}
         fullWidth
+        variant="outlined"
         InputProps={{
           startAdornment: <TimeIcon sx={{ mr: 1, color: 'action.active' }} />,
+          style: { 
+            fontSize: '16px',
+            padding: '12px 16px',
+            borderRadius: '8px'
+          }
+        }}
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            '& fieldset': {
+              borderColor: 'rgba(0, 0, 0, 0.23)',
+              borderWidth: '1px'
+            },
+            '&:hover fieldset': {
+              borderColor: theme.palette.primary.main,
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: theme.palette.primary.main,
+              borderWidth: '2px'
+            }
+          }
         }}
       />
-      <Box sx={{ mt: 1, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-        {['09:00', '09:30', '10:00', '10:30', '11:00', '11:30'].map((time) => (
+      <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+        {['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'].map((time) => (
           <Chip
             key={time}
             label={time}
             size="small"
             variant="outlined"
             onClick={() => onChange({ target: { value: time } })}
-            sx={{ cursor: 'pointer' }}
+            sx={{ 
+              cursor: 'pointer',
+              fontSize: '12px',
+              height: '28px',
+              '&:hover': {
+                backgroundColor: theme.palette.primary.light,
+                color: theme.palette.primary.contrastText
+              }
+            }}
           />
         ))}
       </Box>
@@ -317,7 +350,7 @@ const AttendancePage = () => {
         ws.getCell('A1').font = { bold: true };
         // Dept row
         ws.mergeCells('A2:F2');
-        ws.getCell('A2').value = 'Department Name - Telecom Service Department';
+        ws.getCell('A2').value = `Department Name - ${userData.department || 'General'}`;
         // Employee rows
         ws.getCell('A3').value = 'Employee Name';
         ws.getCell('B3').value = userData.full_name;
@@ -497,25 +530,32 @@ const AttendancePage = () => {
 
   return (
     <>
-      <Header />
-      <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8, backgroundColor: theme.palette.grey[50], minHeight: '100vh' }}>
+      {!readOnly && <Header />}
+      <Box component="main" sx={{ 
+        flexGrow: 1, 
+        p: 3, 
+        mt: readOnly ? 0 : 8, 
+        backgroundColor: theme.palette.grey[50], 
+        minHeight: readOnly ? 'auto' : '100vh' 
+      }}>
       <Container maxWidth="lg">
           {/* Header Section */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
             <Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
-              My Attendance
+              {readOnly ? 'Attendance Records' : 'My Attendance'}
         </Typography>
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-              
-              <Button
-                variant="outlined"
-                startIcon={<DownloadIcon />}
-                onClick={downloadMyAttendance}
-                disabled={downloading}
-                sx={{ mr: 2 }}
-              >
-                {downloading ? 'Downloading...' : 'Download Attendance'}
-              </Button>
+              {!readOnly && (
+                <Button
+                  variant="outlined"
+                  startIcon={<DownloadIcon />}
+                  onClick={downloadMyAttendance}
+                  disabled={downloading}
+                  sx={{ mr: 2 }}
+                >
+                  {downloading ? 'Downloading...' : 'Download Attendance'}
+                </Button>
+              )}
               
               <FormControl size="small" sx={{ minWidth: 120 }}>
                 <InputLabel>Month</InputLabel>
@@ -550,10 +590,11 @@ const AttendancePage = () => {
               </Box>
 
           {/* Today's Attendance Marking */}
-          <Paper sx={{ p: 3, mb: 4 }}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              Mark Today's Attendance
-                                </Typography>
+          {!readOnly && (
+            <Paper sx={{ p: 3, mb: 4 }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Mark Today's Attendance
+              </Typography>
             
             {message && (
               <Alert 
@@ -680,88 +721,15 @@ const AttendancePage = () => {
                       <Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.info.main }}>
                         {totalMarkedDays > 0 ? Math.round((presentDays / totalMarkedDays) * 100) : 0}%
                       </Typography>
-                </Box>
+                    </Box>
                     <CalendarIcon sx={{ fontSize: 40, color: theme.palette.info.main }} />
-              </Box>
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
           </Grid>
 
-          {/* Mark Today's Attendance Section */}
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CalendarIcon color="primary" />
-              Mark Today's Attendance
-            </Typography>
-            
-            {isWeekend() ? (
-              <Alert severity="info" sx={{ mb: 2 }}>
-                You cannot mark attendance on Saturday and Sunday
-              </Alert>
-            ) : (
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} sm={3}>
-                  <TextField
-                    label="In Time (HH:MM)"
-                    placeholder="09:30"
-                    fullWidth
-                    InputProps={{
-                      startAdornment: <TimeIcon sx={{ mr: 1, color: 'action.active' }} />,
-                    }}
-                    onChange={(e) => {
-                      const formatted = normalizeTime(e.target.value);
-                      setTimeDialog(prev => ({ ...prev, in_time: formatted }));
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={3}>
-                  <TextField
-                    label="Out Time (HH:MM)"
-                    placeholder="18:00"
-                    fullWidth
-                    InputProps={{
-                      startAdornment: <TimeIcon sx={{ mr: 1, color: 'action.active' }} />,
-                    }}
-                    onChange={(e) => {
-                      const formatted = normalizeTime(e.target.value);
-                      setTimeDialog(prev => ({ ...prev, out_time: formatted }));
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button
-                      variant="contained"
-                      color="success"
-                      startIcon={<PresentIcon />}
-                      onClick={() => {
-                        const today = new Date().toISOString().split('T')[0];
-                        updateStatusForDate(today, 'present');
-                      }}
-                      disabled={markingAttendance}
-                      sx={{ flex: 1 }}
-                    >
-                      Mark Present
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="error"
-                      startIcon={<AbsentIcon />}
-                      onClick={() => {
-                        const today = new Date().toISOString().split('T')[0];
-                        updateStatusForDate(today, 'absent');
-                      }}
-                      disabled={markingAttendance}
-                      sx={{ flex: 1 }}
-                    >
-                      Mark Absent
-                    </Button>
-                  </Box>
-                </Grid>
-              </Grid>
-            )}
-          </Paper>
+          
 
           {/* Monthly Calendar */}
           <Paper sx={{ p: 3 }}>
@@ -819,7 +787,7 @@ const AttendancePage = () => {
                             borderRadius: 2,
                             position: 'relative',
                             minHeight: 60,
-                             cursor: 'pointer',
+                             cursor: readOnly ? 'default' : 'pointer',
                             boxShadow: dayData.status ? theme.shadows[2] : theme.shadows[1],
                             '&:hover': {
                               boxShadow: theme.shadows[4],
@@ -828,7 +796,7 @@ const AttendancePage = () => {
                             }
                           }}
                            title={`${dayData.date}${dayData.status ? `: ${dayData.status}` : ''}`}
-                           onClick={() => { if (!dayData.isWeekend) { openTimeDialog(dayData.date, dayData); } }}
+                           onClick={() => { if (!dayData.isWeekend && !readOnly) { openTimeDialog(dayData.date, dayData); } }}
                         >
                           <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
                             {dayData.day}
