@@ -265,12 +265,12 @@ const ChatPage = () => {
   const [loading, setLoading] = useState(true);
   const [userDepartment, setUserDepartment] = useState('');
   const [teamMembers, setTeamMembers] = useState([]);
+  const [recentChats, setRecentChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [recentChats, setRecentChats] = useState([]);
-  const messagesEndRef = useRef(null);
   const currentUser = JSON.parse(localStorage.getItem('user'));
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     const fetchChatData = async () => {
@@ -331,8 +331,8 @@ const ChatPage = () => {
 
   // Fetch recent chats (simulate by sorting messages by latest timestamp)
   useEffect(() => {
-    // Fetch all messages for the user
     const fetchRecentChats = async () => {
+      if (!currentUser) return;
       const response = await fetch(API_ENDPOINTS.messages.getByUser(currentUser.id));
       if (response.ok) {
         const data = await response.json();
@@ -352,7 +352,7 @@ const ChatPage = () => {
       }
     };
     fetchRecentChats();
-  }, [messages]);
+  }, [messages, currentUser]);
 
   const fetchMessages = async () => {
     if (!selectedChat) return;
@@ -465,27 +465,28 @@ const ChatPage = () => {
         <Container maxWidth="xl">
           <Typography 
             variant="h4" 
-            sx={{ 
-              mb: 3,
-              fontFamily: "'Poppins', sans-serif",
-              fontWeight: 600,
-              color: theme.palette.text.primary
-            }}
+            sx={{ mb: 3, fontFamily: "'Poppins', sans-serif", fontWeight: 600, color: theme.palette.text.primary }}
           >
             Team Chat
           </Typography>
-
-          <Box sx={{ display: 'flex', gap: 3, height: { xs: 'auto', md: 'calc(100vh - 200px)' }, flexDirection: { xs: 'column', md: 'row' } }}>
+          <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
             {/* Recent Chats */}
-            <Card sx={{ width: { xs: '100%', md: 300 }, maxHeight: { xs: '300px', md: 'auto' } }}>
-              <CardHeader title="Recent Chats" />
-              <CardContent sx={{ p: 0, maxHeight: { xs: 250, md: 400 }, overflow: 'auto' }}>
+            <Card sx={{ width: { xs: '100%', md: 320 }, mb: { xs: 2, md: 0 }, boxShadow: 3 }}>
+              <CardHeader title="Recent Chats" sx={{ pb: 0 }} />
+              <Divider />
+              <CardContent sx={{ p: 0, maxHeight: 350, overflow: 'auto' }}>
                 <List>
-                  {recentChats.map((msg) => {
+                  {(recentChats && recentChats.length > 0) ? recentChats.map((msg) => {
                     const partnerId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
                     const partner = teamMembers.find(m => m.id === partnerId) || { full_name: 'Unknown', employee_code: '' };
                     return (
-                      <ListItem key={msg.id} button selected={selectedChat?.id === partnerId} onClick={() => handleChatSelect(partner)}>
+                      <ListItem key={msg.id} button selected={selectedChat?.id === partnerId} onClick={() => handleChatSelect(partner)}
+                        sx={{
+                          borderRadius: 2,
+                          mb: 1,
+                          '&:hover': { backgroundColor: theme.palette.action.hover }
+                        }}
+                      >
                         <ListItemAvatar>
                           <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>{partner.full_name.charAt(0)}</Avatar>
                         </ListItemAvatar>
@@ -493,46 +494,52 @@ const ChatPage = () => {
                         <Typography variant="caption" sx={{ ml: 1 }}>{formatTime(msg.timestamp)}</Typography>
                       </ListItem>
                     );
-                  })}
+                  }) : (
+                    <Typography variant="body2" sx={{ p: 2, color: theme.palette.text.secondary }}>
+                      No recent chats yet.
+                    </Typography>
+                  )}
                 </List>
               </CardContent>
             </Card>
             {/* Team Members */}
-            <Card sx={{ width: { xs: '100%', md: 300 }, maxHeight: { xs: '300px', md: 'auto' } }}>
-              <CardHeader title="Team Members" />
-              <CardContent sx={{ p: 0, maxHeight: { xs: 250, md: 400 }, overflow: 'auto' }}>
+            <Card sx={{ width: { xs: '100%', md: 320 }, mb: { xs: 2, md: 0 }, boxShadow: 3 }}>
+              <CardHeader title="Team Members" sx={{ pb: 0 }} />
+              <Divider />
+              <CardContent sx={{ p: 0, maxHeight: 350, overflow: 'auto' }}>
                 <List>
-                  {teamMembers.filter(member => member.id !== currentUser.id).map((member) => (
-                    <ListItem key={member.id} button selected={selectedChat?.id === member.id} onClick={() => handleChatSelect(member)}>
+                  {(teamMembers && teamMembers.length > 1) ? teamMembers.filter(member => member.id !== currentUser.id).map((member) => (
+                    <ListItem key={member.id} button selected={selectedChat?.id === member.id} onClick={() => handleChatSelect(member)}
+                      sx={{
+                        borderRadius: 2,
+                        mb: 1,
+                        '&:hover': { backgroundColor: theme.palette.action.hover }
+                      }}
+                    >
                       <ListItemAvatar>
-                        <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>{member.full_name.charAt(0)}</Avatar>
+                        <Avatar sx={{ bgcolor: theme.palette.primary.main }}>{member.full_name.charAt(0)}</Avatar>
                       </ListItemAvatar>
                       <ListItemText primary={member.full_name} secondary={`Emp Code: ${member.employee_code}`} />
                     </ListItem>
-                  ))}
+                  )) : (
+                    <Typography variant="body2" sx={{ p: 2, color: theme.palette.text.secondary }}>
+                      No team members found.
+                    </Typography>
+                  )}
                 </List>
               </CardContent>
             </Card>
             {/* Chat Messages */}
-            <Card sx={{ flex: 1, display: 'flex', flexDirection: 'column', height: { xs: '500px', md: 'auto' } }}>
+            <Card sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 400, boxShadow: 3 }}>
               <CardHeader 
                 title={selectedChat ? selectedChat.name || selectedChat.full_name : 'Select a chat'}
-                subheader={selectedChat ? `Chat Type: Personal` : ''}
+                subheader={selectedChat ? `Emp Code: ${selectedChat.employee_code || ''}` : ''}
               />
-              <CardContent sx={{ 
-                flex: 1, 
-                p: 0, 
-                display: 'flex', 
-                flexDirection: 'column' 
-              }}>
+              <Divider />
+              <CardContent sx={{ flex: 1, p: 0, display: 'flex', flexDirection: 'column' }}>
                 {selectedChat ? (
                   <>
-                    <Box sx={{ 
-                      flex: 1, 
-                      p: 2, 
-                      overflow: 'auto', 
-                      maxHeight: { xs: '300px', md: '400px' }
-                    }}>
+                    <Box sx={{ flex: 1, p: 2, overflow: 'auto', maxHeight: 350 }}>
                       {messages.length === 0 ? (
                         <Box sx={{ textAlign: 'center', color: 'text.secondary', mt: 4 }}>
                           <Typography>No messages yet. Start the conversation!</Typography>
@@ -540,7 +547,7 @@ const ChatPage = () => {
                       ) : (
                         messages.map((message) => (
                           <Box
-                          key={message.id} 
+                            key={message.id} 
                             sx={{
                               display: 'flex',
                               justifyContent: message.sender_id === currentUser.id ? 'flex-end' : 'flex-start',
@@ -556,7 +563,8 @@ const ChatPage = () => {
                                   : theme.palette.grey[100],
                                 color: message.sender_id === currentUser.id 
                                   ? 'white' 
-                                  : 'text.primary'
+                                  : 'text.primary',
+                                borderRadius: 2
                               }}
                             >
                               <Typography variant="body1">{message.content}</Typography>
@@ -572,9 +580,9 @@ const ChatPage = () => {
                               </Typography>
                             </Paper>
                           </Box>
-                      ))
-                    )}
-                    <div ref={messagesEndRef} />
+                        ))
+                      )}
+                      <div ref={messagesEndRef} />
                     </Box>
                     <Divider />
                     <Box sx={{ p: 2 }}>
@@ -600,8 +608,8 @@ const ChatPage = () => {
                         }}
                       />
                     </Box>
-                </>
-              ) : (
+                  </>
+                ) : (
                   <Box sx={{ 
                     flex: 1, 
                     display: 'flex', 
@@ -613,9 +621,9 @@ const ChatPage = () => {
                   </Box>
                 )}
               </CardContent>
-          </Card>
+            </Card>
           </Box>
-    </Container>
+        </Container>
       </Box>
     </Box>
   );
