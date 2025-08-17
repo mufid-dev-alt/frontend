@@ -501,7 +501,7 @@ const ChatPage = () => {
                   {(recentChats && recentChats.length > 0) ? recentChats.map((msg) => {
                     const partnerId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
                     const partner = teamMembers.find(m => m.id === partnerId) || { full_name: 'Unknown', employee_code: '' };
-                    return (
+  return (
                       <ListItem key={msg.id} button selected={selectedChat?.id === partnerId} onClick={() => handleChatSelect(partner)}
                         sx={{
                           borderRadius: 2,
@@ -550,7 +550,7 @@ const ChatPage = () => {
                   )}
                 </List>
               </CardContent>
-            </Card>
+          </Card>
             {/* Chat Messages */}
             <Card sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 400, boxShadow: 3 }}>
               <CardHeader 
@@ -569,7 +569,7 @@ const ChatPage = () => {
                       ) : (
                         messages.map((message) => (
                           <Box
-                            key={message.id} 
+                          key={message.id} 
                             sx={{
                               display: 'flex',
                               justifyContent: message.sender_id === currentUser.id ? 'flex-end' : 'flex-start',
@@ -602,9 +602,9 @@ const ChatPage = () => {
                               </Typography>
                             </Paper>
                           </Box>
-                        ))
-                      )}
-                      <div ref={messagesEndRef} />
+                      ))
+                    )}
+                    <div ref={messagesEndRef} />
                     </Box>
                     <Divider />
                     <Box sx={{ p: 2 }}>
@@ -630,8 +630,8 @@ const ChatPage = () => {
                         }}
                       />
                     </Box>
-                  </>
-                ) : (
+                </>
+              ) : (
                   <Box sx={{ 
                     flex: 1, 
                     display: 'flex', 
@@ -643,13 +643,12 @@ const ChatPage = () => {
                   </Box>
                 )}
               </CardContent>
-            </Card>
+          </Card>
           </Box>
-        </Container>
+    </Container>
       </Box>
     </Box>
   );
 };
 
-export default ChatPage;
 export default ChatPage;

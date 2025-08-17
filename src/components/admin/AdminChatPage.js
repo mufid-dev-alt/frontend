@@ -457,7 +457,7 @@ const AdminChatPage = () => {
                       </ListItemAvatar>
                       <ListItemText 
                         primary={user.full_name}
-                        secondary={`Emp Code: ${user.employee_code} | ${user.department || 'General'}`}
+                        secondary={`Emp Code: ${user.employee_code} | ${user.department || '-'}`}
                       />
                     </ListItem>
                   ))}
@@ -474,7 +474,7 @@ const AdminChatPage = () => {
             }}>
               <CardHeader 
                 title={selectedUser ? `Chat with ${selectedUser.full_name}` : 'Select a user to chat'}
-                subheader={selectedUser ? `${selectedUser.department || 'General'} Department` : ''}
+                subheader={selectedUser ? `${selectedUser.department || '-'} Department` : ''}
               />
               <CardContent sx={{ flex: 1, p: 0, display: 'flex', flexDirection: 'column' }}>
                 {selectedUser ? (
