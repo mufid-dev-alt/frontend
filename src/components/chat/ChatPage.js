@@ -272,41 +272,54 @@ const ChatPage = () => {
   const currentUser = JSON.parse(localStorage.getItem('user'));
   const messagesEndRef = useRef(null);
 
+  // Replace the team/admin fetch useEffect with a single, mount-only effect
   useEffect(() => {
-    const fetchChatData = async () => {
+    let isMounted = true;
+    const fetchTeamAndAdmin = async () => {
       setLoading(true);
       try {
-        if (!currentUser) {
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (!userData) {
           navigate('/');
           return;
         }
-
         // Get user's department
-        const deptResponse = await fetch(`${API_ENDPOINTS.teams.userDepartment.replace('{user_id}', currentUser.id)}`);
+        const deptResponse = await fetch(`${API_ENDPOINTS.teams.userDepartment.replace('{user_id}', userData.id)}`);
+        let members = [];
         if (deptResponse.ok) {
           const deptData = await deptResponse.json();
           if (deptData.success) {
             setUserDepartment(deptData.department);
-            
             // Get team members
             const teamResponse = await fetch(`${API_ENDPOINTS.teams.departmentMembers.replace('{department}', encodeURIComponent(deptData.department))}`);
             if (teamResponse.ok) {
               const teamData = await teamResponse.json();
               if (teamData.success) {
-                setTeamMembers(teamData.members);
+                members = teamData.members;
               }
             }
           }
         }
+        // Fetch admin and add to members if not present
+        const adminResponse = await fetch(API_ENDPOINTS.users.list);
+        if (adminResponse.ok) {
+          const data = await adminResponse.json();
+          const admin = (data.users || []).find(u => u.role === 'admin');
+          if (admin && !members.some(m => m.id === admin.id)) {
+            members.push(admin);
+          }
+        }
+        if (isMounted) setTeamMembers(members);
       } catch (error) {
+        if (isMounted) setTeamMembers([]);
         console.error('Error fetching chat data:', error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
-
-    fetchChatData();
-  }, [navigate, currentUser]);
+    fetchTeamAndAdmin();
+    return () => { isMounted = false; };
+  }, [navigate]);
 
   useEffect(() => {
     if (selectedChat) {
@@ -443,6 +456,15 @@ const ChatPage = () => {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />
+      </Box>
+    );
+  }
+
+  // In the render, if loading is false and teamMembers is empty, show a friendly message
+  if (!loading && (!teamMembers || teamMembers.length === 0)) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Typography variant="h6" color="text.secondary">No team members found. Please contact your admin.</Typography>
       </Box>
     );
   }
@@ -629,4 +651,5 @@ const ChatPage = () => {
   );
 };
 
+export default ChatPage;
 export default ChatPage;
