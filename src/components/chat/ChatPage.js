@@ -270,19 +270,19 @@ const ChatPage = () => {
   const [newMessage, setNewMessage] = useState('');
   const [recentChats, setRecentChats] = useState([]);
   const messagesEndRef = useRef(null);
+  const currentUser = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
     const fetchChatData = async () => {
       setLoading(true);
       try {
-        const userData = JSON.parse(localStorage.getItem('user'));
-        if (!userData) {
+        if (!currentUser) {
           navigate('/');
           return;
         }
 
         // Get user's department
-        const deptResponse = await fetch(`${API_ENDPOINTS.teams.userDepartment.replace('{user_id}', userData.id)}`);
+        const deptResponse = await fetch(`${API_ENDPOINTS.teams.userDepartment.replace('{user_id}', currentUser.id)}`);
         if (deptResponse.ok) {
           const deptData = await deptResponse.json();
           if (deptData.success) {
@@ -306,7 +306,7 @@ const ChatPage = () => {
     };
 
     fetchChatData();
-  }, [navigate]);
+  }, [navigate, currentUser]);
 
   useEffect(() => {
     if (selectedChat) {

@@ -360,14 +360,15 @@ const TeamPage = () => {
               <Grid item xs={12} sm={6} md={4} key={member.id}>
                 <Card 
                   sx={{ 
-                    cursor: 'pointer',
+                    p: 2,
+                    cursor: 'default',
                     transition: 'all 0.3s ease',
+                    boxShadow: theme.shadows[1],
                     '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: theme.shadows[8]
+                      boxShadow: theme.shadows[1],
+                      transform: 'none'
                     }
                   }}
-                  onClick={() => handleMemberClick(member)}
                 >
                   <CardContent>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
