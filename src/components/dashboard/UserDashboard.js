@@ -165,7 +165,7 @@ const Sidebar = ({ open, onClose }) => {
         }}
       >
         <Toolbar />
-        <Box sx={{ overflow: 'auto' }}>
+        <Box sx={{ overflow: 'auto', overflowX: 'hidden' }}>
           <List>
             {menuItems.map((item) => (
               <ListItem
@@ -219,7 +219,7 @@ const Sidebar = ({ open, onClose }) => {
         open
     >
       <Toolbar />
-      <Box sx={{ overflow: 'auto', mt: 2 }}>
+      <Box sx={{ overflow: 'auto', overflowX: 'hidden', mt: 2 }}>
         <List>
           {menuItems.map((item) => (
             <ListItem
@@ -567,6 +567,21 @@ const UserDashboard = () => {
       unsubscribe();
     };
   }, [navigate, selectedMonth, selectedYear]);
+
+  // In useEffect, after fetching teamMembers, also fetch admin and add to teamMembers if not present
+  useEffect(() => {
+    const fetchAdmin = async () => {
+      const response = await fetch(API_ENDPOINTS.users.list);
+      if (response.ok) {
+        const data = await response.json();
+        const admin = (data.users || []).find(u => u.role === 'admin');
+        if (admin && !teamMembers.some(m => m.id === admin.id)) {
+          setTeamMembers(prev => [...prev, admin]);
+        }
+      }
+    };
+    fetchAdmin();
+  }, [teamMembers]);
 
   if (loading) {
     return (

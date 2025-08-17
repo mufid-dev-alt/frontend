@@ -268,8 +268,7 @@ const ChatPage = () => {
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [chatType, setChatType] = useState('group'); // group, personal, admin
-  const [currentUser] = useState(JSON.parse(localStorage.getItem('user')));
+  const [recentChats, setRecentChats] = useState([]);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -313,7 +312,7 @@ const ChatPage = () => {
     if (selectedChat) {
       fetchMessages();
     }
-  }, [selectedChat, chatType]);
+  }, [selectedChat]);
 
   useEffect(() => {
     scrollToBottom();
@@ -330,14 +329,39 @@ const ChatPage = () => {
     return () => clearInterval(interval);
   }, [selectedChat]);
 
+  // Fetch recent chats (simulate by sorting messages by latest timestamp)
+  useEffect(() => {
+    // Fetch all messages for the user
+    const fetchRecentChats = async () => {
+      const response = await fetch(API_ENDPOINTS.messages.getByUser(currentUser.id));
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && Array.isArray(data.messages)) {
+          // Group by chat partner (user or admin), get latest message per chat
+          const chatMap = {};
+          data.messages.forEach(msg => {
+            const partnerId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
+            if (!chatMap[partnerId] || new Date(msg.timestamp) > new Date(chatMap[partnerId].timestamp)) {
+              chatMap[partnerId] = msg;
+            }
+          });
+          // Convert to array and sort by latest timestamp
+          const sortedChats = Object.values(chatMap).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+          setRecentChats(sortedChats);
+        }
+      }
+    };
+    fetchRecentChats();
+  }, [messages]);
+
   const fetchMessages = async () => {
     if (!selectedChat) return;
 
     try {
-      let url = `${API_ENDPOINTS.messages.getByUser(currentUser.id)}?chat_type=${chatType}`;
+      let url = `${API_ENDPOINTS.messages.getByUser(currentUser.id)}?chat_type=personal`;
       
       // For personal chats, filter by specific recipient
-      if (chatType === 'personal' && selectedChat.id) {
+      if (selectedChat.id) {
         url += `&receiver_id=${selectedChat.id}`;
       }
       
@@ -348,18 +372,12 @@ const ChatPage = () => {
           // Filter messages based on chat type and recipient
           let filteredMessages = data.messages || [];
           
-          if (chatType === 'personal' && selectedChat.id) {
+          if (selectedChat.id) {
             // For personal chats, only show messages between current user and selected user
             filteredMessages = filteredMessages.filter(msg => 
               (msg.sender_id === currentUser.id && msg.receiver_id === selectedChat.id) ||
               (msg.sender_id === selectedChat.id && msg.receiver_id === currentUser.id)
             );
-          } else if (chatType === 'group') {
-            // For group chats, show all group messages
-            filteredMessages = filteredMessages.filter(msg => msg.type === 'group');
-          } else if (chatType === 'admin') {
-            // For admin chats, show all admin messages
-            filteredMessages = filteredMessages.filter(msg => msg.type === 'admin');
           }
           
           setMessages(filteredMessages);
@@ -376,9 +394,9 @@ const ChatPage = () => {
     try {
       const messageData = {
         sender_id: currentUser.id,
-        receiver_id: chatType === 'group' ? 'group' : selectedChat.id,
+        receiver_id: selectedChat.id,
         content: newMessage.trim(),
-        type: chatType
+        type: 'personal'
       };
 
       const response = await fetch(API_ENDPOINTS.messages.create, {
@@ -404,9 +422,7 @@ const ChatPage = () => {
   };
 
   const handleChatTypeChange = (event, newValue) => {
-    setChatType(newValue);
-    setSelectedChat(null);
-    setMessages([]);
+    // This function is no longer needed as chat type is removed
   };
 
   const scrollToBottom = () => {
@@ -459,154 +475,49 @@ const ChatPage = () => {
             Team Chat
           </Typography>
 
-          <Box sx={{ 
-            display: 'flex', 
-            gap: 3, 
-            height: { xs: 'auto', md: 'calc(100vh - 200px)' },
-            flexDirection: { xs: 'column', md: 'row' }
-          }}>
-            {/* Chat Types Tabs */}
-            <Card sx={{ 
-              width: { xs: '100%', md: 300 }, 
-              height: 'fit-content',
-              maxHeight: { xs: '200px', md: 'auto' }
-            }}>
-              <CardHeader title="Chat Types" />
-              <CardContent sx={{ p: 0 }}>
-                <Tabs 
-                  value={chatType} 
-                  onChange={handleChatTypeChange}
-                  orientation={{ xs: 'horizontal', md: 'vertical' }}
-                  variant={{ xs: 'scrollable', md: 'standard' }}
-                  scrollButtons={{ xs: 'auto', md: false }}
-                  sx={{ borderRight: { md: 1 }, borderColor: 'divider' }}
-                >
-                  <Tab 
-                    label={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <GroupIcon />
-                        <Typography>Group Chat</Typography>
-                      </Box>
-                    }
-                    value="group"
-                    sx={{ alignItems: 'flex-start', textAlign: 'left' }}
-                  />
-                  <Tab 
-                    label={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <PersonIcon />
-                        <Typography>Personal Chat</Typography>
-                      </Box>
-                    }
-                    value="personal"
-                    sx={{ alignItems: 'flex-start', textAlign: 'left' }}
-                  />
-                  <Tab 
-                    label={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <AdminPanelSettingsIcon />
-                        <Typography>Admin Chat</Typography>
-                      </Box>
-                    }
-                    value="admin"
-                    sx={{ alignItems: 'flex-start', textAlign: 'left' }}
-                  />
-                </Tabs>
+          <Box sx={{ display: 'flex', gap: 3, height: { xs: 'auto', md: 'calc(100vh - 200px)' }, flexDirection: { xs: 'column', md: 'row' } }}>
+            {/* Recent Chats */}
+            <Card sx={{ width: { xs: '100%', md: 300 }, maxHeight: { xs: '300px', md: 'auto' } }}>
+              <CardHeader title="Recent Chats" />
+              <CardContent sx={{ p: 0, maxHeight: { xs: 250, md: 400 }, overflow: 'auto' }}>
+                <List>
+                  {recentChats.map((msg) => {
+                    const partnerId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
+                    const partner = teamMembers.find(m => m.id === partnerId) || { full_name: 'Unknown', employee_code: '' };
+                    return (
+                      <ListItem key={msg.id} button selected={selectedChat?.id === partnerId} onClick={() => handleChatSelect(partner)}>
+                        <ListItemAvatar>
+                          <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>{partner.full_name.charAt(0)}</Avatar>
+                        </ListItemAvatar>
+                        <ListItemText primary={partner.full_name} secondary={`Emp Code: ${partner.employee_code}`} />
+                        <Typography variant="caption" sx={{ ml: 1 }}>{formatTime(msg.timestamp)}</Typography>
+                      </ListItem>
+                    );
+                  })}
+                </List>
               </CardContent>
             </Card>
-
-            {/* Chat List */}
-            <Card sx={{ 
-              width: { xs: '100%', md: 300 },
-              maxHeight: { xs: '300px', md: 'auto' }
-            }}>
-              <CardHeader title={
-                chatType === 'group' ? 'Department Members' :
-                chatType === 'personal' ? 'Team Members' :
-                'Admin'
-              } />
-              <CardContent sx={{ 
-                p: 0, 
-                maxHeight: { xs: 250, md: 400 }, 
-                overflow: 'auto' 
-              }}>
-                {chatType === 'group' && (
-                  <List>
-                    <ListItem 
-                      button 
-                      selected={selectedChat?.type === 'group'}
-                      onClick={() => handleChatSelect({ type: 'group', name: `${userDepartment} Group` })}
-                    >
+            {/* Team Members */}
+            <Card sx={{ width: { xs: '100%', md: 300 }, maxHeight: { xs: '300px', md: 'auto' } }}>
+              <CardHeader title="Team Members" />
+              <CardContent sx={{ p: 0, maxHeight: { xs: 250, md: 400 }, overflow: 'auto' }}>
+                <List>
+                  {teamMembers.filter(member => member.id !== currentUser.id).map((member) => (
+                    <ListItem key={member.id} button selected={selectedChat?.id === member.id} onClick={() => handleChatSelect(member)}>
                       <ListItemAvatar>
-                        <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
-                          <GroupIcon />
-                        </Avatar>
+                        <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>{member.full_name.charAt(0)}</Avatar>
                       </ListItemAvatar>
-                      <ListItemText 
-                        primary={`${userDepartment} Group`}
-                        secondary="Department group chat"
-                      />
+                      <ListItemText primary={member.full_name} secondary={`Emp Code: ${member.employee_code}`} />
                     </ListItem>
-                  </List>
-                )}
-                
-                {chatType === 'personal' && (
-                  <List>
-                    {teamMembers
-                      .filter(member => member.id !== currentUser.id) // Remove self from chat list
-                      .map((member) => (
-                        <ListItem 
-                          key={member.id}
-                          button 
-                          selected={selectedChat?.id === member.id}
-                          onClick={() => handleChatSelect(member)}
-                        >
-                          <ListItemAvatar>
-                            <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
-                              {member.full_name.charAt(0)}
-                            </Avatar>
-                          </ListItemAvatar>
-                          <ListItemText 
-                            primary={member.full_name}
-                            secondary={`Emp Code: ${member.employee_code}`}
-                          />
-                        </ListItem>
-                      ))}
-                  </List>
-                )}
-
-                {chatType === 'admin' && (
-                  <List>
-                    <ListItem 
-                      button 
-                      selected={selectedChat?.type === 'admin'}
-                      onClick={() => handleChatSelect({ type: 'admin', name: 'Admin' })}
-                    >
-                      <ListItemAvatar>
-                        <Avatar sx={{ bgcolor: theme.palette.error.main }}>
-                          <AdminPanelSettingsIcon />
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText 
-                        primary="Admin"
-                        secondary="Chat with admin"
-                      />
-                    </ListItem>
-                  </List>
-                )}
+                  ))}
+                </List>
               </CardContent>
-          </Card>
-
+            </Card>
             {/* Chat Messages */}
-            <Card sx={{ 
-              flex: 1, 
-              display: 'flex', 
-              flexDirection: 'column',
-              height: { xs: '500px', md: 'auto' }
-            }}>
+            <Card sx={{ flex: 1, display: 'flex', flexDirection: 'column', height: { xs: '500px', md: 'auto' } }}>
               <CardHeader 
                 title={selectedChat ? selectedChat.name || selectedChat.full_name : 'Select a chat'}
-                subheader={selectedChat ? `Chat Type: ${chatType}` : ''}
+                subheader={selectedChat ? `Chat Type: Personal` : ''}
               />
               <CardContent sx={{ 
                 flex: 1, 
