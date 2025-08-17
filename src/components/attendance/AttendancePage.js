@@ -188,37 +188,55 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
   // Modern time picker with direct input
   const TimePickerField = ({ label, value, onChange, placeholder }) => {
     const handleTimeInput = (e) => {
-      let inputValue = e.target.value.replace(/[^\d:]/g, ''); // Only allow digits and colon
+      let inputValue = e.target.value;
       
-      // Auto-format time as user types
-      if (inputValue.length <= 2 && !inputValue.includes(':')) {
-        // Just hours
-        if (inputValue.length === 2) {
+      // Allow normal editing but clean up the input
+      // Remove any non-digit characters except colon
+      inputValue = inputValue.replace(/[^\d:]/g, '');
+      
+      // Handle backspace and normal editing
+      if (inputValue.length <= 5) {
+        // Auto-format as user types
+        if (inputValue.length === 2 && !inputValue.includes(':')) {
+          // Add colon after 2 digits
           const hours = parseInt(inputValue);
-          if (hours > 23) inputValue = '23';
-          inputValue = inputValue + ':';
+          if (hours <= 23) {
+            inputValue = inputValue + ':';
+          } else {
+            inputValue = '23:';
+          }
+        } else if (inputValue.includes(':')) {
+          const parts = inputValue.split(':');
+          if (parts.length === 2) {
+            let [hours, minutes] = parts;
+            
+            // Validate hours (00-23)
+            if (hours.length > 0) {
+              const hourNum = parseInt(hours);
+              if (hourNum > 23) hours = '23';
+              else if (hourNum < 0) hours = '00';
+            }
+            
+            // Validate minutes (00-59)
+            if (minutes.length > 0) {
+              const minuteNum = parseInt(minutes);
+              if (minuteNum > 59) minutes = '59';
+              else if (minuteNum < 0) minutes = '00';
+            }
+            
+            // Limit minutes to 2 digits
+            if (minutes.length > 2) {
+              minutes = minutes.substring(0, 2);
+            }
+            
+            inputValue = hours + ':' + minutes;
+          }
         }
-      } else if (inputValue.includes(':')) {
-        const parts = inputValue.split(':');
-        if (parts.length === 2) {
-          let [hours, minutes] = parts;
-          
-          // Validate and format hours
-          if (hours.length === 0) hours = '00';
-          else if (hours.length === 1) hours = '0' + hours;
-          else if (parseInt(hours) > 23) hours = '23';
-          
-          // Validate and format minutes
-          if (minutes.length > 2) minutes = minutes.substring(0, 2);
-          if (minutes.length === 2 && parseInt(minutes) > 59) minutes = '59';
-          
-          inputValue = hours + ':' + minutes;
+        
+        // Limit total length to HH:MM format
+        if (inputValue.length > 5) {
+          inputValue = inputValue.substring(0, 5);
         }
-      }
-      
-      // Limit to HH:MM format
-      if (inputValue.length > 5) {
-        inputValue = inputValue.substring(0, 5);
       }
       
       onChange({ target: { value: inputValue } });

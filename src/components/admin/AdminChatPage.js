@@ -319,17 +319,15 @@ const AdminChatPage = () => {
     if (!selectedUser) return;
 
     try {
-      // Fetch admin messages with the selected user
-      const response = await fetch(`${API_ENDPOINTS.messages.getByUser('admin')}?chat_type=admin&receiver_id=${selectedUser.id}`);
+      // Fetch messages between admin (user ID 1) and selected user
+      const response = await fetch(`${API_ENDPOINTS.messages.getByUser(1)}?chat_type=personal&receiver_id=${selectedUser.id}`);
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          // Filter messages between admin and selected user
+          // Filter messages between admin (ID 1) and selected user
           const filteredMessages = (data.messages || []).filter(msg => 
-            msg.type === 'admin' && (
-              (msg.sender_id === 'admin' && msg.receiver_id === selectedUser.id) ||
-              (msg.sender_id === selectedUser.id && msg.receiver_id === 'admin')
-            )
+            (msg.sender_id === 1 && msg.receiver_id === selectedUser.id) ||
+            (msg.sender_id === selectedUser.id && msg.receiver_id === 1)
           );
           setMessages(filteredMessages);
         }
@@ -344,10 +342,10 @@ const AdminChatPage = () => {
 
     try {
       const messageData = {
-        sender_id: 'admin',
+        sender_id: 1, // Admin user ID
         receiver_id: selectedUser.id,
         content: newMessage.trim(),
-        type: 'admin'
+        type: 'personal'
       };
 
       const response = await fetch(API_ENDPOINTS.messages.create, {
@@ -495,7 +493,7 @@ const AdminChatPage = () => {
                             key={message.id} 
                             sx={{
                               display: 'flex',
-                              justifyContent: message.sender_id === 'admin' ? 'flex-end' : 'flex-start',
+                              justifyContent: message.sender_id === 1 ? 'flex-end' : 'flex-start',
                               mb: 2
                             }}
                           >
@@ -503,10 +501,10 @@ const AdminChatPage = () => {
                               sx={{
                                 p: 2,
                                 maxWidth: '70%',
-                                backgroundColor: message.sender_id === 'admin' 
+                                backgroundColor: message.sender_id === 1 
                                   ? theme.palette.primary.main 
                                   : theme.palette.grey[100],
-                                color: message.sender_id === 'admin' 
+                                color: message.sender_id === 1 
                                   ? 'white' 
                                   : 'text.primary'
                               }}
