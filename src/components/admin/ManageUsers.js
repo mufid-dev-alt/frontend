@@ -48,10 +48,12 @@ const ManageUsers = () => {
   const [userToDelete, setUserToDelete] = useState(null);
   const [recentlyDeleted, setRecentlyDeleted] = useState([]);
   const [currentTime, setCurrentTime] = useState(new Date());
+  // Update formData to include department and employee_code
   const [formData, setFormData] = useState({
     full_name: '',
-    email: '',
-    password: ''
+    department: '',
+    employee_code: '',
+    email: ''
   });
   const [notification, setNotification] = useState({
     open: false,
@@ -96,10 +98,12 @@ const ManageUsers = () => {
   }, [showNotification]);
 
   const handleAddUser = () => {
+    // Update handleAddUser to reset new fields
     setFormData({
       full_name: '',
-      email: '',
-      password: ''
+      department: '',
+      employee_code: '',
+      email: ''
     });
     setDialogOpen(true);
   };
@@ -178,17 +182,20 @@ const ManageUsers = () => {
 
   const handleSubmit = async () => {
     // Validate form
-    if (!formData.full_name || !formData.email || !formData.password) {
+    if (!formData.full_name || !formData.department || !formData.employee_code || !formData.email) {
       showNotification('Please fill in all fields', 'error');
       return;
     }
 
     try {
       setServerSyncStatus('syncing');
+      const password = `dcm@${formData.employee_code}`;
       await userService.addUser({
         email: formData.email,
-        password: formData.password,
+        password,
         full_name: formData.full_name,
+        department: formData.department,
+        employee_code: formData.employee_code,
         role: 'user'
       });
 
@@ -297,20 +304,20 @@ const ManageUsers = () => {
                 <Table>
                   <TableHead sx={{ backgroundColor: theme.palette.primary.light }}>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>User ID</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Emp Code</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Full Name</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Department</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Email</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Registration Date</TableCell>
                       <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {users.map(user => (
                       <TableRow key={user.id} hover>
-                        <TableCell>{user.id}</TableCell>
+                        <TableCell>{user.employee_code}</TableCell>
                         <TableCell>{user.full_name}</TableCell>
+                        <TableCell>{user.department || '-'}</TableCell>
                         <TableCell>{user.email}</TableCell>
-                        <TableCell>{user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</TableCell>
                         <TableCell>
                           <IconButton 
                             color="error" 
@@ -406,6 +413,28 @@ const ManageUsers = () => {
           />
           <TextField
             margin="dense"
+            name="department"
+            label="Department"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={formData.department}
+            onChange={handleChange}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            name="employee_code"
+            label="Employee Code"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={formData.employee_code}
+            onChange={handleChange}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
             name="email"
             label="Email Address"
             type="email"
@@ -415,16 +444,9 @@ const ManageUsers = () => {
             onChange={handleChange}
             sx={{ mb: 2 }}
           />
-          <TextField
-            margin="dense"
-            name="password"
-            label="Password"
-            type="password"
-            fullWidth
-            variant="outlined"
-            value={formData.password}
-            onChange={handleChange}
-          />
+          <Typography variant="caption" color="text.secondary">
+            Password will be auto-generated as <b>dcm@employee_code</b>
+          </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
