@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Box,
   Container,
@@ -44,7 +44,10 @@ import {
   ChevronRight as ChevronRightIcon,
   Search as SearchIcon,
   EventBusy as OffIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  AccessTime as TimeIcon,
+  KeyboardArrowUp as KeyboardArrowUpIcon,
+  KeyboardArrowDown as KeyboardArrowDownIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Header from '../common/Header';
@@ -64,6 +67,7 @@ const AttendanceRecords = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [editDialog, setEditDialog] = useState({ open: false, date: null, status: 'present' });
+  const [timeDialog, setTimeDialog] = useState({ open: false, date: null, in_time: '', out_time: '' });
   const [notification, setNotification] = useState({
     open: false,
     message: '',
@@ -215,7 +219,9 @@ const AttendanceRecords = () => {
         date: dateStr,
         status: attendanceRecord?.status || null,
         isWeekend,
-        isToday: dateStr === new Date().toISOString().split('T')[0]
+        isToday: dateStr === new Date().toISOString().split('T')[0],
+        in_time: attendanceRecord?.in_time || '',
+        out_time: attendanceRecord?.out_time || ''
       });
     }
 
@@ -238,6 +244,221 @@ const AttendanceRecords = () => {
         setSelectedMonth(selectedMonth + 1);
       }
     }
+  };
+
+  // Time input utility functions
+  const clampAndPadTime = (timeStr) => {
+    const [h = '0', m = '0'] = timeStr.split(':');
+    const hours = Math.max(0, Math.min(23, parseInt(h) || 0));
+    const minutes = Math.max(0, Math.min(59, parseInt(m) || 0));
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  };
+
+  const normalizeTime = (timeStr) => {
+    if (!timeStr) return '';
+    return clampAndPadTime(timeStr);
+  };
+
+  // Time input component
+  const TimeHMInput = ({ label, value, onChange }) => {
+    const parse = (v) => {
+      const [h = '', m = ''] = (v || '').split(':');
+      return [h.replace(/\D/g, '').slice(0, 2), m.replace(/\D/g, '').slice(0, 2)];
+    };
+    const [hh, setHh] = useState(parse(value)[0]);
+    const [mm, setMm] = useState(parse(value)[1]);
+
+    useEffect(() => {
+      const [ph, pm] = parse(value);
+      setHh(ph);
+      setMm(pm);
+    }, [value]);
+
+    const handleHhChange = (e) => {
+      const d = (e.target.value || '').replace(/\D/g, '').slice(0, 2);
+      setHh(d);
+    };
+    
+    const handleMmChange = (e) => {
+      const d = (e.target.value || '').replace(/\D/g, '').slice(0, 2);
+      setMm(d);
+    };
+
+    const handleBlur = () => {
+      const timeStr = `${hh}:${mm}`;
+      const c = clampAndPadTime(timeStr);
+      const [nh, nm] = c.split(':');
+      
+      setHh(nh);
+      setMm(nm);
+      onChange(c);
+    };
+
+    const handleArrowClick = (field, direction) => {
+      const currentTimeStr = `${hh}:${mm}`;
+      let [h, m] = currentTimeStr.split(':').map(Number);
+      
+      if (field === 'hh') {
+        h = direction === 'up' ? h + 1 : h - 1;
+        if (h > 23) h = 0;
+        if (h < 0) h = 23;
+      } else if (field === 'mm') {
+        m = direction === 'up' ? m + 1 : m - 1;
+        if (m > 59) m = 0;
+        if (m < 0) m = 59;
+      }
+
+      const newTimeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      onChange(newTimeStr);
+    };
+
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Typography variant="body2" sx={{ 
+          fontWeight: 600, 
+          color: 'text.secondary',
+          fontSize: { xs: '0.875rem', sm: '1rem' }
+        }}>
+          {label}
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <TextField
+              value={hh}
+              onChange={handleHhChange}
+              onBlur={handleBlur}
+              placeholder="HH"
+              inputProps={{ 
+                inputMode: 'numeric', 
+                pattern: '[0-9]*', 
+                maxLength: 2, 
+                style: { 
+                  textAlign: 'center', 
+                  fontWeight: 600,
+                  fontSize: { xs: '0.875rem', sm: '1rem' }
+                } 
+              }}
+              sx={{ 
+                '& .MuiOutlinedInput-root': { 
+                  borderRadius: 2, 
+                  width: { xs: 60, sm: 70 },
+                  height: { xs: 40, sm: 48 }
+                } 
+              }}
+            />
+            <Box sx={{ display: 'flex', flexDirection: 'column', ml: { xs: 0.25, sm: 0.5 } }}>
+              <IconButton 
+                size="small" 
+                onClick={() => handleArrowClick('hh', 'up')}
+                sx={{ padding: { xs: 0.5, sm: 1 } }}
+              >
+                <KeyboardArrowUpIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
+              </IconButton>
+              <IconButton 
+                size="small" 
+                onClick={() => handleArrowClick('hh', 'down')}
+                sx={{ padding: { xs: 0.5, sm: 1 } }}
+              >
+                <KeyboardArrowDownIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
+              </IconButton>
+            </Box>
+          </Box>
+          <Typography sx={{ 
+            fontWeight: 700, 
+            color: 'text.disabled',
+            fontSize: { xs: '1rem', sm: '1.25rem' }
+          }}>
+            :
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <TextField
+              value={mm}
+              onChange={handleMmChange}
+              onBlur={handleBlur}
+              placeholder="MM"
+              inputProps={{ 
+                inputMode: 'numeric', 
+                pattern: '[0-9]*', 
+                maxLength: 2, 
+                style: { 
+                  textAlign: 'center', 
+                  fontWeight: 600,
+                  fontSize: { xs: '0.875rem', sm: '1rem' }
+                } 
+              }}
+              sx={{ 
+                '& .MuiOutlinedInput-root': { 
+                  borderRadius: 2, 
+                  width: { xs: 60, sm: 70 },
+                  height: { xs: 40, sm: 48 }
+                } 
+              }}
+            />
+            <Box sx={{ display: 'flex', flexDirection: 'column', ml: { xs: 0.25, sm: 0.5 } }}>
+              <IconButton 
+                size="small" 
+                onClick={() => handleArrowClick('mm', 'up')}
+                sx={{ padding: { xs: 0.5, sm: 1 } }}
+              >
+                <KeyboardArrowUpIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
+              </IconButton>
+              <IconButton 
+                size="small" 
+                onClick={() => handleArrowClick('mm', 'down')}
+                sx={{ padding: { xs: 0.5, sm: 1 } }}
+              >
+                <KeyboardArrowDownIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
+              </IconButton>
+            </Box>
+          </Box>
+        </Box>
+        <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+          Type HH then MM. Use arrows to adjust.
+        </Typography>
+      </Box>
+    );
+  };
+
+  const openTimeDialog = (date, existing) => {
+    setTimeDialog({ 
+      open: true, 
+      date, 
+      in_time: existing?.in_time || '', 
+      out_time: existing?.out_time || '' 
+    });
+  };
+
+  const saveTimeEntry = async () => {
+    try {
+      const { date } = timeDialog;
+      const in_time = normalizeTime(timeDialog.in_time);
+      const out_time = normalizeTime(timeDialog.out_time);
+
+      const response = await fetch(`${API_ENDPOINTS.attendance.update}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: selectedUser.id,
+          date,
+          in_time,
+          out_time
+        })
+      });
+
+      if (response.ok) {
+        showNotification('Time entry updated successfully', 'success');
+        setTimeDialog({ open: false, date: null, in_time: '', out_time: '' });
+        fetchUserAttendance();
+      } else {
+        throw new Error('Failed to update time entry');
+      }
+    } catch (error) {
+      showNotification('Error updating time entry', 'error');
+    }
+  };
+
+  const updateStatusForDate = (date, status) => {
+    setEditDialog({ open: true, date, status });
   };
 
   // Initialize component and check auth
@@ -573,7 +794,7 @@ const AttendanceRecords = () => {
                               }}
                               onClick={() => {
                                 if (!dayData.isWeekend) {
-                                  handleEditAttendance(dayData.date);
+                                  openTimeDialog(dayData.date, dayData);
                                 }
                               }}
                             >
@@ -602,11 +823,21 @@ const AttendanceRecords = () => {
                                     OFF
                                   </Typography>
                                 ) : dayData.status ? (
-                                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
                                     {dayData.status === 'present' ? (
                                       <PresentIcon sx={{ fontSize: { xs: 10, sm: 12, md: 14 }, color: theme.palette.success.main }} />
                                     ) : (
                                       <AbsentIcon sx={{ fontSize: { xs: 10, sm: 12, md: 14 }, color: theme.palette.error.main }} />
+                                    )}
+                                    {(dayData.in_time || dayData.out_time) && (
+                                      <Typography variant="caption" sx={{ 
+                                        fontSize: { xs: '0.4rem', sm: '0.45rem', md: '0.5rem' },
+                                        lineHeight: 1,
+                                        color: theme.palette.text.secondary
+                                      }}>
+                                        {dayData.in_time ? `IN ${dayData.in_time}` : ''} 
+                                        {dayData.out_time ? `OUT ${dayData.out_time}` : ''}
+                                      </Typography>
                                     )}
                                   </Box>
                                 ) : (
@@ -649,6 +880,112 @@ const AttendanceRecords = () => {
           <DialogActions>
             <Button onClick={() => setEditDialog({ ...editDialog, open: false })}>Cancel</Button>
             <Button onClick={handleSaveAttendance} variant="contained">Save</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Time Entry Dialog */}
+        <Dialog 
+          open={timeDialog.open} 
+          onClose={() => setTimeDialog({ open: false, date: null, in_time: '', out_time: '' })} 
+          maxWidth="sm" 
+          fullWidth
+          sx={{
+            '& .MuiDialog-paper': {
+              margin: { xs: 1, sm: 2 },
+              width: { xs: 'calc(100% - 16px)', sm: 'auto' }
+            }
+          }}
+        >
+          <DialogTitle sx={{ pb: { xs: 1, sm: 2 } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <TimeIcon color="primary" />
+              <Typography variant="h6" sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+                Set In/Out Time
+              </Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1, sm: 2 } }}>
+            <Typography variant="body2" sx={{ 
+              mb: { xs: 2, sm: 3 }, 
+              p: { xs: 1.5, sm: 2 }, 
+              bgcolor: 'grey.50', 
+              borderRadius: 1,
+              fontSize: { xs: '0.875rem', sm: '1rem' }
+            }}>
+              <strong>Date:</strong> {timeDialog.date ? new Date(timeDialog.date).toLocaleDateString() : ''}
+            </Typography>
+            <Grid container spacing={{ xs: 2, sm: 3 }}>
+              <Grid item xs={12} sm={6}>
+                <TimeHMInput
+                  label="In Time (HH:MM)"
+                  value={timeDialog.in_time}
+                  onChange={(next) => setTimeDialog((p) => ({ ...p, in_time: typeof next === 'string' ? next : next?.target?.value }))}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TimeHMInput
+                  label="Out Time (HH:MM)"
+                  value={timeDialog.out_time}
+                  onChange={(next) => setTimeDialog((p) => ({ ...p, out_time: typeof next === 'string' ? next : next?.target?.value }))}
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions sx={{ 
+            p: { xs: 2, sm: 3 }, 
+            pt: 0,
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: { xs: 1, sm: 0 }
+          }}>
+            <Box sx={{ 
+              flex: 1, 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: { xs: 1, sm: 1 }, 
+              alignItems: { xs: 'stretch', sm: 'center' },
+              width: { xs: '100%', sm: 'auto' }
+            }}>
+              <Button 
+                size="small" 
+                color="success" 
+                variant="outlined" 
+                startIcon={<PresentIcon />} 
+                onClick={() => updateStatusForDate(timeDialog.date, 'present')}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
+              >
+                Mark Present
+              </Button>
+              <Button 
+                size="small" 
+                color="error" 
+                variant="outlined" 
+                startIcon={<AbsentIcon />} 
+                onClick={() => updateStatusForDate(timeDialog.date, 'absent')}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
+              >
+                Mark Absent
+              </Button>
+            </Box>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: { xs: 1, sm: 1 },
+              width: { xs: '100%', sm: 'auto' }
+            }}>
+              <Button 
+                onClick={() => setTimeDialog({ open: false, date: null, in_time: '', out_time: '' })}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={saveTimeEntry} 
+                variant="contained"
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
+              >
+                Save
+              </Button>
+            </Box>
           </DialogActions>
         </Dialog>
 

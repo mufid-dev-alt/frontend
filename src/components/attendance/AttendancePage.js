@@ -832,7 +832,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                 aria-label="open drawer"
                 edge="start"
                 onClick={handleDrawerToggle}
-                sx={{ mr: 2, display: { sm: 'none' } }}
+                sx={{ mr: 2, display: { md: 'none' } }}
               >
                 <MenuIcon />
               </IconButton>
@@ -1199,15 +1199,16 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                 <Box sx={{ 
                   display: 'grid', 
                   gridTemplateColumns: 'repeat(7, 1fr)', 
-                  gap: { xs: 0.5, sm: 1 }
+                  gap: { xs: 1, sm: 1.5 },
+                  p: { xs: 0.5, sm: 1 }
                 }}>
                   {calendarData.map((dayData, index) => (
                     <Box key={dayData.isEmpty ? `empty-${index}` : dayData.day}>
                       {dayData.isEmpty ? (
-                        <Box sx={{ minHeight: { xs: 45, sm: 55, md: 65 } }} />
+                        <Box sx={{ minHeight: { xs: 50, sm: 60, md: 70 } }} />
                       ) : (
                         <Box
-          sx={{ 
+                          sx={{ 
                             aspectRatio: '1',
                             display: 'flex',
                             flexDirection: 'column',
@@ -1216,38 +1217,53 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                             backgroundColor: getStatusColor(dayData.status, dayData.isWeekend),
                             color: dayData.isWeekend ? theme.palette.text.secondary : (dayData.status ? 'white' : theme.palette.text.primary),
                             border: `2px solid ${theme.palette.divider}`,
-                            borderRadius: 2,
+                            borderRadius: { xs: 1, sm: 2 },
                             position: 'relative',
-                            minHeight: { xs: 45, sm: 55, md: 65 },
-                             cursor: readOnly ? 'default' : 'pointer',
+                            minHeight: { xs: 50, sm: 60, md: 70 },
+                            cursor: readOnly ? 'default' : 'pointer',
                             boxShadow: dayData.status ? theme.shadows[2] : theme.shadows[1],
+                            transition: 'all 0.2s ease-in-out',
                             '&:hover': {
                               boxShadow: theme.shadows[4],
                               transform: 'translateY(-2px)',
-                              transition: 'all 0.2s ease-in-out'
+                            },
+                            '&:active': {
+                              transform: 'translateY(0px)',
+                              boxShadow: theme.shadows[2]
                             }
                           }}
-                           title={`${dayData.date}${dayData.status ? `: ${dayData.status}` : ''}`}
-                           onClick={() => { if (!dayData.isWeekend && !readOnly) { openTimeDialog(dayData.date, dayData); } }}
+                          title={`${dayData.date}${dayData.status ? `: ${dayData.status}` : ''}`}
+                          onClick={() => { if (!dayData.isWeekend && !readOnly) { openTimeDialog(dayData.date, dayData); } }}
                         >
                           <Typography variant="body2" sx={{ 
                             fontWeight: 600, 
-                            mb: 0.5,
-                            fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' }
+                            mb: { xs: 0.25, sm: 0.5 },
+                            fontSize: { xs: '0.8rem', sm: '0.875rem', md: '1rem' }
                           }}>
                             {dayData.day}
                           </Typography>
                           {getStatusIcon(dayData.status)}
                           {dayData.status && (
-                            <Typography variant="caption" sx={{ fontSize: '0.6rem', textTransform: 'uppercase', mt: 0.5 }}>
+                            <Typography variant="caption" sx={{ 
+                              fontSize: { xs: '0.65rem', sm: '0.7rem' }, 
+                              textTransform: 'uppercase', 
+                              mt: { xs: 0.25, sm: 0.5 },
+                              fontWeight: 600
+                            }}>
                               {dayData.status.charAt(0)}
                             </Typography>
                           )}
-                           {(dayData.in_time || dayData.out_time) && (
-                             <Typography variant="caption" sx={{ fontSize: '0.55rem', mt: 0.5 }}>
-                               {dayData.in_time ? `IN ${dayData.in_time}` : ''} {dayData.out_time ? `OUT ${dayData.out_time}` : ''}
-                             </Typography>
-                           )}
+                          {(dayData.in_time || dayData.out_time) && (
+                            <Typography variant="caption" sx={{ 
+                              fontSize: { xs: '0.6rem', sm: '0.65rem' }, 
+                              mt: { xs: 0.25, sm: 0.5 },
+                              textAlign: 'center',
+                              lineHeight: 1.2
+                            }}>
+                              {dayData.in_time ? `IN ${dayData.in_time}` : ''} 
+                              {dayData.out_time ? `OUT ${dayData.out_time}` : ''}
+                            </Typography>
+                          )}
                         </Box>
                       )}
                     </Box>

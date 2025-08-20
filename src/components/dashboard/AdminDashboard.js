@@ -93,7 +93,7 @@ const AdminHeader = ({ onMenuClick }) => {
           color="inherit"
           edge="start"
           onClick={onMenuClick}
-          sx={{ mr: 2 }}
+          sx={{ mr: 2, display: { md: 'none' } }}
         >
           <MenuIcon />
         </IconButton>
