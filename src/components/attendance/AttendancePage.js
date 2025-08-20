@@ -194,7 +194,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
     setTimeDialog((prev) => ({ ...prev, [field]: formatted }));
   };
 
-  // Redesigned HH:MM input with two boxes (HH and MM). Auto-tab from HH to MM.
+  // Redesigned HH:MM input with two boxes (HH and MM).
   const TimeHMInput = ({ label, value, onChange }) => {
     const parse = (v) => {
       const [h = '', m = ''] = (v || '').split(':');
@@ -219,11 +219,6 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
       const d = (e.target.value || '').replace(/\D/g, '').slice(0, 2);
       setHh(d);
       emit(d, mm);
-      
-      // Auto-tab to MM field when HH reaches 2 digits
-      if (d.length === 2 && mmRef.current) {
-        mmRef.current.focus();
-      }
     };
     
     const handleMm = (e) => {
@@ -232,11 +227,16 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
       emit(hh, d);
     };
     
+    // Use onBlur to clamp and pad the full time string
     const handleBlurH = () => {
-      const c = clampAndPadTime(`${hh || '00'}:${mm || '00'}`);
+      const fullTime = `${hh}:${mm}`;
+      const c = clampAndPadTime(fullTime);
       const [nh, nm] = c.split(':');
-      setHh(nh); setMm(nm); emit(nh, nm);
+      setHh(nh); 
+      setMm(nm); 
+      emit(nh, nm);
     };
+
     const handleBlurM = handleBlurH;
 
     return (
@@ -273,7 +273,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
             sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, width: 100 } }}
           />
         </Box>
-        <Typography variant="caption" color="text.secondary">Type HH then MM. Auto-tabs between fields.</Typography>
+        <Typography variant="caption" color="text.secondary">Type HH then MM.</Typography>
       </Box>
     );
   };
