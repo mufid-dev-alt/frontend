@@ -452,49 +452,173 @@ const AdminDashboard = () => {
       // Build formatted Excel workbook
       const wb = new ExcelJS.Workbook();
       const ws = wb.addWorksheet('Attendance');
+      
+      // Set font size to 7 for all cells
+      const fontSize = 7;
+      
       const monthName = months[selectedMonth - 1];
-      ws.mergeCells('A1:F1');
-      ws.getCell('A1').value = 'DCM Infotech';
+      const year = selectedYear;
+      
+      // Calculate date range
+      const startDate = new Date(year, selectedMonth - 1, 1);
+      const endDate = new Date(year, selectedMonth, 0);
+      const dateRange = `${monthName}-1-${year} to ${monthName}-${endDate.getDate()}-${year}`;
+      
+      // Create header rows matching the exact format
+      ws.mergeCells('A1:Z1');
+      ws.getCell('A1').value = 'Monthly Status Report (Basic Work Duration)';
       ws.getCell('A1').alignment = { horizontal: 'center' };
-      ws.getCell('A1').font = { bold: true };
-      ws.mergeCells('A2:F2');
-      ws.getCell('A2').value = `Department Name - ${user.department || 'General'}`;
-      ws.getCell('A3').value = 'Employee Name';
-      ws.getCell('B3').value = user.full_name;
-      ws.getCell('A4').value = 'Employee Code';
-      ws.getCell('B4').value = user.employee_code || '';
-      const headerRowIndex = 5;
-      ws.getRow(headerRowIndex).values = ['DATE', 'DAY', 'ATTENDANCE', 'IN-Time', 'OUT-Time', 'Total Hours'];
-      ws.getRow(headerRowIndex).font = { bold: true };
-      const diff = (inT, outT) => {
-        if (!inT || !outT) return '';
-        const [ih, im] = inT.split(':').map(Number);
-        const [oh, om] = outT.split(':').map(Number);
-        if ([ih, im, oh, om].some((n) => isNaN(n))) return '';
-        let mins = (oh * 60 + om) - (ih * 60 + im);
-        if (mins < 0) mins += 24 * 60;
-        const h = String(Math.floor(mins / 60)).padStart(2, '0');
-        const m = String(mins % 60).padStart(2, '0');
-        return `${h}:${m} hrs`;
-      };
+      ws.getCell('A1').font = { bold: true, size: fontSize };
+      
+      ws.mergeCells('A2:Z2');
+      ws.getCell('A2').value = dateRange;
+      ws.getCell('A2').alignment = { horizontal: 'center' };
+      ws.getCell('A2').font = { size: fontSize };
+      
+      ws.mergeCells('A3:Z3');
+      ws.getCell('A3').value = 'COMPANY : DCM INFOTECH LIMITED';
+      ws.getCell('A3').font = { size: fontSize };
+      
+      ws.mergeCells('A4:Z4');
+      ws.getCell('A4').value = `DEPARTMENT NAME : ${user.department || 'General'}`;
+      ws.getCell('A4').font = { bold: true, size: fontSize };
+      
+      // User info rows
+      ws.getCell('A5').value = 'Emp. Code :';
+      ws.getCell('A5').font = { size: fontSize };
+      ws.getCell('B5').value = user.employee_code || '';
+      ws.getCell('B5').font = { size: fontSize };
+      
+      ws.getCell('A6').value = 'Emp. Name :';
+      ws.getCell('A6').font = { size: fontSize };
+      ws.getCell('B6').value = user.full_name;
+      ws.getCell('B6').font = { size: fontSize };
+      
+      const headerRowIndex = 8;
       const sorted = [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
-      let rowPtr = headerRowIndex + 1;
-      sorted.forEach((r) => {
-        const d = new Date(r.date);
-        const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()];
-        const formattedDate = `${d.getDate()}-${months[d.getMonth()].substr(0, 3)}-${d.getFullYear().toString().substr(-2)}`;
-        const status = r.status === 'present' ? 'PRESENT' : r.status === 'absent' ? 'ABSENT' : 'OFF';
-        const inT = r.in_time || '';
-        const outT = r.out_time || '';
-        ws.getRow(rowPtr).values = [formattedDate, dayName, status, inT, outT, diff(inT, outT)];
-        rowPtr += 1;
-      });
+      
+      // Days header row
+      ws.getCell(`A${headerRowIndex}`).value = 'Days';
+      ws.getCell(`A${headerRowIndex}`).font = { bold: true, size: fontSize };
+      
+      // Add day columns (1 T, 2 W, 3 Th, etc.)
+      let colIndex = 1; // Start from B column
+      for (let day = 1; day <= endDate.getDate(); day++) {
+        const date = new Date(year, selectedMonth - 1, day);
+        const dayNames = ['S', 'M', 'T', 'W', 'Th', 'F', 'St'];
+        const dayName = dayNames[date.getDay()];
+        const colLetter = String.fromCharCode(65 + colIndex); // A=65, B=66, etc.
+        
+        ws.getCell(`${colLetter}${headerRowIndex}`).value = `${day} ${dayName}`;
+        ws.getCell(`${colLetter}${headerRowIndex}`).font = { bold: true, size: fontSize };
+        colIndex++;
+      }
+      
+      // Status row
+      let currentRow = headerRowIndex + 1;
+      ws.getCell(`A${currentRow}`).value = 'Status';
+      ws.getCell(`A${currentRow}`).font = { size: fontSize };
+      
+      colIndex = 1;
+      for (let day = 1; day <= endDate.getDate(); day++) {
+        const dateStr = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const record = sorted.find(r => r.date === dateStr);
+        const colLetter = String.fromCharCode(65 + colIndex);
+        
+        if (record) {
+          ws.getCell(`${colLetter}${currentRow}`).value = record.status === 'present' ? 'P' : 'A';
+        } else {
+          ws.getCell(`${colLetter}${currentRow}`).value = 'A';
+        }
+        ws.getCell(`${colLetter}${currentRow}`).font = { size: fontSize };
+        colIndex++;
+      }
+      currentRow++;
+      
+      // InTime row
+      ws.getCell(`A${currentRow}`).value = 'InTime';
+      ws.getCell(`A${currentRow}`).font = { size: fontSize };
+      
+      colIndex = 1;
+      for (let day = 1; day <= endDate.getDate(); day++) {
+        const dateStr = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const record = sorted.find(r => r.date === dateStr);
+        const colLetter = String.fromCharCode(65 + colIndex);
+        
+        if (record && record.in_time) {
+          ws.getCell(`${colLetter}${currentRow}`).value = record.in_time;
+        }
+        ws.getCell(`${colLetter}${currentRow}`).font = { size: fontSize };
+        colIndex++;
+      }
+      currentRow++;
+      
+      // OutTime row
+      ws.getCell(`A${currentRow}`).value = 'OutTime';
+      ws.getCell(`A${currentRow}`).font = { size: fontSize };
+      
+      colIndex = 1;
+      for (let day = 1; day <= endDate.getDate(); day++) {
+        const dateStr = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const record = sorted.find(r => r.date === dateStr);
+        const colLetter = String.fromCharCode(65 + colIndex);
+        
+        if (record && record.out_time) {
+          ws.getCell(`${colLetter}${currentRow}`).value = record.out_time;
+        }
+        ws.getCell(`${colLetter}${currentRow}`).font = { size: fontSize };
+        colIndex++;
+      }
+      currentRow++;
+      
+      // Total row
+      ws.getCell(`A${currentRow}`).value = 'Total';
+      ws.getCell(`A${currentRow}`).font = { size: fontSize };
+      
+      colIndex = 1;
+      for (let day = 1; day <= endDate.getDate(); day++) {
+        const dateStr = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const record = sorted.find(r => r.date === dateStr);
+        const colLetter = String.fromCharCode(65 + colIndex);
+        
+        if (record && record.in_time && record.out_time) {
+          // Calculate total hours
+          const [ih, im] = record.in_time.split(':').map(Number);
+          const [oh, om] = record.out_time.split(':').map(Number);
+          if (!isNaN(ih) && !isNaN(im) && !isNaN(oh) && !isNaN(om)) {
+            let mins = (oh * 60 + om) - (ih * 60 + im);
+            if (mins < 0) mins += 24 * 60;
+            const h = String(Math.floor(mins / 60)).padStart(2, '0');
+            const m = String(mins % 60).padStart(2, '0');
+            ws.getCell(`${colLetter}${currentRow}`).value = `${h}:${m}`;
+          } else {
+            ws.getCell(`${colLetter}${currentRow}`).value = '00:00';
+          }
+        } else {
+          ws.getCell(`${colLetter}${currentRow}`).value = '00:00';
+        }
+        ws.getCell(`${colLetter}${currentRow}`).font = { size: fontSize };
+        colIndex++;
+      }
+      
+      // Apply borders to all cells
       ws.eachRow((row) => {
         row.eachCell((cell) => {
-          cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+          cell.border = { 
+            top: { style: 'thin' }, 
+            left: { style: 'thin' }, 
+            bottom: { style: 'thin' }, 
+            right: { style: 'thin' } 
+          };
         });
       });
-      ws.columns = [ { width: 14 }, { width: 14 }, { width: 14 }, { width: 12 }, { width: 12 }, { width: 14 } ];
+      
+      // Set column widths
+      ws.getColumn('A').width = 12;
+      for (let i = 1; i <= endDate.getDate(); i++) {
+        const colLetter = String.fromCharCode(65 + i);
+        ws.getColumn(colLetter).width = 8;
+      }
       const blob = await wb.xlsx.writeBuffer();
       const url = window.URL.createObjectURL(new Blob([blob]));
       const a = document.createElement('a');
@@ -518,38 +642,234 @@ const AdminDashboard = () => {
         showNotification('No users to export', 'warning');
         return;
       }
-      const rows = ['EMPLOYEE_CODE,NAME,EMAIL,DATE,DAY,ATTENDANCE,IN_TIME,OUT_TIME'];
-      for (const user of usersList) {
-        const params = new URLSearchParams();
-        params.append('user_id', user.id);
-        params.append('month', selectedMonth);
-        params.append('year', selectedYear);
-        const response = await fetch(`${API_ENDPOINTS.attendance.list}?${params.toString()}`, {
-          headers: { 'Accept': 'application/json' }
-        });
-        if (!response.ok) continue;
-        const data = await response.json();
-        const records = data.success && data.records ? data.records : [];
-        const sorted = [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
-        sorted.forEach(r => {
-          const d = new Date(r.date);
-          const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()];
-          const formattedDate = `${d.getDate()}-${months[d.getMonth()].substr(0, 3)}-${d.getFullYear().toString().substr(-2)}`;
-          const status = r.status === 'present' ? 'PRESENT' : r.status === 'absent' ? 'ABSENT' : 'OFF';
-          rows.push(`${user.employee_code || ''},${user.full_name.replace(/,/g, ' ')},${user.email},${formattedDate},${dayName},${status},${r.in_time || ''},${r.out_time || ''}`);
-        });
+
+      // Create Excel workbook
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('All Users Attendance');
+      
+      // Set font size to 7 for all cells
+      const fontSize = 7;
+      
+      // Get month name and year
+      const monthName = months[selectedMonth - 1];
+      const year = selectedYear;
+      
+      // Calculate date range
+      const startDate = new Date(year, selectedMonth - 1, 1);
+      const endDate = new Date(year, selectedMonth, 0);
+      const dateRange = `${monthName}-1-${year} to ${monthName}-${endDate.getDate()}-${year}`;
+      
+      // Create header rows
+      ws.mergeCells('A1:Z1');
+      ws.getCell('A1').value = 'Monthly Status Report (Basic Work Duration)';
+      ws.getCell('A1').alignment = { horizontal: 'center' };
+      ws.getCell('A1').font = { bold: true, size: fontSize };
+      
+      ws.mergeCells('A2:Z2');
+      ws.getCell('A2').value = dateRange;
+      ws.getCell('A2').alignment = { horizontal: 'center' };
+      ws.getCell('A2').font = { size: fontSize };
+      
+      ws.mergeCells('A3:Z3');
+      ws.getCell('A3').value = 'COMPANY : DCM INFOTECH LIMITED';
+      ws.getCell('A3').font = { size: fontSize };
+      
+      // Group users by department
+      const departmentGroups = {};
+      usersList.forEach(user => {
+        if (!departmentGroups[user.department]) {
+          departmentGroups[user.department] = [];
+        }
+        departmentGroups[user.department].push(user);
+      });
+      
+      let currentRow = 5;
+      
+      // Process each department
+      for (const [departmentName, departmentUsers] of Object.entries(departmentGroups)) {
+        // Department header
+        ws.mergeCells(`A${currentRow}:Z${currentRow}`);
+        ws.getCell(`A${currentRow}`).value = `DEPARTMENT NAME : ${departmentName}`;
+        ws.getCell(`A${currentRow}`).font = { bold: true, size: fontSize };
+        currentRow++;
+        
+        // Process each user in the department
+        for (const user of departmentUsers) {
+          // User info rows
+          ws.getCell(`A${currentRow}`).value = 'Emp. Code :';
+          ws.getCell(`A${currentRow}`).font = { size: fontSize };
+          ws.getCell(`B${currentRow}`).value = user.employee_code || '';
+          ws.getCell(`B${currentRow}`).font = { size: fontSize };
+          currentRow++;
+          
+          ws.getCell(`A${currentRow}`).value = 'Emp. Name :';
+          ws.getCell(`A${currentRow}`).font = { size: fontSize };
+          ws.getCell(`B${currentRow}`).value = user.full_name;
+          ws.getCell(`B${currentRow}`).font = { size: fontSize };
+          currentRow++;
+          
+          // Get attendance data for this user
+          const params = new URLSearchParams();
+          params.append('user_id', user.id);
+          params.append('month', selectedMonth);
+          params.append('year', selectedYear);
+          
+          const response = await fetch(`${API_ENDPOINTS.attendance.list}?${params.toString()}`, {
+            headers: { 'Accept': 'application/json' }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            const records = data.success && data.records ? data.records : [];
+            
+            if (records.length > 0) {
+              // Create attendance table for this user
+              const sortedRecords = [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
+              
+              // Days header row
+              ws.getCell(`A${currentRow}`).value = 'Days';
+              ws.getCell(`A${currentRow}`).font = { bold: true, size: fontSize };
+              
+              // Add day columns (1 T, 2 W, 3 Th, etc.)
+              let colIndex = 1; // Start from B column
+              for (let day = 1; day <= endDate.getDate(); day++) {
+                const date = new Date(year, selectedMonth - 1, day);
+                const dayNames = ['S', 'M', 'T', 'W', 'Th', 'F', 'St'];
+                const dayName = dayNames[date.getDay()];
+                const colLetter = String.fromCharCode(65 + colIndex); // A=65, B=66, etc.
+                
+                ws.getCell(`${colLetter}${currentRow}`).value = `${day} ${dayName}`;
+                ws.getCell(`${colLetter}${currentRow}`).font = { bold: true, size: fontSize };
+                colIndex++;
+              }
+              currentRow++;
+              
+              // Status row
+              ws.getCell(`A${currentRow}`).value = 'Status';
+              ws.getCell(`A${currentRow}`).font = { size: fontSize };
+              
+              colIndex = 1;
+              for (let day = 1; day <= endDate.getDate(); day++) {
+                const dateStr = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const record = sortedRecords.find(r => r.date === dateStr);
+                const colLetter = String.fromCharCode(65 + colIndex);
+                
+                if (record) {
+                  ws.getCell(`${colLetter}${currentRow}`).value = record.status === 'present' ? 'P' : 'A';
+                } else {
+                  ws.getCell(`${colLetter}${currentRow}`).value = 'A';
+                }
+                ws.getCell(`${colLetter}${currentRow}`).font = { size: fontSize };
+                colIndex++;
+              }
+              currentRow++;
+              
+              // InTime row
+              ws.getCell(`A${currentRow}`).value = 'InTime';
+              ws.getCell(`A${currentRow}`).font = { size: fontSize };
+              
+              colIndex = 1;
+              for (let day = 1; day <= endDate.getDate(); day++) {
+                const dateStr = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const record = sortedRecords.find(r => r.date === dateStr);
+                const colLetter = String.fromCharCode(65 + colIndex);
+                
+                if (record && record.in_time) {
+                  ws.getCell(`${colLetter}${currentRow}`).value = record.in_time;
+                }
+                ws.getCell(`${colLetter}${currentRow}`).font = { size: fontSize };
+                colIndex++;
+              }
+              currentRow++;
+              
+              // OutTime row
+              ws.getCell(`A${currentRow}`).value = 'OutTime';
+              ws.getCell(`A${currentRow}`).font = { size: fontSize };
+              
+              colIndex = 1;
+              for (let day = 1; day <= endDate.getDate(); day++) {
+                const dateStr = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const record = sortedRecords.find(r => r.date === dateStr);
+                const colLetter = String.fromCharCode(65 + colIndex);
+                
+                if (record && record.out_time) {
+                  ws.getCell(`${colLetter}${currentRow}`).value = record.out_time;
+                }
+                ws.getCell(`${colLetter}${currentRow}`).font = { size: fontSize };
+                colIndex++;
+              }
+              currentRow++;
+              
+              // Total row
+              ws.getCell(`A${currentRow}`).value = 'Total';
+              ws.getCell(`A${currentRow}`).font = { size: fontSize };
+              
+              colIndex = 1;
+              for (let day = 1; day <= endDate.getDate(); day++) {
+                const dateStr = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const record = sortedRecords.find(r => r.date === dateStr);
+                const colLetter = String.fromCharCode(65 + colIndex);
+                
+                if (record && record.in_time && record.out_time) {
+                  // Calculate total hours
+                  const [ih, im] = record.in_time.split(':').map(Number);
+                  const [oh, om] = record.out_time.split(':').map(Number);
+                  if (!isNaN(ih) && !isNaN(im) && !isNaN(oh) && !isNaN(om)) {
+                    let mins = (oh * 60 + om) - (ih * 60 + im);
+                    if (mins < 0) mins += 24 * 60;
+                    const h = String(Math.floor(mins / 60)).padStart(2, '0');
+                    const m = String(mins % 60).padStart(2, '0');
+                    ws.getCell(`${colLetter}${currentRow}`).value = `${h}:${m}`;
+                  } else {
+                    ws.getCell(`${colLetter}${currentRow}`).value = '00:00';
+                  }
+                } else {
+                  ws.getCell(`${colLetter}${currentRow}`).value = '00:00';
+                }
+                ws.getCell(`${colLetter}${currentRow}`).font = { size: fontSize };
+                colIndex++;
+              }
+              currentRow++;
+            }
+          }
+          
+          // Add some spacing between users
+          currentRow += 2;
+        }
+        
+        // Add spacing between departments
+        currentRow += 2;
       }
-      const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-      const url = window.URL.createObjectURL(blob);
+      
+      // Apply borders to all cells
+      ws.eachRow((row) => {
+        row.eachCell((cell) => {
+          cell.border = { 
+            top: { style: 'thin' }, 
+            left: { style: 'thin' }, 
+            bottom: { style: 'thin' }, 
+            right: { style: 'thin' } 
+          };
+        });
+      });
+      
+      // Set column widths
+      ws.getColumn('A').width = 12;
+      for (let i = 1; i <= endDate.getDate(); i++) {
+        const colLetter = String.fromCharCode(65 + i);
+        ws.getColumn(colLetter).width = 8;
+      }
+      
+      const blob = await wb.xlsx.writeBuffer();
+      const url = window.URL.createObjectURL(new Blob([blob]));
       const a = document.createElement('a');
       a.href = url;
-      const monthName = months[selectedMonth - 1];
-      a.download = `All_Users_${monthName}_${selectedYear}_Attendance.csv`;
+      a.download = `All_Users_${monthName}_${selectedYear}_Attendance.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      showNotification('All users attendance exported', 'success');
+      showNotification('All users attendance exported successfully', 'success');
     } catch (error) {
       console.error('Error exporting all users:', error);
       showNotification('Error exporting all users', 'error');
@@ -643,6 +963,230 @@ const AdminDashboard = () => {
     setSelectedDepartment(department);
     setDepartmentMembers(department.members);
     setDepartmentDialogOpen(true);
+  };
+
+  const exportDepartmentData = async (department) => {
+    try {
+      if (!department || !department.members || department.members.length === 0) {
+        showNotification('No users in this department to export', 'warning');
+        return;
+      }
+
+      // Create Excel workbook
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet(`${department.name} Attendance`);
+      
+      // Set font size to 7 for all cells
+      const fontSize = 7;
+      
+      // Get month name and year
+      const monthName = months[selectedMonth - 1];
+      const year = selectedYear;
+      
+      // Calculate date range
+      const startDate = new Date(year, selectedMonth - 1, 1);
+      const endDate = new Date(year, selectedMonth, 0);
+      const dateRange = `${monthName}-1-${year} to ${monthName}-${endDate.getDate()}-${year}`;
+      
+      // Create header rows
+      ws.mergeCells('A1:Z1');
+      ws.getCell('A1').value = 'Monthly Status Report (Basic Work Duration)';
+      ws.getCell('A1').alignment = { horizontal: 'center' };
+      ws.getCell('A1').font = { bold: true, size: fontSize };
+      
+      ws.mergeCells('A2:Z2');
+      ws.getCell('A2').value = dateRange;
+      ws.getCell('A2').alignment = { horizontal: 'center' };
+      ws.getCell('A2').font = { size: fontSize };
+      
+      ws.mergeCells('A3:Z3');
+      ws.getCell('A3').value = 'COMPANY : DCM INFOTECH LIMITED';
+      ws.getCell('A3').font = { size: fontSize };
+      
+      // Department header
+      ws.mergeCells('A4:Z4');
+      ws.getCell('A4').value = `DEPARTMENT NAME : ${department.name}`;
+      ws.getCell('A4').font = { bold: true, size: fontSize };
+      
+      let currentRow = 6;
+      
+      // Process each user in the department
+      for (const user of department.members) {
+        // User info rows
+        ws.getCell(`A${currentRow}`).value = 'Emp. Code :';
+        ws.getCell(`A${currentRow}`).font = { size: fontSize };
+        ws.getCell(`B${currentRow}`).value = user.employee_code || '';
+        ws.getCell(`B${currentRow}`).font = { size: fontSize };
+        currentRow++;
+        
+        ws.getCell(`A${currentRow}`).value = 'Emp. Name :';
+        ws.getCell(`A${currentRow}`).font = { size: fontSize };
+        ws.getCell(`B${currentRow}`).value = user.full_name;
+        ws.getCell(`B${currentRow}`).font = { size: fontSize };
+        currentRow++;
+        
+        // Get attendance data for this user
+        const params = new URLSearchParams();
+        params.append('user_id', user.id);
+        params.append('month', selectedMonth);
+        params.append('year', selectedYear);
+        
+        const response = await fetch(`${API_ENDPOINTS.attendance.list}?${params.toString()}`, {
+          headers: { 'Accept': 'application/json' }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const records = data.success && data.records ? data.records : [];
+          
+          if (records.length > 0) {
+            // Create attendance table for this user
+            const sortedRecords = [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            // Days header row
+            ws.getCell(`A${currentRow}`).value = 'Days';
+            ws.getCell(`A${currentRow}`).font = { bold: true, size: fontSize };
+            
+            // Add day columns (1 T, 2 W, 3 Th, etc.)
+            let colIndex = 1; // Start from B column
+            for (let day = 1; day <= endDate.getDate(); day++) {
+              const date = new Date(year, selectedMonth - 1, day);
+              const dayNames = ['S', 'M', 'T', 'W', 'Th', 'F', 'St'];
+              const dayName = dayNames[date.getDay()];
+              const colLetter = String.fromCharCode(65 + colIndex); // A=65, B=66, etc.
+              
+              ws.getCell(`${colLetter}${currentRow}`).value = `${day} ${dayName}`;
+              ws.getCell(`${colLetter}${currentRow}`).font = { bold: true, size: fontSize };
+              colIndex++;
+            }
+            currentRow++;
+            
+            // Status row
+            ws.getCell(`A${currentRow}`).value = 'Status';
+            ws.getCell(`A${currentRow}`).font = { size: fontSize };
+            
+            colIndex = 1;
+            for (let day = 1; day <= endDate.getDate(); day++) {
+              const dateStr = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              const record = sortedRecords.find(r => r.date === dateStr);
+              const colLetter = String.fromCharCode(65 + colIndex);
+              
+              if (record) {
+                ws.getCell(`${colLetter}${currentRow}`).value = record.status === 'present' ? 'P' : 'A';
+              } else {
+                ws.getCell(`${colLetter}${currentRow}`).value = 'A';
+              }
+              ws.getCell(`${colLetter}${currentRow}`).font = { size: fontSize };
+              colIndex++;
+            }
+            currentRow++;
+            
+            // InTime row
+            ws.getCell(`A${currentRow}`).value = 'InTime';
+            ws.getCell(`A${currentRow}`).font = { size: fontSize };
+            
+            colIndex = 1;
+            for (let day = 1; day <= endDate.getDate(); day++) {
+              const dateStr = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              const record = sortedRecords.find(r => r.date === dateStr);
+              const colLetter = String.fromCharCode(65 + colIndex);
+              
+              if (record && record.in_time) {
+                ws.getCell(`${colLetter}${currentRow}`).value = record.in_time;
+              }
+              ws.getCell(`${colLetter}${currentRow}`).font = { size: fontSize };
+              colIndex++;
+            }
+            currentRow++;
+            
+            // OutTime row
+            ws.getCell(`A${currentRow}`).value = 'OutTime';
+            ws.getCell(`A${currentRow}`).font = { size: fontSize };
+            
+            colIndex = 1;
+            for (let day = 1; day <= endDate.getDate(); day++) {
+              const dateStr = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              const record = sortedRecords.find(r => r.date === dateStr);
+              const colLetter = String.fromCharCode(65 + colIndex);
+              
+              if (record && record.out_time) {
+                ws.getCell(`${colLetter}${currentRow}`).value = record.out_time;
+              }
+              ws.getCell(`${colLetter}${currentRow}`).font = { size: fontSize };
+              colIndex++;
+            }
+            currentRow++;
+            
+            // Total row
+            ws.getCell(`A${currentRow}`).value = 'Total';
+            ws.getCell(`A${currentRow}`).font = { size: fontSize };
+            
+            colIndex = 1;
+            for (let day = 1; day <= endDate.getDate(); day++) {
+              const dateStr = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              const record = sortedRecords.find(r => r.date === dateStr);
+              const colLetter = String.fromCharCode(65 + colIndex);
+              
+              if (record && record.in_time && record.out_time) {
+                // Calculate total hours
+                const [ih, im] = record.in_time.split(':').map(Number);
+                const [oh, om] = record.out_time.split(':').map(Number);
+                if (!isNaN(ih) && !isNaN(im) && !isNaN(oh) && !isNaN(om)) {
+                  let mins = (oh * 60 + om) - (ih * 60 + im);
+                  if (mins < 0) mins += 24 * 60;
+                  const h = String(Math.floor(mins / 60)).padStart(2, '0');
+                  const m = String(mins % 60).padStart(2, '0');
+                  ws.getCell(`${colLetter}${currentRow}`).value = `${h}:${m}`;
+                } else {
+                  ws.getCell(`${colLetter}${currentRow}`).value = '00:00';
+                }
+              } else {
+                ws.getCell(`${colLetter}${currentRow}`).value = '00:00';
+              }
+              ws.getCell(`${colLetter}${currentRow}`).font = { size: fontSize };
+              colIndex++;
+            }
+            currentRow++;
+          }
+        }
+        
+        // Add some spacing between users
+        currentRow += 2;
+      }
+      
+      // Apply borders to all cells
+      ws.eachRow((row) => {
+        row.eachCell((cell) => {
+          cell.border = { 
+            top: { style: 'thin' }, 
+            left: { style: 'thin' }, 
+            bottom: { style: 'thin' }, 
+            right: { style: 'thin' } 
+          };
+        });
+      });
+      
+      // Set column widths
+      ws.getColumn('A').width = 12;
+      for (let i = 1; i <= endDate.getDate(); i++) {
+        const colLetter = String.fromCharCode(65 + i);
+        ws.getColumn(colLetter).width = 8;
+      }
+      
+      const blob = await wb.xlsx.writeBuffer();
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${department.name.replace(/\s+/g, '_')}_${monthName}_${selectedYear}_Attendance.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      showNotification(`${department.name} attendance exported successfully`, 'success');
+    } catch (error) {
+      console.error('Error exporting department data:', error);
+      showNotification('Error exporting department data', 'error');
+    }
   };
 
   const getAttendanceRate = (userId) => {
@@ -1051,6 +1595,14 @@ const AdminDashboard = () => {
           )}
         </DialogContent>
         <DialogActions>
+          <Button 
+            variant="contained" 
+            startIcon={<DownloadIcon />}
+            onClick={() => exportDepartmentData(selectedDepartment)}
+            sx={{ mr: 1 }}
+          >
+            Export Department
+          </Button>
           <Button onClick={() => setDepartmentDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>

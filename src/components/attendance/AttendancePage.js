@@ -117,7 +117,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
     try {
       if (!currentUserId) {
         if (!readOnly) {
-          navigate('/');
+        navigate('/');
         }
         return;
       }
@@ -681,7 +681,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
       case 'present': return <PresentIcon sx={{ fontSize: 16, color: 'white' }} />;
       case 'absent': return <AbsentIcon sx={{ fontSize: 16, color: 'white' }} />;
       default: return null;
-    }
+  }
   };
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -697,8 +697,8 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
 
     const drawerWidth = 240;
 
-    return (
-      <>
+  return (
+    <>
         {/* Mobile Drawer */}
         <Drawer
           variant="temporary"
@@ -888,18 +888,18 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
               width: { xs: '100%', sm: 'auto' }
             }}>
               {!readOnly && (
-                <Button
-                  variant="outlined"
-                  startIcon={<DownloadIcon />}
-                  onClick={downloadMyAttendance}
-                  disabled={downloading}
+              <Button
+                variant="outlined"
+                startIcon={<DownloadIcon />}
+                onClick={downloadMyAttendance}
+                disabled={downloading}
                   sx={{ 
                     width: { xs: '100%', sm: 'auto' },
                     mb: { xs: 1, sm: 0 }
                   }}
-                >
-                  {downloading ? 'Downloading...' : 'Download Attendance'}
-                </Button>
+              >
+                {downloading ? 'Downloading...' : 'Download Attendance'}
+              </Button>
               )}
               
               <Box sx={{ 
@@ -912,40 +912,40 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                   minWidth: { xs: '50%', sm: 120 },
                   flex: { xs: 1, sm: 'none' }
                 }}>
-                  <InputLabel>Month</InputLabel>
-                  <Select
-                    value={selectedMonth}
-                    label="Month"
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                  >
-                    {months.map((month, index) => (
-                      <MenuItem key={index + 1} value={index + 1}>
-                        {month}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                
+                <InputLabel>Month</InputLabel>
+                <Select
+                  value={selectedMonth}
+                  label="Month"
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                >
+                  {months.map((month, index) => (
+                    <MenuItem key={index + 1} value={index + 1}>
+                      {month}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              
                 <FormControl size="small" sx={{ 
                   minWidth: { xs: '50%', sm: 100 },
                   flex: { xs: 1, sm: 'none' }
                 }}>
-                  <InputLabel>Year</InputLabel>
-                  <Select
-                    value={selectedYear}
-                    label="Year"
-                    onChange={(e) => setSelectedYear(e.target.value)}
-                  >
-                    {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
-                      <MenuItem key={year} value={year}>
-                        {year}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <InputLabel>Year</InputLabel>
+                <Select
+                  value={selectedYear}
+                  label="Year"
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                >
+                  {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
+                    <MenuItem key={year} value={year}>
+                      {year}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               </Box>
             </Box>
-          </Box>
+              </Box>
 
           {/* Today's Attendance Marking */}
           {!readOnly && (
@@ -955,8 +955,8 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                 fontWeight: 600,
                 fontSize: { xs: '1.1rem', sm: '1.25rem' }
               }}>
-                Mark Today's Attendance
-              </Typography>
+              Mark Today's Attendance
+                                </Typography>
             
             {message && (
               <Alert 
@@ -1072,14 +1072,14 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                         mb: { xs: 0.5, sm: 1 }
                       }}>
                         Absent Days
-                      </Typography>
+                </Typography>
                       <Typography variant="h4" sx={{ 
                         fontWeight: 600, 
                         color: theme.palette.error.main,
                         fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
                       }}>
                         {absentDays}
-                      </Typography>
+                    </Typography>
                     </Box>
                     <AbsentIcon sx={{ 
                       fontSize: { xs: 30, sm: 40 }, 
@@ -1106,7 +1106,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                         fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
                       }}>
                         {totalMarkedDays}
-                      </Typography>
+                    </Typography>
                     </Box>
                     <CalendarIcon sx={{ 
                       fontSize: { xs: 30, sm: 40 }, 
@@ -1135,12 +1135,12 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                       }}>
                         {totalMarkedDays > 0 ? Math.round((presentDays / totalMarkedDays) * 100) : 0}%
                       </Typography>
-                    </Box>
+                </Box>
                     <CalendarIcon sx={{ 
                       fontSize: { xs: 30, sm: 40 }, 
                       color: theme.palette.info.main 
                     }} />
-                  </Box>
+              </Box>
                 </CardContent>
               </Card>
             </Grid>
@@ -1172,26 +1172,26 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                   mb: 1 
                 }}>
                   {weekDays.map((day, index) => (
-                    <Box
+                      <Box
                       key={day}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: index === 0 || index === 6 ? theme.palette.grey[100] : theme.palette.primary.main,
-                        color: index === 0 || index === 6 ? theme.palette.text.primary : 'white',
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: index === 0 || index === 6 ? theme.palette.grey[100] : theme.palette.primary.main,
+                          color: index === 0 || index === 6 ? theme.palette.text.primary : 'white',
                         py: { xs: 0.5, sm: 1 },
-                        borderRadius: 1,
-                        fontWeight: 600
-                      }}
-                    >
+                          borderRadius: 1,
+                          fontWeight: 600
+                        }}
+      >
                       <Typography variant="body2" sx={{ 
                         fontWeight: 600,
                         fontSize: { xs: '0.7rem', sm: '0.875rem' }
                       }}>
-                        {day}
-                      </Typography>
-                    </Box>
+                          {day}
+                        </Typography>
+                      </Box>
                   ))}
                 </Box>
 
@@ -1208,7 +1208,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                         <Box sx={{ minHeight: { xs: 50, sm: 60, md: 70 } }} />
                       ) : (
                         <Box
-                          sx={{ 
+          sx={{ 
                             aspectRatio: '1',
                             display: 'flex',
                             flexDirection: 'column',
@@ -1232,7 +1232,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                               boxShadow: theme.shadows[2]
                             }
                           }}
-                          title={`${dayData.date}${dayData.status ? `: ${dayData.status}` : ''}`}
+                           title={`${dayData.date}${dayData.status ? `: ${dayData.status}` : ''}`}
                           onClick={() => { if (!dayData.isWeekend && !readOnly) { openTimeDialog(dayData.date, dayData); } }}
                         >
                           <Typography variant="body2" sx={{ 
@@ -1253,7 +1253,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                               {dayData.status.charAt(0)}
                             </Typography>
                           )}
-                          {(dayData.in_time || dayData.out_time) && (
+                           {(dayData.in_time || dayData.out_time) && (
                             <Typography variant="caption" sx={{ 
                               fontSize: { xs: '0.6rem', sm: '0.65rem' }, 
                               mt: { xs: 0.25, sm: 0.5 },
@@ -1262,8 +1262,8 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                             }}>
                               {dayData.in_time ? `IN ${dayData.in_time}` : ''} 
                               {dayData.out_time ? `OUT ${dayData.out_time}` : ''}
-                            </Typography>
-                          )}
+                             </Typography>
+                           )}
                         </Box>
                       )}
                     </Box>

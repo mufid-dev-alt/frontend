@@ -412,7 +412,7 @@ const TeamPage = () => {
                       )}
                     </Box>
                   </CardContent>
-                </Card>
+            </Card>
               </Grid>
             ))}
           </Grid>
