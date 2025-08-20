@@ -306,7 +306,8 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
       const response = await fetch(API_ENDPOINTS.attendance.create, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ user_id: userData.id, status: 'present', date, in_time, out_time, notes: 'Time entry update' })
+        // If component receives a specific userId (e.g., when used by admin), update that user's attendance
+        body: JSON.stringify({ user_id: currentUserId || userData.id, status: 'present', date, in_time, out_time, notes: 'Time entry update' })
       });
       if (!response.ok) throw new Error('Failed to save time');
       setTimeDialog({ open: false, date: null, in_time: '', out_time: '' });

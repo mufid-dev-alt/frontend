@@ -517,6 +517,7 @@ const ChatPage = () => {
   }
 
   return (
+    <>
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
       <Header onMenuClick={handleDrawerToggle} />
       <Sidebar open={mobileOpen} onClose={handleDrawerToggle} />
@@ -725,6 +726,7 @@ const ChatPage = () => {
         </Button>
       </DialogActions>
     </Dialog>
+    </>
   );
 };
 
