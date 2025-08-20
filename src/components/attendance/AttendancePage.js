@@ -178,6 +178,15 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
     return `${hhs}:${mms}`;
   };
 
+  // Clamp on blur like provided logic
+  const clampAndPadTime = (timeStr) => {
+    if (!timeStr) return '00:00';
+    const [hRaw = '0', mRaw = '0'] = (timeStr.includes(':') ? timeStr : normalizeTime(timeStr)).split(':');
+    let h = parseInt(hRaw, 10); if (isNaN(h)) h = 0; h = Math.max(0, Math.min(23, h));
+    let m = parseInt(mRaw, 10); if (isNaN(m)) m = 0; m = Math.max(0, Math.min(59, m));
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  };
+
   const handleTimeChange = (field) => (e) => {
     const raw = e.target.value || '';
     // Auto-insert ':'
@@ -241,6 +250,10 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
       
       onChange({ target: { value: inputValue } });
     };
+    const handleBlur = () => {
+      const formatted = clampAndPadTime(value);
+      onChange({ target: { value: formatted } });
+    };
 
     return (
       <Box sx={{ mb: 2 }}>
@@ -260,6 +273,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
           type="text"
           value={value || ''}
           onChange={handleTimeInput}
+          onBlur={handleBlur}
           placeholder={placeholder || "HH:MM"}
           variant="outlined"
           size="medium"

@@ -554,25 +554,28 @@ const ChatPage = () => {
               <Divider />
               <CardContent sx={{ p: 0, maxHeight: 350, overflow: 'auto' }}>
                 <List>
-                  {(recentChats && recentChats.length > 0) ? recentChats.map((msg) => {
-                    const partnerId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
-                    const partner = teamMembers.find(m => m.id === partnerId) || { full_name: 'Unknown', employee_code: '' };
-  return (
-                      <ListItem key={msg.id} button selected={selectedChat?.id === partnerId} onClick={() => handleChatSelect(partner)}
-                        sx={{
-                          borderRadius: 2,
-                          mb: 1,
-                          '&:hover': { backgroundColor: theme.palette.action.hover }
-                        }}
-                      >
-                        <ListItemAvatar>
-                          <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>{partner.full_name.charAt(0)}</Avatar>
-                        </ListItemAvatar>
-                        <ListItemText primary={partner.full_name} secondary={`Emp Code: ${partner.employee_code}`} />
-                        <Typography variant="caption" sx={{ ml: 1 }}>{formatTime(msg.timestamp)}</Typography>
-                      </ListItem>
-                    );
-                  }) : (
+                  {(recentChats && recentChats.length > 0) ? recentChats.map((chat) => (
+                    <ListItem
+                      key={chat.id}
+                      button
+                      selected={selectedChat?.id === chat.id}
+                      onClick={() => handleChatSelect({ id: chat.id, full_name: chat.full_name, employee_code: chat.employee_code, department: chat.department })}
+                      sx={{
+                        borderRadius: 2,
+                        mb: 1,
+                        '&:hover': { backgroundColor: theme.palette.action.hover }
+                      }}
+                    >
+                      <ListItemAvatar>
+                        <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>{(chat.full_name || 'U').charAt(0)}</Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={chat.full_name || 'Unknown'}
+                        secondary={`Emp Code: ${chat.employee_code || ''}${chat.department ? ` | ${chat.department}` : ''}`}
+                      />
+                      <Typography variant="caption" sx={{ ml: 1 }}>{formatTime(chat.timestamp)}</Typography>
+                    </ListItem>
+                  )) : (
                     <Typography variant="body2" sx={{ p: 2, color: theme.palette.text.secondary }}>
                       No recent chats yet.
                     </Typography>
