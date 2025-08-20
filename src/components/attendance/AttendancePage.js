@@ -194,64 +194,65 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
     setTimeDialog((prev) => ({ ...prev, [field]: formatted }));
   };
 
-  // Modern single-field time input with 4-digit numeric entry (HHMM) and auto HH:MM formatting
-  const FourDigitTimeInput = ({ label, value, onChange }) => {
-    // derive raw digits from value
-    const toRaw = (v) => (v || '').replace(/\D/g, '').slice(0, 4);
-    const [raw, setRaw] = useState(toRaw(value));
+  // Redesigned HH:MM input with two boxes (HH and MM). Typing only, no focus jumps.
+  const TimeHMInput = ({ label, value, onChange }) => {
+    const parse = (v) => {
+      const [h = '', m = ''] = (v || '').split(':');
+      return [h.replace(/\D/g, '').slice(0, 2), m.replace(/\D/g, '').slice(0, 2)];
+    };
+    const [hh, setHh] = useState(parse(value)[0]);
+    const [mm, setMm] = useState(parse(value)[1]);
 
     useEffect(() => {
-      setRaw(toRaw(value));
+      const [ph, pm] = parse(value);
+      setHh(ph);
+      setMm(pm);
     }, [value]);
 
-    const handleChange = (e) => {
-      const digits = (e.target.value || '').replace(/\D/g, '').slice(0, 4);
-      setRaw(digits);
-      // live format to HH:MM as user types
-      const hh = digits.slice(0, 2);
-      const mm = digits.slice(2, 4);
-      const formatted = digits.length <= 2 ? hh : `${hh}:${mm}`;
-      onChange({ target: { value: formatted } });
+    const emit = (nextH, nextM) => {
+      onChange(`${nextH}:${nextM}`);
     };
 
-    const handleBlur = () => {
-      // clamp and pad to valid HH:MM
-      const hh = raw.slice(0, 2);
-      const mm = raw.slice(2, 4);
-      const formatted = clampAndPadTime(`${hh || '00'}:${mm || '00'}`);
-      setRaw((formatted || '').replace(/\D/g, '').slice(0, 4));
-      onChange({ target: { value: formatted } });
+    const handleHh = (e) => {
+      const d = (e.target.value || '').replace(/\D/g, '').slice(0, 2);
+      setHh(d);
+      emit(d, mm);
     };
+    const handleMm = (e) => {
+      const d = (e.target.value || '').replace(/\D/g, '').slice(0, 2);
+      setMm(d);
+      emit(hh, d);
+    };
+    const handleBlurH = () => {
+      const c = clampAndPadTime(`${hh || '00'}:${mm || '00'}`);
+      const [nh, nm] = c.split(':');
+      setHh(nh); setMm(nm); emit(nh, nm);
+    };
+    const handleBlurM = handleBlurH;
 
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>{label}</Typography>
-        <Box sx={{ position: 'relative' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <TextField
-            fullWidth
-            value={raw}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="HHMM"
-            inputProps={{
-              inputMode: 'numeric',
-              pattern: '[0-9]*',
-              maxLength: 4,
-              style: { textAlign: 'center', letterSpacing: '6px', fontSize: 18, fontWeight: 600 }
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: theme.palette.background.paper,
-              }
-            }}
+            value={hh}
+            onChange={handleHh}
+            onBlur={handleBlurH}
+            placeholder="HH"
+            inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 2, style: { textAlign: 'center', fontWeight: 600 } }}
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, width: 100 } }}
           />
-          {/* colon overlay */}
-          <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none' }}>
-            <Typography sx={{ fontWeight: 700, color: 'text.disabled' }}>:</Typography>
-          </Box>
+          <Typography sx={{ fontWeight: 700, color: 'text.disabled' }}>:</Typography>
+          <TextField
+            value={mm}
+            onChange={handleMm}
+            onBlur={handleBlurM}
+            placeholder="MM"
+            inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 2, style: { textAlign: 'center', fontWeight: 600 } }}
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, width: 100 } }}
+          />
         </Box>
-        <Typography variant="caption" color="text.secondary">Type 4 digits (HHMM). We’ll format to HH:MM.</Typography>
+        <Typography variant="caption" color="text.secondary">Only numbers. We’ll format and clamp to HH:MM.</Typography>
       </Box>
     );
   };
@@ -867,17 +868,17 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
           </Typography>
           <Grid container spacing={3}>
             <Grid item xs={12} sm={6}>
-              <FourDigitTimeInput
+              <TimeHMInput
                 label="In Time (HH:MM)"
                 value={timeDialog.in_time}
-                onChange={handleTimeChange('in_time')}
+                onChange={(next) => setTimeDialog((p) => ({ ...p, in_time: typeof next === 'string' ? next : next?.target?.value }))}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <FourDigitTimeInput
+              <TimeHMInput
                 label="Out Time (HH:MM)"
                 value={timeDialog.out_time}
-                onChange={handleTimeChange('out_time')}
+                onChange={(next) => setTimeDialog((p) => ({ ...p, out_time: typeof next === 'string' ? next : next?.target?.value }))}
               />
             </Grid>
           </Grid>
