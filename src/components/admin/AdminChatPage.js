@@ -70,7 +70,7 @@ const AdminHeader = ({ onMenuClick }) => {
           color="inherit"
           edge="start"
           onClick={onMenuClick}
-          sx={{ mr: 2 }}
+          sx={{ mr: 2, display: { md: 'none' } }}
         >
           <MenuIcon />
         </IconButton>
@@ -161,7 +161,7 @@ const Sidebar = ({ open, onClose }) => {
         }}
       >
         <Toolbar />
-        <Box sx={{ overflow: 'auto' }}>
+        <Box sx={{ overflow: 'auto', overflowX: 'hidden' }}>
           <MuiList>
             {menuItems.map((item) => (
               <MuiListItem
@@ -212,7 +212,7 @@ const Sidebar = ({ open, onClose }) => {
         open
       >
         <Toolbar />
-        <Box sx={{ overflow: 'auto' }}>
+        <Box sx={{ overflow: 'hidden' }}>
           <MuiList>
             {menuItems.map((item) => (
               <MuiListItem
