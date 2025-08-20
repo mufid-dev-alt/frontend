@@ -42,6 +42,11 @@ import SendIcon from '@mui/icons-material/Send';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { useNavigate } from 'react-router-dom';
 import { API_ENDPOINTS } from '../../config/api';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import AddIcon from '@mui/icons-material/Add';
 
 const Header = ({ onMenuClick }) => {
   const navigate = useNavigate();
@@ -269,6 +274,9 @@ const ChatPage = () => {
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [newChatOpen, setNewChatOpen] = useState(false);
+  const [targetEmpCode, setTargetEmpCode] = useState('');
+  const [startingChat, setStartingChat] = useState(false);
   const currentUser = JSON.parse(localStorage.getItem('user'));
   const messagesEndRef = useRef(null);
 
@@ -342,30 +350,31 @@ const ChatPage = () => {
     return () => clearInterval(interval);
   }, [selectedChat]);
 
-  // Fetch recent chats (simulate by sorting messages by latest timestamp)
+  // Fetch conversation list using new endpoint
   useEffect(() => {
-    const fetchRecentChats = async () => {
+    const fetchConversations = async () => {
       if (!currentUser) return;
-      const response = await fetch(API_ENDPOINTS.messages.getByUser(currentUser.id));
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && Array.isArray(data.messages)) {
-          // Group by chat partner (user or admin), get latest message per chat
-          const chatMap = {};
-          data.messages.forEach(msg => {
-            const partnerId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
-            if (!chatMap[partnerId] || new Date(msg.timestamp) > new Date(chatMap[partnerId].timestamp)) {
-              chatMap[partnerId] = msg;
-            }
-          });
-          // Convert to array and sort by latest timestamp
-          const sortedChats = Object.values(chatMap).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-          setRecentChats(sortedChats);
+      try {
+        const res = await fetch(API_ENDPOINTS.chat.conversations(currentUser.id));
+        const data = await res.json();
+        if (data.success) {
+          // Map to a list compatible with UI
+          const mapped = (data.conversations || []).map(c => ({
+            id: c.user.id,
+            full_name: c.user.full_name,
+            employee_code: c.user.employee_code,
+            department: c.user.department,
+            last_message: c.last_message,
+            timestamp: c.last_timestamp
+          }));
+          setRecentChats(mapped);
         }
+      } catch (e) {
+        console.error('Failed to load conversations', e);
       }
     };
-    fetchRecentChats();
-  }, [messages, currentUser]);
+    fetchConversations();
+  }, [currentUser, messages]);
 
   const fetchMessages = async () => {
     if (!selectedChat) return;
@@ -426,6 +435,44 @@ const ChatPage = () => {
       }
     } catch (error) {
       console.error('Error sending message:', error);
+    }
+  };
+
+  const openNewChat = () => {
+    setTargetEmpCode('');
+    setNewChatOpen(true);
+  };
+
+  const startChatByEmpCode = async () => {
+    const code = parseInt(targetEmpCode, 10);
+    if (!code || isNaN(code)) return;
+    setStartingChat(true);
+    try {
+      // 1) Lookup user by employee code
+      const lookupRes = await fetch(API_ENDPOINTS.chat.userByEmployeeCode(code));
+      const lookup = await lookupRes.json();
+      if (!lookup.success || !lookup.user) {
+        alert('No user found with that employee code');
+        setStartingChat(false);
+        return;
+      }
+      const targetUser = lookup.user;
+      if (targetUser.id === currentUser.id) {
+        alert('You cannot start a chat with yourself');
+        setStartingChat(false);
+        return;
+      }
+      // 2) Open the conversation in UI and fetch messages
+      setSelectedChat({ id: targetUser.id, full_name: targetUser.full_name, employee_code: targetUser.employee_code });
+      setNewChatOpen(false);
+      setTargetEmpCode('');
+      // Trigger messages fetch
+      setTimeout(fetchMessages, 0);
+    } catch (e) {
+      console.error('Failed to start chat', e);
+      alert('Failed to start chat');
+    } finally {
+      setStartingChat(false);
     }
   };
 
@@ -490,6 +537,14 @@ const ChatPage = () => {
             sx={{ mb: 3, fontFamily: "'Poppins', sans-serif", fontWeight: 600, color: theme.palette.text.primary }}
           >
             Team Chat
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{ ml: 2, borderRadius: 2 }}
+              onClick={openNewChat}
+            >
+              New Chat
+            </Button>
           </Typography>
           <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
             {/* Recent Chats */}
@@ -648,6 +703,28 @@ const ChatPage = () => {
     </Container>
       </Box>
     </Box>
+
+    {/* New Chat Modal */}
+    <Dialog open={newChatOpen} onClose={() => setNewChatOpen(false)}>
+      <DialogTitle>Start New Chat</DialogTitle>
+      <DialogContent>
+        <TextField
+          fullWidth
+          label="Enter Employee Code"
+          type="number"
+          value={targetEmpCode}
+          onChange={(e) => setTargetEmpCode(e.target.value)}
+          inputProps={{ min: 1 }}
+          sx={{ mt: 1 }}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setNewChatOpen(false)}>Cancel</Button>
+        <Button onClick={startChatByEmpCode} variant="contained" disabled={startingChat}>
+          {startingChat ? 'Starting...' : 'Start Chat'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

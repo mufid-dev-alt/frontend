@@ -40,6 +40,10 @@ export const API_ENDPOINTS = {
     getByUser: (userId) => `${BASE_URL}/api/messages/${userId}`,
     getConversation: (senderId, receiverId) => `${BASE_URL}/api/messages?sender_id=${senderId}&receiver_id=${receiverId}`,
   },
+  chat: {
+    userByEmployeeCode: (code) => `${BASE_URL}/api/users/by-employee-code/${code}`,
+    conversations: (userId) => `${BASE_URL}/api/conversations/${userId}`,
+  },
   teams: {
     departmentMembers: `${BASE_URL}/api/teams/department/{department}`,
     userDepartment: `${BASE_URL}/api/teams/user/{user_id}/department`,
