@@ -31,6 +31,8 @@ import {
   Undo as UndoIcon,
   Refresh as RefreshIcon,
   AccessTime as TimeIcon,
+  KeyboardArrowUp as KeyboardArrowUpIcon,
+  KeyboardArrowDown as KeyboardArrowDownIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Header from '../common/Header';
@@ -197,7 +199,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
     setTimeDialog((prev) => ({ ...prev, [field]: formatted }));
   };
 
-  // Redesigned HH:MM input with two boxes (HH and MM).
+  // Redesigned HH:MM input with two boxes (HH and MM) and arrow buttons.
   const TimeHMInput = ({ label, value, onChange }) => {
     const parse = (v) => {
       const [h = '', m = ''] = (v || '').split(':');
@@ -214,18 +216,17 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
       setMm(pm);
     }, [value]);
 
-    const handleHh = (e) => {
+    const handleHhChange = (e) => {
       const d = (e.target.value || '').replace(/\D/g, '').slice(0, 2);
       setHh(d);
-      // The old auto-focus logic was removed from here.
     };
     
-    const handleMm = (e) => {
+    const handleMmChange = (e) => {
       const d = (e.target.value || '').replace(/\D/g, '').slice(0, 2);
       setMm(d);
     };
-    
-    const handleBlurH = () => {
+
+    const handleBlur = () => {
       const timeStr = `${hh}:${mm}`;
       const c = clampAndPadTime(timeStr);
       const [nh, nm] = c.split(':');
@@ -235,43 +236,95 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
       onChange(c);
     };
 
-    const handleBlurM = handleBlurH;
+    const handleHhKeyDown = (e) => {
+      if ((e.key === 'Tab' || e.key === 'Enter') && hh.length === 2 && mmRef.current) {
+        e.preventDefault();
+        mmRef.current.focus();
+      }
+    };
+    
+    const handleMmKeyDown = (e) => {
+      if (e.key === 'Backspace' && mm.length === 0 && hhRef.current) {
+        e.preventDefault();
+        hhRef.current.focus();
+      }
+    };
+
+    const handleArrowClick = (field, direction) => {
+      const currentTimeStr = `${hh}:${mm}`;
+      let [h, m] = currentTimeStr.split(':').map(Number);
+      
+      if (field === 'hh') {
+        h = direction === 'up' ? h + 1 : h - 1;
+        if (h > 23) h = 0;
+        if (h < 0) h = 23;
+      } else if (field === 'mm') {
+        m = direction === 'up' ? m + 1 : m - 1;
+        if (m > 59) m = 0;
+        if (m < 0) m = 59;
+      }
+
+      const newTimeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      onChange(newTimeStr);
+    };
 
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>{label}</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <TextField
-            inputRef={hhRef}
-            value={hh}
-            onChange={handleHh}
-            onBlur={handleBlurH}
-            placeholder="HH"
-            inputProps={{ 
-              inputMode: 'numeric', 
-              pattern: '[0-9]*', 
-              maxLength: 2, 
-              style: { textAlign: 'center', fontWeight: 600 } 
-            }}
-            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, width: 100 } }}
-          />
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <TextField
+              inputRef={hhRef}
+              value={hh}
+              onChange={handleHhChange}
+              onBlur={handleBlur}
+              onKeyDown={handleHhKeyDown}
+              placeholder="HH"
+              inputProps={{ 
+                inputMode: 'numeric', 
+                pattern: '[0-9]*', 
+                maxLength: 2, 
+                style: { textAlign: 'center', fontWeight: 600 } 
+              }}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, width: 70 } }}
+            />
+            <Box sx={{ display: 'flex', flexDirection: 'column', ml: 0.5 }}>
+              <IconButton size="small" onClick={() => handleArrowClick('hh', 'up')}>
+                <KeyboardArrowUpIcon />
+              </IconButton>
+              <IconButton size="small" onClick={() => handleArrowClick('hh', 'down')}>
+                <KeyboardArrowDownIcon />
+              </IconButton>
+            </Box>
+          </Box>
           <Typography sx={{ fontWeight: 700, color: 'text.disabled' }}>:</Typography>
-          <TextField
-            inputRef={mmRef}
-            value={mm}
-            onChange={handleMm}
-            onBlur={handleBlurM}
-            placeholder="MM"
-            inputProps={{ 
-              inputMode: 'numeric', 
-              pattern: '[0-9]*', 
-              maxLength: 2, 
-              style: { textAlign: 'center', fontWeight: 600 } 
-            }}
-            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, width: 100 } }}
-          />
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <TextField
+              inputRef={mmRef}
+              value={mm}
+              onChange={handleMmChange}
+              onBlur={handleBlur}
+              onKeyDown={handleMmKeyDown}
+              placeholder="MM"
+              inputProps={{ 
+                inputMode: 'numeric', 
+                pattern: '[0-9]*', 
+                maxLength: 2, 
+                style: { textAlign: 'center', fontWeight: 600 } 
+              }}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, width: 70 } }}
+            />
+            <Box sx={{ display: 'flex', flexDirection: 'column', ml: 0.5 }}>
+              <IconButton size="small" onClick={() => handleArrowClick('mm', 'up')}>
+                <KeyboardArrowUpIcon />
+              </IconButton>
+              <IconButton size="small" onClick={() => handleArrowClick('mm', 'down')}>
+                <KeyboardArrowDownIcon />
+              </IconButton>
+            </Box>
+          </Box>
         </Box>
-        <Typography variant="caption" color="text.secondary">Type HH then MM. Fields validate on blur.</Typography>
+        <Typography variant="caption" color="text.secondary">Type HH then MM. Use arrows to adjust.</Typography>
       </Box>
     );
   };
