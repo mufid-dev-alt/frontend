@@ -178,13 +178,16 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
     return `${hhs}:${mms}`;
   };
 
-  // Clamp on blur like provided logic
   const clampAndPadTime = (timeStr) => {
     if (!timeStr) return '00:00';
     const [hRaw = '0', mRaw = '0'] = (timeStr.includes(':') ? timeStr : normalizeTime(timeStr)).split(':');
-    let h = parseInt(hRaw, 10); if (isNaN(h)) h = 0; h = Math.max(0, Math.min(23, h));
-    let m = parseInt(mRaw, 10); if (isNaN(m)) m = 0; m = Math.max(0, Math.min(59, m));
-    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+    let h = parseInt(hRaw, 10);
+    if (isNaN(h)) h = 0;
+    h = Math.max(0, Math.min(23, h));
+    let m = parseInt(mRaw, 10);
+    if (isNaN(m)) m = 0;
+    m = Math.max(0, Math.min(59, m));
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   };
 
   const handleTimeChange = (field) => (e) => {
@@ -211,30 +214,25 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
       setMm(pm);
     }, [value]);
 
-    const emit = (nextH, nextM) => {
-      onChange(`${nextH}:${nextM}`);
-    };
-
     const handleHh = (e) => {
       const d = (e.target.value || '').replace(/\D/g, '').slice(0, 2);
       setHh(d);
-      emit(d, mm);
+      // The old auto-focus logic was removed from here.
     };
     
     const handleMm = (e) => {
       const d = (e.target.value || '').replace(/\D/g, '').slice(0, 2);
       setMm(d);
-      emit(hh, d);
     };
     
-    // Use onBlur to clamp and pad the full time string
     const handleBlurH = () => {
-      const fullTime = `${hh}:${mm}`;
-      const c = clampAndPadTime(fullTime);
+      const timeStr = `${hh}:${mm}`;
+      const c = clampAndPadTime(timeStr);
       const [nh, nm] = c.split(':');
-      setHh(nh); 
-      setMm(nm); 
-      emit(nh, nm);
+      
+      setHh(nh);
+      setMm(nm);
+      onChange(c);
     };
 
     const handleBlurM = handleBlurH;
@@ -273,7 +271,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
             sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, width: 100 } }}
           />
         </Box>
-        <Typography variant="caption" color="text.secondary">Type HH then MM.</Typography>
+        <Typography variant="caption" color="text.secondary">Type HH then MM. Fields validate on blur.</Typography>
       </Box>
     );
   };
