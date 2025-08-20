@@ -194,119 +194,64 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
     setTimeDialog((prev) => ({ ...prev, [field]: formatted }));
   };
 
-  // Modern time picker with direct input
-  const TimePickerField = ({ label, value, onChange, placeholder }) => {
-    const handleTimeInput = (e) => {
-      let inputValue = e.target.value;
-      
-      // Allow normal editing but clean up the input
-      // Remove any non-digit characters except colon
-      inputValue = inputValue.replace(/[^\d:]/g, '');
-      
-      // Handle backspace and normal editing
-      if (inputValue.length <= 5) {
-        // Auto-format as user types
-        if (inputValue.length === 2 && !inputValue.includes(':')) {
-          // Add colon after 2 digits
-          const hours = parseInt(inputValue);
-          if (hours <= 23) {
-            inputValue = inputValue + ':';
-          } else {
-            inputValue = '23:';
-          }
-        } else if (inputValue.includes(':')) {
-          const parts = inputValue.split(':');
-          if (parts.length === 2) {
-            let [hours, minutes] = parts;
-            
-            // Validate hours (00-23)
-            if (hours.length > 0) {
-              const hourNum = parseInt(hours);
-              if (hourNum > 23) hours = '23';
-              else if (hourNum < 0) hours = '00';
-            }
-            
-            // Validate minutes (00-59)
-            if (minutes.length > 0) {
-              const minuteNum = parseInt(minutes);
-              if (minuteNum > 59) minutes = '59';
-              else if (minuteNum < 0) minutes = '00';
-            }
-            
-            // Limit minutes to 2 digits
-            if (minutes.length > 2) {
-              minutes = minutes.substring(0, 2);
-            }
-            
-            inputValue = hours + ':' + minutes;
-          }
-        }
-        
-        // Limit total length to HH:MM format
-        if (inputValue.length > 5) {
-          inputValue = inputValue.substring(0, 5);
-        }
-      }
-      
-      onChange({ target: { value: inputValue } });
+  // Modern single-field time input with 4-digit numeric entry (HHMM) and auto HH:MM formatting
+  const FourDigitTimeInput = ({ label, value, onChange }) => {
+    // derive raw digits from value
+    const toRaw = (v) => (v || '').replace(/\D/g, '').slice(0, 4);
+    const [raw, setRaw] = useState(toRaw(value));
+
+    useEffect(() => {
+      setRaw(toRaw(value));
+    }, [value]);
+
+    const handleChange = (e) => {
+      const digits = (e.target.value || '').replace(/\D/g, '').slice(0, 4);
+      setRaw(digits);
+      // live format to HH:MM as user types
+      const hh = digits.slice(0, 2);
+      const mm = digits.slice(2, 4);
+      const formatted = digits.length <= 2 ? hh : `${hh}:${mm}`;
+      onChange({ target: { value: formatted } });
     };
+
     const handleBlur = () => {
-      const formatted = clampAndPadTime(value);
+      // clamp and pad to valid HH:MM
+      const hh = raw.slice(0, 2);
+      const mm = raw.slice(2, 4);
+      const formatted = clampAndPadTime(`${hh || '00'}:${mm || '00'}`);
+      setRaw((formatted || '').replace(/\D/g, '').slice(0, 4));
       onChange({ target: { value: formatted } });
     };
 
     return (
-      <Box sx={{ mb: 2 }}>
-        <Typography 
-          variant="body2" 
-          sx={{ 
-            mb: 1, 
-            fontWeight: 500, 
-            color: 'text.secondary',
-            fontFamily: "'Poppins', sans-serif"
-          }}
-        >
-          {label}
-        </Typography>
-        <TextField
-          fullWidth
-          type="text"
-          value={value || ''}
-          onChange={handleTimeInput}
-          onBlur={handleBlur}
-          placeholder={placeholder || "HH:MM"}
-          variant="outlined"
-          size="medium"
-          inputProps={{
-            maxLength: 5,
-            style: { 
-              fontSize: '16px',
-              fontWeight: 500,
-              textAlign: 'center',
-              fontFamily: "'Poppins', sans-serif"
-            }
-          }}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 2,
-              backgroundColor: theme.palette.background.paper,
-              '& fieldset': {
-                borderColor: theme.palette.divider,
-                borderWidth: '1px'
-              },
-              '&:hover fieldset': {
-                borderColor: theme.palette.primary.main,
-                borderWidth: '2px'
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: theme.palette.primary.main,
-                borderWidth: '2px',
-                boxShadow: `0 0 0 3px ${theme.palette.primary.main}22`
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>{label}</Typography>
+        <Box sx={{ position: 'relative' }}>
+          <TextField
+            fullWidth
+            value={raw}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            placeholder="HHMM"
+            inputProps={{
+              inputMode: 'numeric',
+              pattern: '[0-9]*',
+              maxLength: 4,
+              style: { textAlign: 'center', letterSpacing: '6px', fontSize: 18, fontWeight: 600 }
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+                backgroundColor: theme.palette.background.paper,
               }
-            }
-          }}
-          helperText="Format: HH:MM (24-hour)"
-        />
+            }}
+          />
+          {/* colon overlay */}
+          <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none' }}>
+            <Typography sx={{ fontWeight: 700, color: 'text.disabled' }}>:</Typography>
+          </Box>
+        </Box>
+        <Typography variant="caption" color="text.secondary">Type 4 digits (HHMM). We’ll format to HH:MM.</Typography>
       </Box>
     );
   };
@@ -922,17 +867,15 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
           </Typography>
           <Grid container spacing={3}>
             <Grid item xs={12} sm={6}>
-              <TimePickerField
+              <FourDigitTimeInput
                 label="In Time (HH:MM)"
-                placeholder="09:30"
                 value={timeDialog.in_time}
                 onChange={handleTimeChange('in_time')}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TimePickerField
+              <FourDigitTimeInput
                 label="Out Time (HH:MM)"
-                placeholder="18:00"
                 value={timeDialog.out_time}
                 onChange={handleTimeChange('out_time')}
               />
