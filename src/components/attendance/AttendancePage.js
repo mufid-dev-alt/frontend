@@ -21,7 +21,15 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField
+  TextField,
+  AppBar,
+  Toolbar,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  useMediaQuery
 } from '@mui/material';
 import {
   CheckCircle as PresentIcon,
@@ -33,8 +41,14 @@ import {
   AccessTime as TimeIcon,
   KeyboardArrowUp as KeyboardArrowUpIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
+  Menu as MenuIcon,
+  Dashboard as DashboardIcon,
+  EventAvailable as EventAvailableIcon,
+  Chat as ChatIcon,
+  Group as GroupIcon,
+  ExitToApp as LogoutIcon
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Header from '../common/Header';
 import { API_ENDPOINTS } from '../../config/api';
 import ExcelJS from 'exceljs';
@@ -43,6 +57,8 @@ import eventService from '../../config/eventService';
 const AttendancePage = ({ userId, readOnly = false, onClose }) => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [attendanceData, setAttendanceData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [markingAttendance, setMarkingAttendance] = useState(false);
@@ -56,6 +72,10 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
 
   // Use provided userId or get from localStorage
   const currentUserId = userId || JSON.parse(localStorage.getItem('user'))?.id;
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -270,8 +290,14 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
 
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>{label}</Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography variant="body2" sx={{ 
+          fontWeight: 600, 
+          color: 'text.secondary',
+          fontSize: { xs: '0.875rem', sm: '1rem' }
+        }}>
+          {label}
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <TextField
               inputRef={hhRef}
@@ -284,20 +310,44 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                 inputMode: 'numeric', 
                 pattern: '[0-9]*', 
                 maxLength: 2, 
-                style: { textAlign: 'center', fontWeight: 600 } 
+                style: { 
+                  textAlign: 'center', 
+                  fontWeight: 600,
+                  fontSize: { xs: '0.875rem', sm: '1rem' }
+                } 
               }}
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, width: 70 } }}
+              sx={{ 
+                '& .MuiOutlinedInput-root': { 
+                  borderRadius: 2, 
+                  width: { xs: 60, sm: 70 },
+                  height: { xs: 40, sm: 48 }
+                } 
+              }}
             />
-            <Box sx={{ display: 'flex', flexDirection: 'column', ml: 0.5 }}>
-              <IconButton size="small" onClick={() => handleArrowClick('hh', 'up')}>
-                <KeyboardArrowUpIcon />
+            <Box sx={{ display: 'flex', flexDirection: 'column', ml: { xs: 0.25, sm: 0.5 } }}>
+              <IconButton 
+                size="small" 
+                onClick={() => handleArrowClick('hh', 'up')}
+                sx={{ padding: { xs: 0.5, sm: 1 } }}
+              >
+                <KeyboardArrowUpIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
               </IconButton>
-              <IconButton size="small" onClick={() => handleArrowClick('hh', 'down')}>
-                <KeyboardArrowDownIcon />
+              <IconButton 
+                size="small" 
+                onClick={() => handleArrowClick('hh', 'down')}
+                sx={{ padding: { xs: 0.5, sm: 1 } }}
+              >
+                <KeyboardArrowDownIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
               </IconButton>
             </Box>
           </Box>
-          <Typography sx={{ fontWeight: 700, color: 'text.disabled' }}>:</Typography>
+          <Typography sx={{ 
+            fontWeight: 700, 
+            color: 'text.disabled',
+            fontSize: { xs: '1rem', sm: '1.25rem' }
+          }}>
+            :
+          </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <TextField
               inputRef={mmRef}
@@ -310,21 +360,41 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                 inputMode: 'numeric', 
                 pattern: '[0-9]*', 
                 maxLength: 2, 
-                style: { textAlign: 'center', fontWeight: 600 } 
+                style: { 
+                  textAlign: 'center', 
+                  fontWeight: 600,
+                  fontSize: { xs: '0.875rem', sm: '1rem' }
+                } 
               }}
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, width: 70 } }}
+              sx={{ 
+                '& .MuiOutlinedInput-root': { 
+                  borderRadius: 2, 
+                  width: { xs: 60, sm: 70 },
+                  height: { xs: 40, sm: 48 }
+                } 
+              }}
             />
-            <Box sx={{ display: 'flex', flexDirection: 'column', ml: 0.5 }}>
-              <IconButton size="small" onClick={() => handleArrowClick('mm', 'up')}>
-                <KeyboardArrowUpIcon />
+            <Box sx={{ display: 'flex', flexDirection: 'column', ml: { xs: 0.25, sm: 0.5 } }}>
+              <IconButton 
+                size="small" 
+                onClick={() => handleArrowClick('mm', 'up')}
+                sx={{ padding: { xs: 0.5, sm: 1 } }}
+              >
+                <KeyboardArrowUpIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
               </IconButton>
-              <IconButton size="small" onClick={() => handleArrowClick('mm', 'down')}>
-                <KeyboardArrowDownIcon />
+              <IconButton 
+                size="small" 
+                onClick={() => handleArrowClick('mm', 'down')}
+                sx={{ padding: { xs: 0.5, sm: 1 } }}
+              >
+                <KeyboardArrowDownIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
               </IconButton>
             </Box>
           </Box>
         </Box>
-        <Typography variant="caption" color="text.secondary">Type HH then MM. Use arrows to adjust.</Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+          Type HH then MM. Use arrows to adjust.
+        </Typography>
       </Box>
     );
   };
@@ -616,71 +686,275 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+  // Sidebar Component
+  const Sidebar = ({ open, onClose }) => {
+    const menuItems = [
+      { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
+      { text: 'Attendance', icon: <EventAvailableIcon />, path: '/attendance' },
+      { text: 'Chat', icon: <ChatIcon />, path: '/chat' },
+      { text: 'Team', icon: <GroupIcon />, path: '/team' }
+    ];
+
+    const drawerWidth = 240;
+
+    return (
+      <>
+        {/* Mobile Drawer */}
+        <Drawer
+          variant="temporary"
+          open={open}
+          onClose={onClose}
+          ModalProps={{
+            keepMounted: true,
+          }}
+          sx={{
+            display: { xs: 'block', sm: 'none' },
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
+              width: drawerWidth,
+            },
+          }}
+        >
+          <Toolbar />
+          <Box sx={{ overflow: 'auto', overflowX: 'hidden' }}>
+            <List>
+              {menuItems.map((item) => (
+                <ListItem
+                  button
+                  key={item.text}
+                  component={Link}
+                  to={item.path}
+                  onClick={onClose}
+                  sx={{
+                    mb: 1,
+                    mx: 1,
+                    borderRadius: 1,
+                    '&:hover': {
+                      backgroundColor: theme.palette.primary.light,
+                      '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
+                        color: theme.palette.primary.main
+                      }
+                    }
+                  }}
+                >
+                  <ListItemIcon sx={{ color: theme.palette.text.secondary }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={item.text} 
+                    sx={{ 
+                      '& .MuiTypography-root': { 
+                        fontFamily: "'Poppins', sans-serif",
+                        fontWeight: 500
+                      } 
+                    }} 
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        </Drawer>
+
+        {/* Desktop Drawer */}
+        <Drawer
+          variant="permanent"
+          sx={{
+            display: { xs: 'none', sm: 'block' },
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
+              width: drawerWidth,
+              backgroundColor: theme.palette.background.default,
+              borderRight: `1px solid ${theme.palette.divider}`
+            },
+          }}
+          open
+        >
+          <Toolbar />
+          <Box sx={{ overflow: 'auto', overflowX: 'hidden', mt: 2 }}>
+            <List>
+              {menuItems.map((item) => (
+                <ListItem
+                  button
+                  key={item.text}
+                  component={Link}
+                  to={item.path}
+                  sx={{
+                    mb: 1,
+                    mx: 1,
+                    borderRadius: 1,
+                    '&:hover': {
+                      backgroundColor: theme.palette.primary.light,
+                      '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
+                        color: theme.palette.primary.main
+                      }
+                    }
+                  }}
+                >
+                  <ListItemIcon sx={{ color: theme.palette.text.secondary }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={item.text} 
+                    sx={{ 
+                      '& .MuiTypography-root': { 
+                        fontFamily: "'Poppins', sans-serif",
+                        fontWeight: 500
+                      } 
+                    }} 
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        </Drawer>
+      </>
+    );
+  };
+
   return (
     <>
-      {!readOnly && <Header />}
+      {!readOnly && (
+        <>
+          <AppBar 
+            position="fixed" 
+            sx={{ 
+              borderRadius: 0,
+              boxShadow: 'none',
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              zIndex: (theme) => theme.zIndex.drawer + 1
+            }}
+          >
+            <Toolbar sx={{ minHeight: '64px !important' }}>
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                edge="start"
+                onClick={handleDrawerToggle}
+                sx={{ mr: 2, display: { sm: 'none' } }}
+              >
+                <MenuIcon />
+              </IconButton>
+              <Typography 
+                variant="h6" 
+                component="div" 
+                sx={{ 
+                  flexGrow: 1,
+                  fontWeight: 600,
+                  color: 'white'
+                }}
+              >
+                Office Attendance Management
+              </Typography>
+            </Toolbar>
+          </AppBar>
+          <Sidebar open={mobileOpen} onClose={handleDrawerToggle} />
+        </>
+      )}
       <Box component="main" sx={{ 
         flexGrow: 1, 
-        p: 3, 
-        mt: readOnly ? 0 : 8, 
+        p: { xs: 1, sm: 2, md: 3 }, 
+        mt: readOnly ? 0 : { xs: 7, sm: 8 }, 
+        ml: { xs: 0, sm: readOnly ? 0 : 30 },
         backgroundColor: theme.palette.grey[50], 
-        minHeight: readOnly ? 'auto' : '100vh' 
+        minHeight: readOnly ? 'auto' : '100vh',
+        overflow: 'hidden',
+        maxWidth: '100vw'
       }}>
-      <Container maxWidth="lg">
-          {/* Header Section */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-            <Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 1, sm: 2 } }}>
+          {/* Header Section - Mobile Responsive */}
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            justifyContent: 'space-between', 
+            alignItems: { xs: 'stretch', sm: 'center' }, 
+            mb: { xs: 2, sm: 4 },
+            gap: { xs: 2, sm: 0 }
+          }}>
+            <Typography variant="h4" sx={{ 
+              fontWeight: 600, 
+              color: theme.palette.primary.main,
+              fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' },
+              textAlign: { xs: 'center', sm: 'left' }
+            }}>
               {readOnly ? 'Attendance Records' : 'My Attendance'}
             </Typography>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: { xs: 1, sm: 2 }, 
+              alignItems: 'center',
+              width: { xs: '100%', sm: 'auto' }
+            }}>
               {!readOnly && (
                 <Button
                   variant="outlined"
                   startIcon={<DownloadIcon />}
                   onClick={downloadMyAttendance}
                   disabled={downloading}
-                  sx={{ mr: 2 }}
+                  sx={{ 
+                    width: { xs: '100%', sm: 'auto' },
+                    mb: { xs: 1, sm: 0 }
+                  }}
                 >
                   {downloading ? 'Downloading...' : 'Download Attendance'}
                 </Button>
               )}
               
-              <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel>Month</InputLabel>
-                <Select
-                  value={selectedMonth}
-                  label="Month"
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                >
-                  {months.map((month, index) => (
-                    <MenuItem key={index + 1} value={index + 1}>
-                      {month}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              
-              <FormControl size="small" sx={{ minWidth: 100 }}>
-                <InputLabel>Year</InputLabel>
-                <Select
-                  value={selectedYear}
-                  label="Year"
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                >
-                  {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
-                    <MenuItem key={year} value={year}>
-                      {year}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: { xs: 'row', sm: 'row' },
+                gap: 1,
+                width: { xs: '100%', sm: 'auto' }
+              }}>
+                <FormControl size="small" sx={{ 
+                  minWidth: { xs: '50%', sm: 120 },
+                  flex: { xs: 1, sm: 'none' }
+                }}>
+                  <InputLabel>Month</InputLabel>
+                  <Select
+                    value={selectedMonth}
+                    label="Month"
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                  >
+                    {months.map((month, index) => (
+                      <MenuItem key={index + 1} value={index + 1}>
+                        {month}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                
+                <FormControl size="small" sx={{ 
+                  minWidth: { xs: '50%', sm: 100 },
+                  flex: { xs: 1, sm: 'none' }
+                }}>
+                  <InputLabel>Year</InputLabel>
+                  <Select
+                    value={selectedYear}
+                    label="Year"
+                    onChange={(e) => setSelectedYear(e.target.value)}
+                  >
+                    {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
+                      <MenuItem key={year} value={year}>
+                        {year}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
             </Box>
           </Box>
 
           {/* Today's Attendance Marking */}
           {!readOnly && (
-            <Paper sx={{ p: 3, mb: 4 }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+            <Paper sx={{ p: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 4 } }}>
+              <Typography variant="h6" sx={{ 
+                mb: { xs: 1.5, sm: 2 }, 
+                fontWeight: 600,
+                fontSize: { xs: '1.1rem', sm: '1.25rem' }
+              }}>
                 Mark Today's Attendance
               </Typography>
             
@@ -700,13 +974,19 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                 </Alert>
             )}
 
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: { xs: 1, sm: 2 }, 
+              alignItems: { xs: 'stretch', sm: 'center' }
+            }}>
                     <Button
                       variant="contained"
                 color="success"
                 startIcon={<PresentIcon />}
                 onClick={() => markAttendance('present')}
                 disabled={markingAttendance || todayMarked || isWeekend()}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
                     >
                 {markingAttendance ? <CircularProgress size={20} /> : 'Present'}
                     </Button>
@@ -717,18 +997,26 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                 startIcon={<AbsentIcon />}
                 onClick={() => markAttendance('absent')}
                 disabled={markingAttendance || todayMarked || isWeekend()}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
                     >
                 {markingAttendance ? <CircularProgress size={20} /> : 'Absent'}
                     </Button>
 
               {todayMarked && (
-                <>
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  gap: { xs: 1, sm: 2 },
+                  alignItems: { xs: 'stretch', sm: 'center' },
+                  width: { xs: '100%', sm: 'auto' }
+                }}>
                   <Button
                     variant="outlined"
                     color="warning"
                     startIcon={<UndoIcon />}
                     onClick={undoTodayAttendance}
                     disabled={markingAttendance || !todayAttendanceId}
+                    sx={{ width: { xs: '100%', sm: 'auto' } }}
                   >
                     Undo
                   </Button>
@@ -736,82 +1024,122 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                   label="Today's attendance already marked" 
                   color="info" 
                   size="small"
+                  sx={{ alignSelf: { xs: 'center', sm: 'flex-start' } }}
                 />
-                </>
+                </Box>
               )}
             </Box>
           </Paper>
           )}
 
           {/* Statistics Cards */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
+          <Grid container spacing={2} sx={{ mb: { xs: 2, sm: 4 } }}>
+            <Grid item xs={6} sm={6} md={3}>
+              <Card sx={{ height: '100%' }}>
+                <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Box>
-                      <Typography color="textSecondary" gutterBottom variant="h6">
+                      <Typography color="textSecondary" gutterBottom variant="h6" sx={{ 
+                        fontSize: { xs: '0.875rem', sm: '1rem' },
+                        mb: { xs: 0.5, sm: 1 }
+                      }}>
                         Present Days
                       </Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.success.main }}>
+                      <Typography variant="h4" sx={{ 
+                        fontWeight: 600, 
+                        color: theme.palette.success.main,
+                        fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
+                      }}>
                         {presentDays}
                       </Typography>
                     </Box>
-                    <PresentIcon sx={{ fontSize: 40, color: theme.palette.success.main }} />
+                    <PresentIcon sx={{ 
+                      fontSize: { xs: 30, sm: 40 }, 
+                      color: theme.palette.success.main 
+                    }} />
                   </Box>
                 </CardContent>
               </Card>
             </Grid>
             
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
+            <Grid item xs={6} sm={6} md={3}>
+              <Card sx={{ height: '100%' }}>
+                <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Box>
-                      <Typography color="textSecondary" gutterBottom variant="h6">
+                      <Typography color="textSecondary" gutterBottom variant="h6" sx={{ 
+                        fontSize: { xs: '0.875rem', sm: '1rem' },
+                        mb: { xs: 0.5, sm: 1 }
+                      }}>
                         Absent Days
                       </Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.error.main }}>
+                      <Typography variant="h4" sx={{ 
+                        fontWeight: 600, 
+                        color: theme.palette.error.main,
+                        fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
+                      }}>
                         {absentDays}
                       </Typography>
                     </Box>
-                    <AbsentIcon sx={{ fontSize: 40, color: theme.palette.error.main }} />
+                    <AbsentIcon sx={{ 
+                      fontSize: { xs: 30, sm: 40 }, 
+                      color: theme.palette.error.main 
+                    }} />
                   </Box>
                 </CardContent>
               </Card>
             </Grid>
             
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
+            <Grid item xs={6} sm={6} md={3}>
+              <Card sx={{ height: '100%' }}>
+                <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Box>
-                      <Typography color="textSecondary" gutterBottom variant="h6">
+                      <Typography color="textSecondary" gutterBottom variant="h6" sx={{ 
+                        fontSize: { xs: '0.875rem', sm: '1rem' },
+                        mb: { xs: 0.5, sm: 1 }
+                      }}>
                         Total Marked
                       </Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 600 }}>
+                      <Typography variant="h4" sx={{ 
+                        fontWeight: 600,
+                        fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
+                      }}>
                         {totalMarkedDays}
                       </Typography>
                     </Box>
-                    <CalendarIcon sx={{ fontSize: 40, color: theme.palette.primary.main }} />
+                    <CalendarIcon sx={{ 
+                      fontSize: { xs: 30, sm: 40 }, 
+                      color: theme.palette.primary.main 
+                    }} />
                   </Box>
                 </CardContent>
               </Card>
             </Grid>
             
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
+            <Grid item xs={6} sm={6} md={3}>
+              <Card sx={{ height: '100%' }}>
+                <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Box>
-                      <Typography color="textSecondary" gutterBottom variant="h6">
+                      <Typography color="textSecondary" gutterBottom variant="h6" sx={{ 
+                        fontSize: { xs: '0.875rem', sm: '1rem' },
+                        mb: { xs: 0.5, sm: 1 }
+                      }}>
                         Attendance Rate
                       </Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.info.main }}>
+                      <Typography variant="h4" sx={{ 
+                        fontWeight: 600, 
+                        color: theme.palette.info.main,
+                        fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
+                      }}>
                         {totalMarkedDays > 0 ? Math.round((presentDays / totalMarkedDays) * 100) : 0}%
                       </Typography>
                     </Box>
-                    <CalendarIcon sx={{ fontSize: 40, color: theme.palette.info.main }} />
+                    <CalendarIcon sx={{ 
+                      fontSize: { xs: 30, sm: 40 }, 
+                      color: theme.palette.info.main 
+                    }} />
                   </Box>
                 </CardContent>
               </Card>
@@ -821,8 +1149,12 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
           
 
           {/* Monthly Calendar */}
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+          <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+            <Typography variant="h6" sx={{ 
+              mb: { xs: 2, sm: 3 }, 
+              fontWeight: 600,
+              fontSize: { xs: '1.1rem', sm: '1.25rem' }
+            }}>
               {months[selectedMonth - 1]} {selectedYear} - Attendance Calendar
             </Typography>
             
@@ -927,18 +1259,37 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
           
         </Container>
     </Box>
-      <Dialog open={timeDialog.open} onClose={() => setTimeDialog({ open: false, date: null, in_time: '', out_time: '' })} maxWidth="sm" fullWidth>
-        <DialogTitle>
+      <Dialog 
+        open={timeDialog.open} 
+        onClose={() => setTimeDialog({ open: false, date: null, in_time: '', out_time: '' })} 
+        maxWidth="sm" 
+        fullWidth
+        sx={{
+          '& .MuiDialog-paper': {
+            margin: { xs: 1, sm: 2 },
+            width: { xs: 'calc(100% - 16px)', sm: 'auto' }
+          }
+        }}
+      >
+        <DialogTitle sx={{ pb: { xs: 1, sm: 2 } }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <TimeIcon color="primary" />
-            <Typography variant="h6">Set In/Out Time</Typography>
+            <Typography variant="h6" sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+              Set In/Out Time
+            </Typography>
           </Box>
         </DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+        <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1, sm: 2 } }}>
+          <Typography variant="body2" sx={{ 
+            mb: { xs: 2, sm: 3 }, 
+            p: { xs: 1.5, sm: 2 }, 
+            bgcolor: 'grey.50', 
+            borderRadius: 1,
+            fontSize: { xs: '0.875rem', sm: '1rem' }
+          }}>
             <strong>Date:</strong> {timeDialog.date}
           </Typography>
-          <Grid container spacing={3}>
+          <Grid container spacing={{ xs: 2, sm: 3 }}>
             <Grid item xs={12} sm={6}>
               <TimeHMInput
                 label="In Time (HH:MM)"
@@ -955,14 +1306,27 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 0 }}>
-          <Box sx={{ flex: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
+        <DialogActions sx={{ 
+          p: { xs: 2, sm: 3 }, 
+          pt: 0,
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: { xs: 1, sm: 0 }
+        }}>
+          <Box sx={{ 
+            flex: 1, 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: { xs: 1, sm: 1 }, 
+            alignItems: { xs: 'stretch', sm: 'center' },
+            width: { xs: '100%', sm: 'auto' }
+          }}>
             <Button 
               size="small" 
               color="success" 
               variant="outlined" 
               startIcon={<PresentIcon />} 
               onClick={() => updateStatusForDate(timeDialog.date, 'present')}
+              sx={{ width: { xs: '100%', sm: 'auto' } }}
             >
               Mark Present
             </Button>
@@ -972,12 +1336,31 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
               variant="outlined" 
               startIcon={<AbsentIcon />} 
               onClick={() => updateStatusForDate(timeDialog.date, 'absent')}
+              sx={{ width: { xs: '100%', sm: 'auto' } }}
             >
               Mark Absent
             </Button>
           </Box>
-          <Button onClick={() => setTimeDialog({ open: false, date: null, in_time: '', out_time: '' })}>Cancel</Button>
-          <Button onClick={saveTimeEntry} variant="contained">Save</Button>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: { xs: 1, sm: 1 },
+            width: { xs: '100%', sm: 'auto' }
+          }}>
+            <Button 
+              onClick={() => setTimeDialog({ open: false, date: null, in_time: '', out_time: '' })}
+              sx={{ width: { xs: '100%', sm: 'auto' } }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={saveTimeEntry} 
+              variant="contained"
+              sx={{ width: { xs: '100%', sm: 'auto' } }}
+            >
+              Save
+            </Button>
+          </Box>
         </DialogActions>
       </Dialog>
     </>
