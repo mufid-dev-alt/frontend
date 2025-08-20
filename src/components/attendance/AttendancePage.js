@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Box,
   Container,
@@ -194,7 +194,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
     setTimeDialog((prev) => ({ ...prev, [field]: formatted }));
   };
 
-  // Redesigned HH:MM input with two boxes (HH and MM). Typing only, no focus jumps.
+  // Redesigned HH:MM input with two boxes (HH and MM). Auto-tab from HH to MM.
   const TimeHMInput = ({ label, value, onChange }) => {
     const parse = (v) => {
       const [h = '', m = ''] = (v || '').split(':');
@@ -202,6 +202,8 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
     };
     const [hh, setHh] = useState(parse(value)[0]);
     const [mm, setMm] = useState(parse(value)[1]);
+    const hhRef = useRef(null);
+    const mmRef = useRef(null);
 
     useEffect(() => {
       const [ph, pm] = parse(value);
@@ -217,12 +219,19 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
       const d = (e.target.value || '').replace(/\D/g, '').slice(0, 2);
       setHh(d);
       emit(d, mm);
+      
+      // Auto-tab to MM field when HH reaches 2 digits
+      if (d.length === 2 && mmRef.current) {
+        mmRef.current.focus();
+      }
     };
+    
     const handleMm = (e) => {
       const d = (e.target.value || '').replace(/\D/g, '').slice(0, 2);
       setMm(d);
       emit(hh, d);
     };
+    
     const handleBlurH = () => {
       const c = clampAndPadTime(`${hh || '00'}:${mm || '00'}`);
       const [nh, nm] = c.split(':');
@@ -235,24 +244,36 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
         <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>{label}</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <TextField
+            inputRef={hhRef}
             value={hh}
             onChange={handleHh}
             onBlur={handleBlurH}
             placeholder="HH"
-            inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 2, style: { textAlign: 'center', fontWeight: 600 } }}
+            inputProps={{ 
+              inputMode: 'numeric', 
+              pattern: '[0-9]*', 
+              maxLength: 2, 
+              style: { textAlign: 'center', fontWeight: 600 } 
+            }}
             sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, width: 100 } }}
           />
           <Typography sx={{ fontWeight: 700, color: 'text.disabled' }}>:</Typography>
           <TextField
+            inputRef={mmRef}
             value={mm}
             onChange={handleMm}
             onBlur={handleBlurM}
             placeholder="MM"
-            inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 2, style: { textAlign: 'center', fontWeight: 600 } }}
+            inputProps={{ 
+              inputMode: 'numeric', 
+              pattern: '[0-9]*', 
+              maxLength: 2, 
+              style: { textAlign: 'center', fontWeight: 600 } 
+            }}
             sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, width: 100 } }}
           />
         </Box>
-        <Typography variant="caption" color="text.secondary">Only numbers. We’ll format and clamp to HH:MM.</Typography>
+        <Typography variant="caption" color="text.secondary">Type HH then MM. Auto-tabs between fields.</Typography>
       </Box>
     );
   };
