@@ -466,40 +466,40 @@ const AdminDashboard = () => {
       
       // Create header rows matching the exact format
       ws.mergeCells('A1:Z1');
-      ws.getCell('A1').value = 'Monthly Status Report (Basic Work Duration)';
-      ws.getCell('A1').alignment = { horizontal: 'center' };
-      ws.getCell('A1').font = { bold: true, size: fontSize };
+      ws.getRow(1).getCell('A').value = 'Monthly Status Report (Basic Work Duration)';
+      ws.getRow(1).getCell('A').alignment = { horizontal: 'center' };
+      ws.getRow(1).getCell('A').font = { bold: true, size: fontSize };
       
       ws.mergeCells('A2:Z2');
-      ws.getCell('A2').value = dateRange;
-      ws.getCell('A2').alignment = { horizontal: 'center' };
-      ws.getCell('A2').font = { size: fontSize };
+      ws.getRow(2).getCell('A').value = dateRange;
+      ws.getRow(2).getCell('A').alignment = { horizontal: 'center' };
+      ws.getRow(2).getCell('A').font = { size: fontSize };
       
       ws.mergeCells('A3:Z3');
-      ws.getCell('A3').value = 'COMPANY : DCM INFOTECH LIMITED';
-      ws.getCell('A3').font = { size: fontSize };
+      ws.getRow(3).getCell('A').value = 'COMPANY : DCM INFOTECH LIMITED';
+      ws.getRow(3).getCell('A').font = { size: fontSize };
       
       ws.mergeCells('A4:Z4');
-      ws.getCell('A4').value = `DEPARTMENT NAME : ${user.department || 'General'}`;
-      ws.getCell('A4').font = { bold: true, size: fontSize };
+      ws.getRow(4).getCell('A').value = `DEPARTMENT NAME : ${user.department || 'General'}`;
+      ws.getRow(4).getCell('A').font = { bold: true, size: fontSize };
       
       // User info rows
-      ws.getCell('A5').value = 'Emp. Code :';
-      ws.getCell('A5').font = { size: fontSize };
-      ws.getCell('B5').value = user.employee_code || '';
-      ws.getCell('B5').font = { size: fontSize };
+      ws.getRow(5).getCell('A').value = 'Emp. Code :';
+      ws.getRow(5).getCell('A').font = { size: fontSize };
+      ws.getRow(5).getCell('B').value = user.employee_code || '';
+      ws.getRow(5).getCell('B').font = { size: fontSize };
       
-      ws.getCell('A6').value = 'Emp. Name :';
-      ws.getCell('A6').font = { size: fontSize };
-      ws.getCell('B6').value = user.full_name;
-      ws.getCell('B6').font = { size: fontSize };
+      ws.getRow(6).getCell('A').value = 'Emp. Name :';
+      ws.getRow(6).getCell('A').font = { size: fontSize };
+      ws.getRow(6).getCell('B').value = user.full_name;
+      ws.getRow(6).getCell('B').font = { size: fontSize };
       
       const headerRowIndex = 8;
       const sorted = [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
       
       // Days header row
-      ws.getCell(`A${headerRowIndex}`).value = 'Days';
-      ws.getCell(`A${headerRowIndex}`).font = { bold: true, size: fontSize };
+      ws.getRow(headerRowIndex).getCell('A').value = 'Days';
+      ws.getRow(headerRowIndex).getCell('A').font = { bold: true, size: fontSize };
       
       // Add day columns (1 T, 2 W, 3 Th, etc.)
       let colIndex = 1; // Start from B column
@@ -509,15 +509,15 @@ const AdminDashboard = () => {
         const dayName = dayNames[date.getDay()];
         const colLetter = String.fromCharCode(65 + colIndex); // A=65, B=66, etc.
         
-        ws.getCell(`${colLetter}${headerRowIndex}`).value = `${day} ${dayName}`;
-        ws.getCell(`${colLetter}${headerRowIndex}`).font = { bold: true, size: fontSize };
+        ws.getRow(headerRowIndex).getCell(colLetter).value = `${day} ${dayName}`;
+        ws.getRow(headerRowIndex).getCell(colLetter).font = { bold: true, size: fontSize };
         colIndex++;
       }
       
       // Status row
       let currentRow = headerRowIndex + 1;
-      ws.getCell(`A${currentRow}`).value = 'Status';
-      ws.getCell(`A${currentRow}`).font = { size: fontSize };
+      ws.getRow(currentRow).getCell('A').value = 'Status';
+      ws.getRow(currentRow).getCell('A').font = { size: fontSize };
       
       colIndex = 1;
       for (let day = 1; day <= endDate.getDate(); day++) {
@@ -526,18 +526,18 @@ const AdminDashboard = () => {
         const colLetter = String.fromCharCode(65 + colIndex);
         
         if (record) {
-          ws.getCell(`${colLetter}${currentRow}`).value = record.status === 'present' ? 'P' : 'A';
+          ws.getRow(currentRow).getCell(colLetter).value = record.status === 'present' ? 'P' : 'A';
         } else {
-          ws.getCell(`${colLetter}${currentRow}`).value = 'A';
+          ws.getRow(currentRow).getCell(colLetter).value = 'A';
         }
-        ws.getCell(`${colLetter}${currentRow}`).font = { size: fontSize };
+        ws.getRow(currentRow).getCell(colLetter).font = { size: fontSize };
         colIndex++;
       }
       currentRow++;
       
       // InTime row
-      ws.getCell(`A${currentRow}`).value = 'InTime';
-      ws.getCell(`A${currentRow}`).font = { size: fontSize };
+      ws.getRow(currentRow).getCell('A').value = 'InTime';
+      ws.getRow(currentRow).getCell('A').font = { size: fontSize };
       
       colIndex = 1;
       for (let day = 1; day <= endDate.getDate(); day++) {
@@ -546,16 +546,16 @@ const AdminDashboard = () => {
         const colLetter = String.fromCharCode(65 + colIndex);
         
         if (record && record.in_time) {
-          ws.getCell(`${colLetter}${currentRow}`).value = record.in_time;
+          ws.getRow(currentRow).getCell(colLetter).value = record.in_time;
         }
-        ws.getCell(`${colLetter}${currentRow}`).font = { size: fontSize };
+        ws.getRow(currentRow).getCell(colLetter).font = { size: fontSize };
         colIndex++;
       }
       currentRow++;
       
       // OutTime row
-      ws.getCell(`A${currentRow}`).value = 'OutTime';
-      ws.getCell(`A${currentRow}`).font = { size: fontSize };
+      ws.getRow(currentRow).getCell('A').value = 'OutTime';
+      ws.getRow(currentRow).getCell('A').font = { size: fontSize };
       
       colIndex = 1;
       for (let day = 1; day <= endDate.getDate(); day++) {
@@ -564,16 +564,16 @@ const AdminDashboard = () => {
         const colLetter = String.fromCharCode(65 + colIndex);
         
         if (record && record.out_time) {
-          ws.getCell(`${colLetter}${currentRow}`).value = record.out_time;
+          ws.getRow(currentRow).getCell(colLetter).value = record.out_time;
         }
-        ws.getCell(`${colLetter}${currentRow}`).font = { size: fontSize };
+        ws.getRow(currentRow).getCell(colLetter).font = { size: fontSize };
         colIndex++;
       }
       currentRow++;
       
       // Total row
-      ws.getCell(`A${currentRow}`).value = 'Total';
-      ws.getCell(`A${currentRow}`).font = { size: fontSize };
+      ws.getRow(currentRow).getCell('A').value = 'Total';
+      ws.getRow(currentRow).getCell('A').font = { size: fontSize };
       
       colIndex = 1;
       for (let day = 1; day <= endDate.getDate(); day++) {
@@ -590,14 +590,14 @@ const AdminDashboard = () => {
             if (mins < 0) mins += 24 * 60;
             const h = String(Math.floor(mins / 60)).padStart(2, '0');
             const m = String(mins % 60).padStart(2, '0');
-            ws.getCell(`${colLetter}${currentRow}`).value = `${h}:${m}`;
+            ws.getRow(currentRow).getCell(colLetter).value = `${h}:${m}`;
           } else {
-            ws.getCell(`${colLetter}${currentRow}`).value = '00:00';
+            ws.getRow(currentRow).getCell(colLetter).value = '00:00';
           }
         } else {
-          ws.getCell(`${colLetter}${currentRow}`).value = '00:00';
+          ws.getRow(currentRow).getCell(colLetter).value = '00:00';
         }
-        ws.getCell(`${colLetter}${currentRow}`).font = { size: fontSize };
+        ws.getRow(currentRow).getCell(colLetter).font = { size: fontSize };
         colIndex++;
       }
       
@@ -619,6 +619,7 @@ const AdminDashboard = () => {
         const colLetter = String.fromCharCode(65 + i);
         ws.getColumn(colLetter).width = 8;
       }
+      
       const blob = await wb.xlsx.writeBuffer();
       const url = window.URL.createObjectURL(new Blob([blob]));
       const a = document.createElement('a');
@@ -687,26 +688,26 @@ const AdminDashboard = () => {
       
       // Process each department
       for (const [departmentName, departmentUsers] of Object.entries(departmentGroups)) {
-        // Department header
-        ws.mergeCells(`A${currentRow}:Z${currentRow}`);
-        ws.getCell(`A${currentRow}`).value = `DEPARTMENT NAME : ${departmentName}`;
-        ws.getCell(`A${currentRow}`).font = { bold: true, size: fontSize };
-        currentRow++;
-        
-        // Process each user in the department
-        for (const user of departmentUsers) {
-          // User info rows
-          ws.getCell(`A${currentRow}`).value = 'Emp. Code :';
-          ws.getCell(`A${currentRow}`).font = { size: fontSize };
-          ws.getCell(`B${currentRow}`).value = user.employee_code || '';
-          ws.getCell(`B${currentRow}`).font = { size: fontSize };
-          currentRow++;
-          
-          ws.getCell(`A${currentRow}`).value = 'Emp. Name :';
-          ws.getCell(`A${currentRow}`).font = { size: fontSize };
-          ws.getCell(`B${currentRow}`).value = user.full_name;
-          ws.getCell(`B${currentRow}`).font = { size: fontSize };
-          currentRow++;
+                 // Department header
+         ws.mergeCells(`A${currentRow}:Z${currentRow}`);
+         ws.getRow(currentRow).getCell('A').value = `DEPARTMENT NAME : ${departmentName}`;
+         ws.getRow(currentRow).getCell('A').font = { bold: true, size: fontSize };
+         currentRow++;
+         
+         // Process each user in the department
+         for (const user of departmentUsers) {
+           // User info rows
+           ws.getRow(currentRow).getCell('A').value = 'Emp. Code :';
+           ws.getRow(currentRow).getCell('A').font = { size: fontSize };
+           ws.getRow(currentRow).getCell('B').value = user.employee_code || '';
+           ws.getRow(currentRow).getCell('B').font = { size: fontSize };
+           currentRow++;
+           
+           ws.getRow(currentRow).getCell('A').value = 'Emp. Name :';
+           ws.getRow(currentRow).getCell('A').font = { size: fontSize };
+           ws.getRow(currentRow).getCell('B').value = user.full_name;
+           ws.getRow(currentRow).getCell('B').font = { size: fontSize };
+           currentRow++;
           
           // Get attendance data for this user
           const params = new URLSearchParams();
@@ -1601,7 +1602,7 @@ const AdminDashboard = () => {
             onClick={() => exportDepartmentData(selectedDepartment)}
             sx={{ mr: 1 }}
           >
-            Export Department
+            Export Users Attendance
           </Button>
           <Button onClick={() => setDepartmentDialogOpen(false)}>Close</Button>
         </DialogActions>

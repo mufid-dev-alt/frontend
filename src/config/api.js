@@ -28,12 +28,7 @@ export const API_ENDPOINTS = {
     delete: (attendanceId) => `${BASE_URL}/api/attendance/${attendanceId}`,
     sync: `${BASE_URL}/api/attendance/force-sync`,
   },
-  todos: {
-    list: `${BASE_URL}/api/todos`,
-    create: `${BASE_URL}/api/todos`,
-    update: (todoId) => `${BASE_URL}/api/todos/${todoId}`,
-    delete: (todoId) => `${BASE_URL}/api/todos/${todoId}`,
-  },
+
   messages: {
     list: `${BASE_URL}/api/messages`,
     create: `${BASE_URL}/api/messages`,

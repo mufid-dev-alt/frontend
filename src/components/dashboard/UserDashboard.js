@@ -333,8 +333,8 @@ const UserDashboard = () => {
   const [stats, setStats] = useState({
     presentDays: 0,
     absentDays: 0,
-    completedTasks: 0,
-    pendingTasks: 0
+    
+    
   });
   const [userDepartment, setUserDepartment] = useState('');
   const [teamMembers, setTeamMembers] = useState([]);
@@ -493,30 +493,12 @@ const UserDashboard = () => {
         const attendanceData = await response.json();
         console.log('Attendance stats received:', attendanceData);
         
-        // Get todos for current user
-        console.log('Fetching todos from:', `${API_ENDPOINTS.todos.list}?user_id=${userData.id}`);
-        const todosResponse = await fetch(`${API_ENDPOINTS.todos.list}?user_id=${userData.id}`, {
-          headers: { 'Accept': 'application/json' }
-        });
         
-        let todosData = [];
-        if (todosResponse.ok) {
-          const todosJson = await todosResponse.json();
-          console.log('Todos data received:', todosJson);
-          todosData = Array.isArray(todosJson) ? todosJson : 
-                     (todosJson.todos ? todosJson.todos : []);
-        } else {
-          console.error('Failed to fetch todos:', todosResponse.status);
-        }
-        
-        const completedTasks = todosData.filter(todo => todo.completed).length;
-        const pendingTasks = todosData.filter(todo => !todo.completed).length;
         
         setStats({
           presentDays: attendanceData.present_days || 0,
           absentDays: attendanceData.absent_days || 0,
-          completedTasks: completedTasks,
-          pendingTasks: pendingTasks
+
         });
 
         // Fetch user department
