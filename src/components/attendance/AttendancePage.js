@@ -1441,6 +1441,15 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
             >
               Mark Absent
             </Button>
+            <Button 
+              size="small" 
+              color="warning" 
+              variant="outlined" 
+              onClick={clearCalendarCell}
+              sx={{ width: { xs: '100%', sm: 'auto' } }}
+            >
+              Clear Format
+            </Button>
           </Box>
           <Box sx={{ 
             display: 'flex', 
@@ -1453,15 +1462,6 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
               sx={{ width: { xs: '100%', sm: 'auto' } }}
             >
               Cancel
-            </Button>
-            <Button 
-              size="small" 
-              color="warning" 
-              variant="outlined" 
-              onClick={clearCalendarCell}
-              sx={{ width: { xs: '100%', sm: 'auto' } }}
-            >
-              Clear Format
             </Button>
           </Box>
         </DialogActions>

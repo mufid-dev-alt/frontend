@@ -629,7 +629,7 @@ const AttendanceRecords = () => {
       const { date } = timeDialog;
       
       // Find the attendance record for this date and user
-      const attendanceRecord = userAttendanceData.find(record => 
+      const attendanceRecord = attendanceData.find(record => 
         record.date === date && record.user_id === selectedUser.id
       );
       
@@ -1133,6 +1133,15 @@ const AttendanceRecords = () => {
               >
                 Mark Absent
               </Button>
+              <Button 
+                size="small" 
+                color="warning" 
+                variant="outlined" 
+                onClick={clearCalendarCell}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
+              >
+                Clear Format
+              </Button>
             </Box>
             <Box sx={{ 
               display: 'flex', 
@@ -1145,15 +1154,6 @@ const AttendanceRecords = () => {
                 sx={{ width: { xs: '100%', sm: 'auto' } }}
               >
                 Cancel
-              </Button>
-              <Button 
-                size="small" 
-                color="warning" 
-                variant="outlined" 
-                onClick={clearCalendarCell}
-                sx={{ width: { xs: '100%', sm: 'auto' } }}
-              >
-                Clear Format
               </Button>
             </Box>
           </DialogActions>
