@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Box,
@@ -29,7 +30,8 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  useMediaQuery
+  useMediaQuery,
+  Tooltip
 } from '@mui/material';
 import {
   CheckCircle as PresentIcon,
@@ -210,6 +212,23 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
     if (isNaN(m)) m = 0;
     m = Math.max(0, Math.min(59, m));
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  };
+
+  const calculateTotalHours = (inTime, outTime) => {
+    if (!inTime || !outTime) return '';
+    
+    const [ih, im] = inTime.split(':').map(Number);
+    const [oh, om] = outTime.split(':').map(Number);
+    
+    if (isNaN(ih) || isNaN(im) || isNaN(oh) || isNaN(om)) return '';
+    
+    let mins = (oh * 60 + om) - (ih * 60 + im);
+    if (mins < 0) mins += 24 * 60; // Handle overnight shifts
+    
+    const hours = Math.floor(mins / 60);
+    const minutes = mins % 60;
+    
+    return `${hours}h ${minutes}m`;
   };
 
   const handleTimeChange = (field) => (e) => {
@@ -1254,15 +1273,37 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                             </Typography>
                           )}
                            {(dayData.in_time || dayData.out_time) && (
-                            <Typography variant="caption" sx={{ 
-                              fontSize: { xs: '0.6rem', sm: '0.65rem' }, 
-                              mt: { xs: 0.25, sm: 0.5 },
-                              textAlign: 'center',
-                              lineHeight: 1.2
-                            }}>
-                              {dayData.in_time ? `IN ${dayData.in_time}` : ''} 
-                              {dayData.out_time ? `OUT ${dayData.out_time}` : ''}
-                             </Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: { xs: 0.25, sm: 0.5 } }}>
+                              {dayData.in_time && (
+                                <Typography variant="caption" sx={{ 
+                                  fontSize: { xs: '0.6rem', sm: '0.65rem' }, 
+                                  textAlign: 'center',
+                                  lineHeight: 1.2
+                                }}>
+                                  IN {dayData.in_time}
+                                </Typography>
+                              )}
+                              {dayData.out_time && (
+                                <Typography variant="caption" sx={{ 
+                                  fontSize: { xs: '0.6rem', sm: '0.65rem' }, 
+                                  textAlign: 'center',
+                                  lineHeight: 1.2
+                                }}>
+                                  OUT {dayData.out_time}
+                                </Typography>
+                              )}
+                              {dayData.in_time && dayData.out_time && (
+                                <Typography variant="caption" sx={{ 
+                                  fontSize: { xs: '0.55rem', sm: '0.6rem' }, 
+                                  textAlign: 'center',
+                                  lineHeight: 1.2,
+                                  fontWeight: 600,
+                                  color: 'primary.main'
+                                }}>
+                                  {calculateTotalHours(dayData.in_time, dayData.out_time)}
+                                </Typography>
+                              )}
+                            </Box>
                            )}
                         </Box>
                       )}
@@ -1336,16 +1377,24 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
             alignItems: { xs: 'stretch', sm: 'center' },
             width: { xs: '100%', sm: 'auto' }
           }}>
-            <Button 
-              size="small" 
-              color="success" 
-              variant="outlined" 
-              startIcon={<PresentIcon />} 
-              onClick={() => updateStatusForDate(timeDialog.date, 'present')}
-              sx={{ width: { xs: '100%', sm: 'auto' } }}
+            <Tooltip 
+              title={!timeDialog.in_time ? "Please fill in the 'In Time' before marking present" : ""}
+              placement="top"
             >
-              Mark Present
-            </Button>
+              <span>
+                <Button 
+                  size="small" 
+                  color="success" 
+                  variant="outlined" 
+                  startIcon={<PresentIcon />} 
+                  onClick={() => updateStatusForDate(timeDialog.date, 'present')}
+                  disabled={!timeDialog.in_time}
+                  sx={{ width: { xs: '100%', sm: 'auto' } }}
+                >
+                  Mark Present
+                </Button>
+              </span>
+            </Tooltip>
             <Button 
               size="small" 
               color="error" 

@@ -148,7 +148,6 @@ const AttendanceRecords = () => {
         eventService.attendanceUpdated(selectedUser.id, date, status);
         
         fetchUserAttendance();
-        setEditDialog({ open: false, date: null, status: 'present' });
       } else {
         throw new Error('Failed to update attendance');
       }
@@ -621,7 +620,7 @@ const AttendanceRecords = () => {
   };
 
   const updateStatusForDate = (date, status) => {
-    setEditDialog({ open: true, date, status });
+    updateAttendance(date, status);
   };
 
   // Initialize component and check auth

@@ -597,10 +597,10 @@ const AdminDashboard = () => {
           const [ih, im] = record.in_time.split(':').map(Number);
           const [oh, om] = record.out_time.split(':').map(Number);
           if (!isNaN(ih) && !isNaN(im) && !isNaN(oh) && !isNaN(om)) {
-            let mins = (oh * 60 + om) - (ih * 60 + im);
-            if (mins < 0) mins += 24 * 60;
-            const h = String(Math.floor(mins / 60)).padStart(2, '0');
-            const m = String(mins % 60).padStart(2, '0');
+        let mins = (oh * 60 + om) - (ih * 60 + im);
+        if (mins < 0) mins += 24 * 60;
+        const h = String(Math.floor(mins / 60)).padStart(2, '0');
+        const m = String(mins % 60).padStart(2, '0');
             ws.getRow(currentRow).getCell(colLetter).value = `${h}:${m}`;
           } else {
             ws.getRow(currentRow).getCell(colLetter).value = '00:00';
@@ -721,18 +721,18 @@ const AdminDashboard = () => {
            currentRow++;
           
           // Get attendance data for this user
-          const params = new URLSearchParams();
-          params.append('user_id', user.id);
-          params.append('month', selectedMonth);
-          params.append('year', selectedYear);
+        const params = new URLSearchParams();
+        params.append('user_id', user.id);
+        params.append('month', selectedMonth);
+        params.append('year', selectedYear);
           
-          const response = await fetch(`${API_ENDPOINTS.attendance.list}?${params.toString()}`, {
-            headers: { 'Accept': 'application/json' }
-          });
+        const response = await fetch(`${API_ENDPOINTS.attendance.list}?${params.toString()}`, {
+          headers: { 'Accept': 'application/json' }
+        });
           
           if (response.ok) {
-            const data = await response.json();
-            const records = data.success && data.records ? data.records : [];
+        const data = await response.json();
+        const records = data.success && data.records ? data.records : [];
             
             if (records.length > 0) {
               // Create attendance table for this user
