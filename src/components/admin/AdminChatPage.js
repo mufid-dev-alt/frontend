@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Fragment } from 'react';
 import {
   Box,
   Container,
@@ -563,7 +563,7 @@ const AdminChatPage = () => {
                             formatDate(message.timestamp) !== formatDate(messages[index - 1]?.timestamp);
                           
                           return (
-                            <React.Fragment key={message.id}>
+                            <Fragment key={message.id}>
                               {showDateHeader && (
                                 <Box sx={{ textAlign: 'center', my: 2 }}>
                                   <Typography 
@@ -642,7 +642,7 @@ const AdminChatPage = () => {
                                   </Box>
                                 </Paper>
                               </Box>
-                            </React.Fragment>
+                            </Fragment>
                           );
                         })
                       )}
