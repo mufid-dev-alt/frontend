@@ -655,13 +655,14 @@ const AttendanceRecords = () => {
         setUsers(nonAdminUsers);
         setFilteredUsers(nonAdminUsers.filter(user => 
           user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchQuery.toLowerCase())
+          user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          String(user.employee_code || '').includes(searchCode)
         ));
       }
     });
     
     return () => unsubscribe();
-  }, [searchQuery]);
+  }, [searchQuery, searchCode]);
 
   // Only fetch users on component mount and via refresh button
 
@@ -672,11 +673,16 @@ const AttendanceRecords = () => {
   }, [selectedUser]);
 
   useEffect(() => {
+    console.log('Search values:', { searchQuery, searchCode });
+    console.log('Users:', users.map(u => ({ name: u.full_name, code: u.employee_code })));
+    
     const filtered = users.filter(user => 
       user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       String(user.employee_code || '').includes(searchCode)
     );
+    
+    console.log('Filtered users:', filtered.map(u => ({ name: u.full_name, code: u.employee_code })));
     setFilteredUsers(filtered);
   }, [users, searchQuery, searchCode]);
 
@@ -800,7 +806,7 @@ const AttendanceRecords = () => {
                     >
                       <ListItemText 
                         primary={user.full_name} 
-                        secondary={user.email}
+                        secondary={`${user.email} (Code: ${user.employee_code || 'N/A'})`}
                         primaryTypographyProps={{ fontWeight: 600 }}
                       />
                     </ListItem>
