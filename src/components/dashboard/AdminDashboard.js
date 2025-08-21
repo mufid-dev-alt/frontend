@@ -44,7 +44,7 @@ import LogoutIcon from '@mui/icons-material/ExitToApp';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import PersonIcon from '@mui/icons-material/Person';
-// Removed User Todos from admin panel
+// Removed Todos
 import DownloadIcon from '@mui/icons-material/Download';
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -66,11 +66,11 @@ const AdminHeader = ({ onMenuClick }) => {
 
   const handleLogout = async () => {
     try {
-      // Simple local logout since we don't have sessions
+      // Local logout
       localStorage.removeItem('user');
       navigate('/');
     } catch (error) {
-      // Continue with local logout even if server logout fails
+      // Continue logout
       localStorage.removeItem('user');
       navigate('/');
     }

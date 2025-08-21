@@ -149,7 +149,7 @@ const ManageUsers = () => {
       // Remove from recently deleted list
       setRecentlyDeleted(prev => prev.filter(item => item.id !== userId));
       
-      showNotification(`${result.restored_user.full_name} has been restored successfully`, 'success');
+      showNotification(`${result.user.full_name} has been restored successfully`, 'success');
       
       // Refresh user list
       fetchUsers();

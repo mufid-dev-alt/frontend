@@ -280,7 +280,7 @@ const ChatPage = () => {
   const currentUser = JSON.parse(localStorage.getItem('user'));
   const messagesEndRef = useRef(null);
 
-  // Replace the team/admin fetch useEffect with a single, mount-only effect
+  // Team/admin fetch effect
   useEffect(() => {
     let isMounted = true;
     const fetchTeamAndAdmin = async () => {
@@ -291,14 +291,14 @@ const ChatPage = () => {
           navigate('/');
           return;
         }
-        // Get user's department
+        // Get department
         const deptResponse = await fetch(`${API_ENDPOINTS.teams.userDepartment.replace('{user_id}', userData.id)}`);
         let members = [];
         if (deptResponse.ok) {
           const deptData = await deptResponse.json();
           if (deptData.success) {
             setUserDepartment(deptData.department);
-            // Get team members
+            // Get members
             const teamResponse = await fetch(`${API_ENDPOINTS.teams.departmentMembers.replace('{department}', encodeURIComponent(deptData.department))}`);
             if (teamResponse.ok) {
               const teamData = await teamResponse.json();
@@ -308,7 +308,7 @@ const ChatPage = () => {
             }
           }
         }
-        // Fetch admin and add to members if not present
+        // Add admin
         const adminResponse = await fetch(API_ENDPOINTS.users.list);
         if (adminResponse.ok) {
           const data = await adminResponse.json();
@@ -339,18 +339,18 @@ const ChatPage = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Polling for real-time updates
+  // Real-time polling
   useEffect(() => {
     const interval = setInterval(() => {
       if (selectedChat) {
         fetchMessages();
       }
-    }, 3000); // Poll every 3 seconds
+    }, 3000); // Poll every 3s
 
     return () => clearInterval(interval);
   }, [selectedChat]);
 
-  // Fetch conversation list using new endpoint
+  // Fetch conversations
   useEffect(() => {
     const fetchConversations = async () => {
       if (!currentUser) return;
@@ -358,7 +358,7 @@ const ChatPage = () => {
         const res = await fetch(API_ENDPOINTS.chat.conversations(currentUser.id));
         const data = await res.json();
         if (data.success) {
-          // Map to a list compatible with UI
+          // Map to UI list
           const mapped = (data.conversations || []).map(c => ({
             id: c.user.id,
             full_name: c.user.full_name,

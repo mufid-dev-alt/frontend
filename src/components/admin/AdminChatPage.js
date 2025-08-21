@@ -275,12 +275,12 @@ const AdminChatPage = () => {
           return;
         }
 
-        // Fetch all users
+        // Fetch users
         const response = await fetch(API_ENDPOINTS.users.list);
         if (response.ok) {
           const data = await response.json();
           const usersArray = data.success && data.users ? data.users : (Array.isArray(data) ? data : []);
-          // Filter out admin users
+          // Filter admins
           const nonAdminUsers = usersArray.filter(user => user.role !== 'admin');
           setUsers(nonAdminUsers);
         }
@@ -304,13 +304,13 @@ const AdminChatPage = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Polling for real-time updates
+  // Real-time polling
   useEffect(() => {
     const interval = setInterval(() => {
       if (selectedUser) {
         fetchMessages();
       }
-    }, 3000); // Poll every 3 seconds
+    }, 3000); // Poll every 3s
 
     return () => clearInterval(interval);
   }, [selectedUser]);
@@ -319,12 +319,12 @@ const AdminChatPage = () => {
     if (!selectedUser) return;
 
     try {
-      // Fetch messages between admin (user ID 1) and selected user
+      // Fetch messages
       const response = await fetch(`${API_ENDPOINTS.messages.getByUser(1)}?chat_type=personal&receiver_id=${selectedUser.id}`);
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          // Filter messages between admin (ID 1) and selected user
+          // Filter messages
           const filteredMessages = (data.messages || []).filter(msg => 
             (msg.sender_id === 1 && msg.receiver_id === selectedUser.id) ||
             (msg.sender_id === selectedUser.id && msg.receiver_id === 1)
@@ -342,7 +342,7 @@ const AdminChatPage = () => {
 
     try {
       const messageData = {
-        sender_id: 1, // Admin user ID
+        sender_id: 1, // Admin ID
         receiver_id: selectedUser.id,
         content: newMessage.trim(),
         type: 'personal'

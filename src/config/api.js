@@ -1,4 +1,4 @@
-// API endpoints configuration with improved error handling and logging
+// API config
 const BASE_URL = (process.env.REACT_APP_API_URL || 'https://backend-9z1y.onrender.com').replace(/\/+$/, '');
 
 // Log the base URL being used (for debugging in development only)
@@ -9,7 +9,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 export const API_ENDPOINTS = {
-  // User management
+  // Users
   users: {
     list: `${BASE_URL}/api/users`,
     create: `${BASE_URL}/api/users`,
@@ -52,12 +52,12 @@ export const API_ENDPOINTS = {
   },
 };
 
-// Log the login endpoint for debugging in development only
+// Debug login endpoint
 if (process.env.NODE_ENV === 'development') {
   console.log('Login endpoint URL:', API_ENDPOINTS.auth.login);
 }
 
-// Utility function for making API requests with error handling
+// API request utility
 export const apiRequest = async (url, options = {}) => {
   try {
     if (process.env.NODE_ENV === 'development') {
@@ -78,7 +78,7 @@ export const apiRequest = async (url, options = {}) => {
       try {
         errorData = JSON.parse(errorText);
       } catch (e) {
-        // If not JSON, use status text
+        // Use status text
       }
       throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
     }

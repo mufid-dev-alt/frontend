@@ -1,7 +1,7 @@
 import { API_ENDPOINTS } from './api';
 import eventService from './eventService';
 
-// User Service - Centralized user management for persistence across components
+// User service
 class UserService {
   constructor() {
     this.users = [];
@@ -12,19 +12,19 @@ class UserService {
     console.log('🔄 User service initialized with session ID:', this.sessionId);
   }
 
-  // Load users from backend and localStorage
+  // Load users
   async initialize() {
     if (this.initialized) return this.users;
     
     try {
-      // Try to load from localStorage first for immediate display
+      // Load from localStorage first
       const savedUsers = this.loadFromLocalStorage();
       if (savedUsers && savedUsers.length > 0) {
         this.users = savedUsers;
         this.notifyListeners('init_start', null, this.users);
       }
 
-      // Always fetch from backend to ensure latest data
+      // Fetch from backend
       const response = await fetch(API_ENDPOINTS.users.list);
       const data = await response.json();
       
@@ -45,7 +45,7 @@ class UserService {
     }
   }
 
-  // Add a new user
+  // Add user
   async addUser(userData) {
     try {
       const response = await fetch(API_ENDPOINTS.users.create, {

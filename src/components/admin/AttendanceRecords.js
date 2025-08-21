@@ -87,7 +87,7 @@ const AttendanceRecords = () => {
     setNotification({ open: true, message, severity });
   }, []);
 
-  // Fetch users using the centralized user service
+  // Fetch users
   const fetchUsers = useCallback(async () => {
     try {
       const usersList = await userService.getUsers();
@@ -145,7 +145,7 @@ const AttendanceRecords = () => {
       if (response.ok) {
         showNotification(`Attendance marked as ${status} for ${date}`, 'success');
         
-        // Notify other components about the attendance update using eventService
+        // Notify components
         eventService.attendanceUpdated(selectedUser.id, date, status);
         
         fetchUserAttendance();
@@ -162,22 +162,22 @@ const AttendanceRecords = () => {
     
     setDownloading(true);
     try {
-      // Build formatted Excel workbook
+      // Build Excel workbook
       const wb = new ExcelJS.Workbook();
       const ws = wb.addWorksheet('Attendance');
       
-      // Set font size to 7 for all cells
+      // Font size 7
       const fontSize = 7;
       
       const monthName = months[selectedMonth - 1];
       const year = selectedYear;
       
-      // Calculate date range
+      // Date range
       const startDate = new Date(year, selectedMonth - 1, 1);
       const endDate = new Date(year, selectedMonth, 0);
       const dateRange = `${monthName}-1-${year} to ${monthName}-${endDate.getDate()}-${year}`;
       
-      // Create header rows matching the exact format
+      // Create headers
       ws.mergeCells('A1:Z1');
       ws.getRow(1).getCell('A').value = 'Monthly Status Report (Basic Work Duration)';
       ws.getRow(1).getCell('A').alignment = { horizontal: 'center' };

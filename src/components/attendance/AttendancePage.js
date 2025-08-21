@@ -72,7 +72,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
   const [downloading, setDownloading] = useState(false);
   const [timeDialog, setTimeDialog] = useState({ open: false, date: null, in_time: '', out_time: '' });
 
-  // Use provided userId or get from localStorage
+  // Get userId
   const currentUserId = userId || JSON.parse(localStorage.getItem('user'))?.id;
 
   const handleDrawerToggle = () => {
@@ -84,14 +84,14 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  // Check if today is weekend
+  // Check weekend
   const isWeekend = () => {
     const today = new Date();
     const dayOfWeek = today.getDay();
-    return dayOfWeek === 0 || dayOfWeek === 6; // Sunday = 0, Saturday = 6
+    return dayOfWeek === 0 || dayOfWeek === 6; // Sun=0, Sat=6
   };
 
-  // Force sync attendance data with the backend
+  // Force sync
   const forceSync = async () => {
     try {
       setMessage('Syncing attendance data...');
@@ -103,7 +103,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
       if (response.ok) {
         const result = await response.json();
         setMessage(`Attendance data synced successfully (${result.record_count} records)`);
-        // Refresh attendance data
+        // Refresh data
         await fetchAttendance();
       } else {
         throw new Error('Failed to sync attendance data');
@@ -139,7 +139,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
       const data = await response.json();
       setAttendanceData(Array.isArray(data.records) ? data.records : []);
       
-      // Check if today's attendance is already marked
+      // Check today's attendance
       const today = new Date().toISOString().split('T')[0];
       const todayRecord = (Array.isArray(data.records) ? data.records : []).find(record => record.date === today);
       setTodayMarked(!!todayRecord);
