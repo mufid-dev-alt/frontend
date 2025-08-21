@@ -23,7 +23,18 @@ import {
   Select,
   MenuItem,
   Snackbar,
-  Alert
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/ExitToApp';
@@ -259,19 +270,24 @@ const Sidebar = ({ open, onClose }) => {
   );
 };
 
-const StatCard = ({ title, value, icon, color }) => {
+const StatCard = ({ title, value, icon, color, onClick }) => {
   const theme = useTheme();
   
   return (
     <Card 
+      onClick={onClick}
       sx={{ 
         height: '100%',
         backgroundColor: theme.palette.background.paper,
         boxShadow: theme.shadows[2],
         transition: 'transform 0.2s, box-shadow 0.2s',
+        cursor: onClick ? 'pointer' : 'default',
         '&:hover': {
           transform: 'translateY(-4px)',
-          boxShadow: theme.shadows[4]
+          boxShadow: theme.shadows[4],
+          ...(onClick && {
+            backgroundColor: theme.palette.action.hover
+          })
         }
       }}
     >
@@ -338,6 +354,12 @@ const UserDashboard = () => {
     cl: 7,
     sl: 7
   });
+  const [leaveHistory, setLeaveHistory] = useState([]);
+  const [leaveHistoryDialog, setLeaveHistoryDialog] = useState({
+    open: false,
+    leaveType: '',
+    title: ''
+  });
   const [userDepartment, setUserDepartment] = useState('');
   const [teamMembers, setTeamMembers] = useState([]);
   const [notification, setNotification] = useState({
@@ -361,6 +383,44 @@ const UserDashboard = () => {
       message,
       severity
     });
+  };
+
+  const handleLeaveCardClick = async (leaveType) => {
+    try {
+      const userData = JSON.parse(localStorage.getItem('user'));
+      if (!userData) return;
+
+      // Fetch leave history for this user
+      const response = await fetch(API_ENDPOINTS.users.list);
+      if (response.ok) {
+        const data = await response.json();
+        const user = (data.users || []).find(u => u.id === userData.id);
+        
+        if (user && user.leave_history) {
+          // Filter history for this leave type
+          const filteredHistory = user.leave_history
+            .filter(record => record.type === leaveType.toLowerCase())
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+          setLeaveHistory(filteredHistory);
+          
+          const leaveTypeNames = {
+            'pl': 'Paid Leave',
+            'cl': 'Casual Leave', 
+            'sl': 'Sick Leave'
+          };
+
+          setLeaveHistoryDialog({
+            open: true,
+            leaveType: leaveType,
+            title: `${leaveTypeNames[leaveType.toLowerCase()]} History`
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching leave history:', error);
+      showNotification('Error fetching leave history', 'error');
+    }
   };
 
   const downloadMyAttendance = async () => {
@@ -674,6 +734,7 @@ const UserDashboard = () => {
                 value={leaveBalances.pl}
                 icon={<EventAvailableIcon sx={{ color: '#FF9800' }} />}
                 color="#FF9800"
+                onClick={() => handleLeaveCardClick('PL')}
               />
             </Grid>
             <Grid item xs={12} sm={4} md={4}>
@@ -682,6 +743,7 @@ const UserDashboard = () => {
                 value={leaveBalances.cl}
                 icon={<EventAvailableIcon sx={{ color: '#2196F3' }} />}
                 color="#2196F3"
+                onClick={() => handleLeaveCardClick('CL')}
               />
             </Grid>
             <Grid item xs={12} sm={4} md={4}>
@@ -690,6 +752,7 @@ const UserDashboard = () => {
                 value={leaveBalances.sl}
                 icon={<EventAvailableIcon sx={{ color: '#F44336' }} />}
                 color="#F44336"
+                onClick={() => handleLeaveCardClick('SL')}
               />
             </Grid>
 
@@ -797,22 +860,84 @@ const UserDashboard = () => {
         </Container>
       </Box>
 
-      <Snackbar
-        open={notification.open}
-        autoHideDuration={6000}
-        onClose={() => setNotification({ ...notification, open: false })}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={() => setNotification({ ...notification, open: false })}
-          severity={notification.severity}
-          sx={{ width: '100%' }}
-        >
-          {notification.message}
-        </Alert>
-      </Snackbar>
-    </Box>
-  );
-};
+             <Snackbar
+         open={notification.open}
+         autoHideDuration={6000}
+         onClose={() => setNotification({ ...notification, open: false })}
+         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+       >
+         <Alert
+           onClose={() => setNotification({ ...notification, open: false })}
+           severity={notification.severity}
+           sx={{ width: '100%' }}
+         >
+           {notification.message}
+         </Alert>
+       </Snackbar>
+
+       {/* Leave History Dialog */}
+       <Dialog
+         open={leaveHistoryDialog.open}
+         onClose={() => setLeaveHistoryDialog({ ...leaveHistoryDialog, open: false })}
+         maxWidth="md"
+         fullWidth
+       >
+         <DialogTitle>
+           <Typography variant="h6" sx={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600 }}>
+             {leaveHistoryDialog.title}
+           </Typography>
+         </DialogTitle>
+         <DialogContent>
+           {leaveHistory.length > 0 ? (
+             <TableContainer component={Paper} sx={{ mt: 2 }}>
+               <Table>
+                 <TableHead>
+                   <TableRow>
+                     <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
+                     <TableCell sx={{ fontWeight: 600 }}>Action</TableCell>
+                     <TableCell sx={{ fontWeight: 600 }}>Timestamp</TableCell>
+                   </TableRow>
+                 </TableHead>
+                 <TableBody>
+                   {leaveHistory.map((record, index) => (
+                     <TableRow key={index}>
+                       <TableCell>
+                         {new Date(record.date).toLocaleDateString()}
+                       </TableCell>
+                       <TableCell>
+                         <Chip 
+                           label={record.action === 'applied' ? 'Applied' : 'Cancelled'}
+                           color={record.action === 'applied' ? 'error' : 'success'}
+                           size="small"
+                         />
+                       </TableCell>
+                       <TableCell>
+                         {new Date(record.timestamp).toLocaleString()}
+                       </TableCell>
+                     </TableRow>
+                   ))}
+                 </TableBody>
+               </Table>
+             </TableContainer>
+           ) : (
+             <Box sx={{ textAlign: 'center', py: 4 }}>
+               <Typography variant="body1" color="text.secondary">
+                 No leave history found for this leave type.
+               </Typography>
+             </Box>
+           )}
+         </DialogContent>
+         <DialogActions>
+           <Button 
+             onClick={() => setLeaveHistoryDialog({ ...leaveHistoryDialog, open: false })}
+             variant="contained"
+           >
+             Close
+           </Button>
+         </DialogActions>
+       </Dialog>
+     </Box>
+   );
+ };
 
 export default UserDashboard;

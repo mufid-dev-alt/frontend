@@ -1308,12 +1308,15 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                           {getStatusIcon(dayData.status)}
                           {dayData.status && (
                             <Typography variant="caption" sx={{ 
-                              fontSize: { xs: '0.65rem', sm: '0.7rem' }, 
+                              fontSize: { xs: '0.6rem', sm: '0.65rem' }, 
                               textTransform: 'uppercase', 
                               mt: { xs: 0.25, sm: 0.5 },
                               fontWeight: 600
                             }}>
-                              {dayData.status.charAt(0)}
+                              {dayData.status === 'PL' ? 'PL' : 
+                               dayData.status === 'CL' ? 'CL' : 
+                               dayData.status === 'SL' ? 'SL' : 
+                               dayData.status.charAt(0)}
                             </Typography>
                           )}
                            {(dayData.in_time || dayData.out_time) && (
@@ -1338,11 +1341,15 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                               )}
                               {dayData.in_time && dayData.out_time && (
                                 <Typography variant="caption" sx={{ 
-                                  fontSize: { xs: '0.55rem', sm: '0.6rem' }, 
+                                  fontSize: { xs: '0.6rem', sm: '0.7rem' }, 
                                   textAlign: 'center',
                                   lineHeight: 1.2,
-                                  fontWeight: 600,
-                                  color: 'primary.main'
+                                  fontWeight: 700,
+                                  color: '#1976D2',
+                                  backgroundColor: 'rgba(25, 118, 210, 0.1)',
+                                  borderRadius: '4px',
+                                  px: 0.5,
+                                  py: 0.25
                                 }}>
                                   {calculateTotalHours(dayData.in_time, dayData.out_time)}
                                 </Typography>
