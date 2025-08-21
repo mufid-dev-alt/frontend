@@ -444,6 +444,37 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
     }
   };
 
+  const clearCalendarCell = async () => {
+    try {
+      const userData = JSON.parse(localStorage.getItem('user'));
+      const { date } = timeDialog;
+      
+      // Find the attendance record for this date
+      const attendanceRecord = attendanceData.find(record => 
+        record.date === date && record.user_id === (currentUserId || userData.id)
+      );
+      
+      if (attendanceRecord && attendanceRecord.id) {
+        // Delete the attendance record
+        const response = await fetch(API_ENDPOINTS.attendance.delete(attendanceRecord.id), {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+        });
+        
+        if (!response.ok) throw new Error('Failed to clear calendar cell');
+        
+        setMessage('Calendar cell cleared successfully');
+        await fetchAttendance();
+      } else {
+        setMessage('No attendance record found for this date');
+      }
+      
+      setTimeDialog({ open: false, date: null, in_time: '', out_time: '' });
+    } catch (e) {
+      setMessage('Error clearing calendar cell');
+    }
+  };
+
   const updateStatusForDate = async (date, status) => {
     try {
       const userData = JSON.parse(localStorage.getItem('user'));
@@ -1392,7 +1423,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                   color="success" 
                   variant="outlined" 
                   startIcon={<PresentIcon />} 
-                  onClick={() => updateStatusForDate(timeDialog.date, 'present')}
+                  onClick={saveTimeEntry}
                   disabled={!timeDialog.in_time}
                   sx={{ width: { xs: '100%', sm: 'auto' } }}
                 >
@@ -1410,15 +1441,6 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
             >
               Mark Absent
             </Button>
-            <Button 
-              size="small" 
-              color="warning" 
-              variant="outlined" 
-              onClick={() => setTimeDialog(prev => ({ ...prev, in_time: '', out_time: '' }))}
-              sx={{ width: { xs: '100%', sm: 'auto' } }}
-            >
-              Clear Format
-            </Button>
           </Box>
           <Box sx={{ 
             display: 'flex', 
@@ -1432,21 +1454,15 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
             >
               Cancel
             </Button>
-            <Tooltip 
-              title={!timeDialog.in_time ? "Please fill in the 'In Time' before saving" : ""}
-              placement="top"
+            <Button 
+              size="small" 
+              color="warning" 
+              variant="outlined" 
+              onClick={clearCalendarCell}
+              sx={{ width: { xs: '100%', sm: 'auto' } }}
             >
-              <span>
-                <Button 
-                  onClick={saveTimeEntry} 
-                  variant="contained"
-                  disabled={!timeDialog.in_time}
-                  sx={{ width: { xs: '100%', sm: 'auto' } }}
-                >
-                  Save
-                </Button>
-              </span>
-            </Tooltip>
+              Clear Format
+            </Button>
           </Box>
         </DialogActions>
       </Dialog>

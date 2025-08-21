@@ -624,6 +624,36 @@ const AttendanceRecords = () => {
     }
   };
 
+  const clearCalendarCell = async () => {
+    try {
+      const { date } = timeDialog;
+      
+      // Find the attendance record for this date and user
+      const attendanceRecord = userAttendanceData.find(record => 
+        record.date === date && record.user_id === selectedUser.id
+      );
+      
+      if (attendanceRecord && attendanceRecord.id) {
+        // Delete the attendance record
+        const response = await fetch(API_ENDPOINTS.attendance.delete(attendanceRecord.id), {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+        });
+        
+        if (!response.ok) throw new Error('Failed to clear calendar cell');
+        
+        showNotification('Calendar cell cleared successfully', 'success');
+        await fetchUserAttendance();
+      } else {
+        showNotification('No attendance record found for this date', 'warning');
+      }
+      
+      setTimeDialog({ open: false, date: null, in_time: '', out_time: '' });
+    } catch (e) {
+      showNotification('Error clearing calendar cell', 'error');
+    }
+  };
+
   const updateStatusForDate = (date, status) => {
     updateAttendance(date, status);
   };
@@ -1088,7 +1118,7 @@ const AttendanceRecords = () => {
                 color="success" 
                 variant="outlined" 
                 startIcon={<PresentIcon />} 
-                onClick={() => updateStatusForDate(timeDialog.date, 'present')}
+                onClick={saveTimeEntry}
                 sx={{ width: { xs: '100%', sm: 'auto' } }}
               >
                 Mark Present
@@ -1103,15 +1133,6 @@ const AttendanceRecords = () => {
               >
                 Mark Absent
               </Button>
-              <Button 
-                size="small" 
-                color="warning" 
-                variant="outlined" 
-                onClick={() => setTimeDialog(prev => ({ ...prev, in_time: '', out_time: '' }))}
-                sx={{ width: { xs: '100%', sm: 'auto' } }}
-              >
-                Clear Format
-              </Button>
             </Box>
             <Box sx={{ 
               display: 'flex', 
@@ -1125,21 +1146,15 @@ const AttendanceRecords = () => {
               >
                 Cancel
               </Button>
-              <Tooltip 
-                title={!timeDialog.in_time ? "Please fill in the 'In Time' before saving" : ""}
-                placement="top"
+              <Button 
+                size="small" 
+                color="warning" 
+                variant="outlined" 
+                onClick={clearCalendarCell}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
               >
-                <span>
-                  <Button 
-                    onClick={saveTimeEntry} 
-                    variant="contained"
-                    disabled={!timeDialog.in_time}
-                    sx={{ width: { xs: '100%', sm: 'auto' } }}
-                  >
-                    Save
-                  </Button>
-                </span>
-              </Tooltip>
+                Clear Format
+              </Button>
             </Box>
           </DialogActions>
         </Dialog>

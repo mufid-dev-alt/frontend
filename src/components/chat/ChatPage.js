@@ -783,8 +783,8 @@ const ChatPage = () => {
                             </Fragment>
                           );
                         })
-                      )}
-                      <div ref={messagesEndRef} />
+                    )}
+                    <div ref={messagesEndRef} />
                     </Box>
                     <Divider />
                     <Box sx={{ p: 2 }}>

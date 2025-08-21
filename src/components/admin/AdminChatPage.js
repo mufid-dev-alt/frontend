@@ -656,7 +656,7 @@ const AdminChatPage = () => {
                           multiline
                           maxRows={4}
                           variant="outlined"
-                          placeholder="Type a message... (Shift+Enter for new line)"
+                          placeholder="Type a message..."
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
                           onKeyPress={handleKeyPress}
