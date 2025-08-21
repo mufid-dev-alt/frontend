@@ -25,7 +25,10 @@ import {
   useTheme,
   Paper,
   Divider,
-  InputAdornment
+  InputAdornment,
+  Menu,
+  MenuItem,
+  Tooltip
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/ExitToApp';
@@ -35,6 +38,8 @@ import PersonIcon from '@mui/icons-material/Person';
 import ChatIcon from '@mui/icons-material/Chat';
 import SendIcon from '@mui/icons-material/Send';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
 import { useNavigate, Link } from 'react-router-dom';
 import { API_ENDPOINTS } from '../../config/api';
 
@@ -262,6 +267,9 @@ const AdminChatPage = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [messageMenuAnchor, setMessageMenuAnchor] = useState(null);
+  const [selectedMessage, setSelectedMessage] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [currentUser] = useState(JSON.parse(localStorage.getItem('user')));
   const messagesEndRef = useRef(null);
 
@@ -380,6 +388,68 @@ const AdminChatPage = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const formatDate = (timestamp) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+
+  const handleMessageMenuOpen = (event, message) => {
+    setMessageMenuAnchor(event.currentTarget);
+    setSelectedMessage(message);
+  };
+
+  const handleMessageMenuClose = () => {
+    setMessageMenuAnchor(null);
+    setSelectedMessage(null);
+  };
+
+  const handleDeleteMessage = async () => {
+    if (!selectedMessage) return;
+    
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`${API_ENDPOINTS.messages.delete || API_ENDPOINTS.messages.list}/${selectedMessage.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        // Remove message from local state
+        setMessages(prev => prev.filter(msg => msg.id !== selectedMessage.id));
+        handleMessageMenuClose();
+      } else {
+        console.error('Failed to delete message');
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && e.shiftKey) {
+      // Shift+Enter for new line
+      return;
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
@@ -488,41 +558,93 @@ const AdminChatPage = () => {
                           <Typography>No messages yet. Start the conversation!</Typography>
                         </Box>
                       ) : (
-                        messages.map((message) => (
-                          <Box
-                            key={message.id} 
-                            sx={{
-                              display: 'flex',
-                              justifyContent: message.sender_id === 1 ? 'flex-end' : 'flex-start',
-                              mb: 2
-                            }}
-                          >
-                            <Paper
-                              sx={{
-                                p: 2,
-                                maxWidth: '70%',
-                                backgroundColor: message.sender_id === 1 
-                                  ? theme.palette.primary.main 
-                                  : theme.palette.grey[100],
-                                color: message.sender_id === 1 
-                                  ? 'white' 
-                                  : 'text.primary'
-                              }}
-                            >
-                              <Typography variant="body1">{message.content}</Typography>
-                              <Typography 
-                                variant="caption" 
-                                sx={{ 
-                                  opacity: 0.7,
-                                  display: 'block',
-                                  mt: 0.5
+                        messages.map((message, index) => {
+                          const showDateHeader = index === 0 || 
+                            formatDate(message.timestamp) !== formatDate(messages[index - 1]?.timestamp);
+                          
+                          return (
+                            <React.Fragment key={message.id}>
+                              {showDateHeader && (
+                                <Box sx={{ textAlign: 'center', my: 2 }}>
+                                  <Typography 
+                                    variant="caption" 
+                                    sx={{ 
+                                      backgroundColor: theme.palette.grey[200],
+                                      px: 2,
+                                      py: 0.5,
+                                      borderRadius: 1,
+                                      color: theme.palette.text.secondary
+                                    }}
+                                  >
+                                    {formatDate(message.timestamp)}
+                                  </Typography>
+                                </Box>
+                              )}
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  justifyContent: message.sender_id === 1 ? 'flex-end' : 'flex-start',
+                                  mb: 2
                                 }}
                               >
-                                {formatTime(message.timestamp)}
-                              </Typography>
-                            </Paper>
-                          </Box>
-                        ))
+                                <Paper
+                                  sx={{
+                                    p: 2,
+                                    maxWidth: '70%',
+                                    backgroundColor: message.sender_id === 1 
+                                      ? theme.palette.primary.main 
+                                      : theme.palette.grey[100],
+                                    color: message.sender_id === 1 
+                                      ? 'white' 
+                                      : 'text.primary',
+                                    borderRadius: 2,
+                                    position: 'relative'
+                                  }}
+                                >
+                                  <Typography 
+                                    variant="body1" 
+                                    sx={{ 
+                                      whiteSpace: 'pre-wrap',
+                                      wordBreak: 'break-word'
+                                    }}
+                                  >
+                                    {message.content}
+                                  </Typography>
+                                  <Box sx={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'space-between', 
+                                    alignItems: 'center',
+                                    mt: 0.5 
+                                  }}>
+                                    <Typography 
+                                      variant="caption" 
+                                      sx={{ 
+                                        opacity: 0.7
+                                      }}
+                                    >
+                                      {formatTime(message.timestamp)}
+                                    </Typography>
+                                    {message.sender_id === 1 && (
+                                      <Tooltip title="Message options">
+                                        <IconButton
+                                          size="small"
+                                          onClick={(e) => handleMessageMenuOpen(e, message)}
+                                          sx={{ 
+                                            opacity: 0.7,
+                                            '&:hover': { opacity: 1 },
+                                            color: 'inherit'
+                                          }}
+                                        >
+                                          <MoreVertIcon fontSize="small" />
+                                        </IconButton>
+                                      </Tooltip>
+                                    )}
+                                  </Box>
+                                </Paper>
+                              </Box>
+                            </React.Fragment>
+                          );
+                        })
                       )}
                       <div ref={messagesEndRef} />
                     </Box>
@@ -530,21 +652,25 @@ const AdminChatPage = () => {
                     <Box sx={{ p: 2 }}>
                       <TextField
                         fullWidth
+                        multiline
+                        maxRows={4}
                         variant="outlined"
-                        placeholder="Type a message..."
+                        placeholder="Type a message... (Shift+Enter for new line)"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                        onKeyPress={handleKeyPress}
                         InputProps={{
                           endAdornment: (
                             <InputAdornment position="end">
-                              <IconButton
-                                onClick={sendMessage}
-                                disabled={!newMessage.trim()}
-                                color="primary"
-                              >
-                                <SendIcon />
-                              </IconButton>
+                              <Tooltip title="Send message">
+                                <IconButton
+                                  onClick={sendMessage}
+                                  disabled={!newMessage.trim()}
+                                  color="primary"
+                                >
+                                  <SendIcon />
+                                </IconButton>
+                              </Tooltip>
                             </InputAdornment>
                           ),
                         }}
@@ -568,6 +694,29 @@ const AdminChatPage = () => {
         </Container>
       </Box>
     </Box>
+
+    {/* Message Options Menu */}
+    <Menu
+      anchorEl={messageMenuAnchor}
+      open={Boolean(messageMenuAnchor)}
+      onClose={handleMessageMenuClose}
+      anchorOrigin={{
+        vertical: 'top',
+        horizontal: 'right',
+      }}
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: 'left',
+      }}
+    >
+      <MenuItem 
+        onClick={handleDeleteMessage}
+        disabled={isDeleting}
+        sx={{ color: 'error.main' }}
+      >
+        {isDeleting ? 'Deleting...' : 'Unsend'}
+      </MenuItem>
+    </Menu>
   );
 };
 

@@ -29,7 +29,10 @@ import {
   Paper,
   Divider,
   IconButton as MuiIconButton,
-  InputAdornment
+  InputAdornment,
+  Menu,
+  MenuItem,
+  Tooltip
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/ExitToApp';
@@ -40,6 +43,8 @@ import ChatIcon from '@mui/icons-material/Chat';
 import GroupIcon from '@mui/icons-material/Group';
 import SendIcon from '@mui/icons-material/Send';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
 import { useNavigate } from 'react-router-dom';
 import { API_ENDPOINTS } from '../../config/api';
 import Dialog from '@mui/material/Dialog';
@@ -277,6 +282,9 @@ const ChatPage = () => {
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [targetEmpCode, setTargetEmpCode] = useState('');
   const [startingChat, setStartingChat] = useState(false);
+  const [messageMenuAnchor, setMessageMenuAnchor] = useState(null);
+  const [selectedMessage, setSelectedMessage] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const currentUser = JSON.parse(localStorage.getItem('user'));
   const messagesEndRef = useRef(null);
 
@@ -495,6 +503,68 @@ const ChatPage = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const formatDate = (timestamp) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+
+  const handleMessageMenuOpen = (event, message) => {
+    setMessageMenuAnchor(event.currentTarget);
+    setSelectedMessage(message);
+  };
+
+  const handleMessageMenuClose = () => {
+    setMessageMenuAnchor(null);
+    setSelectedMessage(null);
+  };
+
+  const handleDeleteMessage = async () => {
+    if (!selectedMessage) return;
+    
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`${API_ENDPOINTS.messages.delete || API_ENDPOINTS.messages.list}/${selectedMessage.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        // Remove message from local state
+        setMessages(prev => prev.filter(msg => msg.id !== selectedMessage.id));
+        handleMessageMenuClose();
+      } else {
+        console.error('Failed to delete message');
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && e.shiftKey) {
+      // Shift+Enter for new line
+      return;
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
@@ -626,64 +696,119 @@ const ChatPage = () => {
                           <Typography>No messages yet. Start the conversation!</Typography>
                         </Box>
                       ) : (
-                        messages.map((message) => (
-                          <Box
-                          key={message.id} 
-                            sx={{
-                              display: 'flex',
-                              justifyContent: message.sender_id === currentUser.id ? 'flex-end' : 'flex-start',
-                              mb: 2
-                            }}
-                          >
-                            <Paper
-                              sx={{
-                                p: 2,
-                                maxWidth: '70%',
-                                backgroundColor: message.sender_id === currentUser.id 
-                                  ? theme.palette.primary.main 
-                                  : theme.palette.grey[100],
-                                color: message.sender_id === currentUser.id 
-                                  ? 'white' 
-                                  : 'text.primary',
-                                borderRadius: 2
-                              }}
-                            >
-                              <Typography variant="body1">{message.content}</Typography>
-                              <Typography 
-                                variant="caption" 
-                                sx={{ 
-                                  opacity: 0.7,
-                                  display: 'block',
-                                  mt: 0.5
+                        messages.map((message, index) => {
+                          const showDateHeader = index === 0 || 
+                            formatDate(message.timestamp) !== formatDate(messages[index - 1]?.timestamp);
+                          
+                          return (
+                            <React.Fragment key={message.id}>
+                              {showDateHeader && (
+                                <Box sx={{ textAlign: 'center', my: 2 }}>
+                                  <Typography 
+                                    variant="caption" 
+                                    sx={{ 
+                                      backgroundColor: theme.palette.grey[200],
+                                      px: 2,
+                                      py: 0.5,
+                                      borderRadius: 1,
+                                      color: theme.palette.text.secondary
+                                    }}
+                                  >
+                                    {formatDate(message.timestamp)}
+                                  </Typography>
+                                </Box>
+                              )}
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  justifyContent: message.sender_id === currentUser.id ? 'flex-end' : 'flex-start',
+                                  mb: 2
                                 }}
                               >
-                                {formatTime(message.timestamp)}
-                              </Typography>
-                            </Paper>
-                          </Box>
-                      ))
-                    )}
+                                <Paper
+                                  sx={{
+                                    p: 2,
+                                    maxWidth: '70%',
+                                    backgroundColor: message.sender_id === currentUser.id 
+                                      ? theme.palette.primary.main 
+                                      : theme.palette.grey[100],
+                                    color: message.sender_id === currentUser.id 
+                                      ? 'white' 
+                                      : 'text.primary',
+                                    borderRadius: 2,
+                                    position: 'relative'
+                                  }}
+                                >
+                                  <Typography 
+                                    variant="body1" 
+                                    sx={{ 
+                                      whiteSpace: 'pre-wrap',
+                                      wordBreak: 'break-word'
+                                    }}
+                                  >
+                                    {message.content}
+                                  </Typography>
+                                  <Box sx={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'space-between', 
+                                    alignItems: 'center',
+                                    mt: 0.5 
+                                  }}>
+                                    <Typography 
+                                      variant="caption" 
+                                      sx={{ 
+                                        opacity: 0.7
+                                      }}
+                                    >
+                                      {formatTime(message.timestamp)}
+                                    </Typography>
+                                    {message.sender_id === currentUser.id && (
+                                      <Tooltip title="Message options">
+                                        <MuiIconButton
+                                          size="small"
+                                          onClick={(e) => handleMessageMenuOpen(e, message)}
+                                          sx={{ 
+                                            opacity: 0.7,
+                                            '&:hover': { opacity: 1 },
+                                            color: 'inherit'
+                                          }}
+                                        >
+                                          <MoreVertIcon fontSize="small" />
+                                        </MuiIconButton>
+                                      </Tooltip>
+                                    )}
+                                  </Box>
+                                </Paper>
+                              </Box>
+                            </React.Fragment>
+                          );
+                        })
+                      )}
                     <div ref={messagesEndRef} />
                     </Box>
                     <Divider />
                     <Box sx={{ p: 2 }}>
                       <TextField
                         fullWidth
+                        multiline
+                        maxRows={4}
                         variant="outlined"
-                        placeholder="Type a message..."
+                        placeholder="Type a message... (Shift+Enter for new line)"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                        onKeyPress={handleKeyPress}
                         InputProps={{
                           endAdornment: (
                             <InputAdornment position="end">
-                              <MuiIconButton
-                                onClick={sendMessage}
-                                disabled={!newMessage.trim()}
-                                color="primary"
-                              >
-                                <SendIcon />
-                              </MuiIconButton>
+                              <Tooltip title="Send message">
+                                <MuiIconButton
+                                  onClick={sendMessage}
+                                  disabled={!newMessage.trim()}
+                                  color="primary"
+                                >
+                                  <SendIcon />
+                                </MuiIconButton>
+                              </Tooltip>
                             </InputAdornment>
                           ),
                         }}
@@ -729,6 +854,29 @@ const ChatPage = () => {
         </Button>
       </DialogActions>
     </Dialog>
+
+    {/* Message Options Menu */}
+    <Menu
+      anchorEl={messageMenuAnchor}
+      open={Boolean(messageMenuAnchor)}
+      onClose={handleMessageMenuClose}
+      anchorOrigin={{
+        vertical: 'top',
+        horizontal: 'right',
+      }}
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: 'left',
+      }}
+    >
+      <MenuItem 
+        onClick={handleDeleteMessage}
+        disabled={isDeleting}
+        sx={{ color: 'error.main' }}
+      >
+        {isDeleting ? 'Deleting...' : 'Unsend'}
+      </MenuItem>
+    </Menu>
     </>
   );
 };
