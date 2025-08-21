@@ -725,8 +725,11 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
       return theme.palette.grey[200]; // Light gray for weekends
     }
     switch (status) {
-      case 'present': return theme.palette.success.main;
-      case 'absent': return theme.palette.error.main;
+      case 'present': return theme.palette.success.light; // Light green for present
+      case 'absent': return theme.palette.error.light; // Light red for absent
+      case 'PL': return '#FFF3E0'; // Light yellow for PL
+      case 'CL': return '#FFF3E0'; // Light yellow for CL
+      case 'SL': return '#FFF3E0'; // Light yellow for SL
       default: return theme.palette.background.paper; // White for unmarked weekdays
     }
   };
@@ -735,6 +738,9 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
     switch (status) {
       case 'present': return <PresentIcon sx={{ fontSize: 16, color: 'white' }} />;
       case 'absent': return <AbsentIcon sx={{ fontSize: 16, color: 'white' }} />;
+      case 'PL': return <EventAvailableIcon sx={{ fontSize: 16, color: '#FF9800' }} />;
+      case 'CL': return <EventAvailableIcon sx={{ fontSize: 16, color: '#2196F3' }} />;
+      case 'SL': return <EventAvailableIcon sx={{ fontSize: 16, color: '#F44336' }} />;
       default: return null;
   }
   };
@@ -1270,7 +1276,9 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                             alignItems: 'center',
                             justifyContent: 'center',
                             backgroundColor: getStatusColor(dayData.status, dayData.isWeekend),
-                            color: dayData.isWeekend ? theme.palette.text.secondary : (dayData.status ? 'white' : theme.palette.text.primary),
+                            color: dayData.isWeekend ? theme.palette.text.secondary : 
+                                  (dayData.status === 'PL' || dayData.status === 'CL' || dayData.status === 'SL') ? '#D32F2F' : 
+                                  (dayData.status ? 'white' : theme.palette.text.primary),
                             border: `2px solid ${theme.palette.divider}`,
                             borderRadius: { xs: 1, sm: 2 },
                             position: 'relative',
@@ -1440,6 +1448,57 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
               sx={{ width: { xs: '100%', sm: 'auto' } }}
             >
               Mark Absent
+            </Button>
+            <Button 
+              size="small" 
+              color="warning" 
+              variant="outlined" 
+              onClick={() => updateStatusForDate(timeDialog.date, 'PL')}
+              sx={{ 
+                width: { xs: '100%', sm: 'auto' },
+                color: '#FF9800',
+                borderColor: '#FF9800',
+                '&:hover': {
+                  borderColor: '#F57C00',
+                  backgroundColor: 'rgba(255, 152, 0, 0.04)'
+                }
+              }}
+            >
+              PL
+            </Button>
+            <Button 
+              size="small" 
+              color="warning" 
+              variant="outlined" 
+              onClick={() => updateStatusForDate(timeDialog.date, 'CL')}
+              sx={{ 
+                width: { xs: '100%', sm: 'auto' },
+                color: '#2196F3',
+                borderColor: '#2196F3',
+                '&:hover': {
+                  borderColor: '#1976D2',
+                  backgroundColor: 'rgba(33, 150, 243, 0.04)'
+                }
+              }}
+            >
+              CL
+            </Button>
+            <Button 
+              size="small" 
+              color="warning" 
+              variant="outlined" 
+              onClick={() => updateStatusForDate(timeDialog.date, 'SL')}
+              sx={{ 
+                width: { xs: '100%', sm: 'auto' },
+                color: '#F44336',
+                borderColor: '#F44336',
+                '&:hover': {
+                  borderColor: '#D32F2F',
+                  backgroundColor: 'rgba(244, 67, 54, 0.04)'
+                }
+              }}
+            >
+              SL
             </Button>
             <Button 
               size="small" 

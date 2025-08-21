@@ -28,6 +28,12 @@ export const API_ENDPOINTS = {
     delete: (attendanceId) => `${BASE_URL}/api/attendance/${attendanceId}`,
     sync: `${BASE_URL}/api/attendance/force-sync`,
   },
+  leave: {
+    balances: (userId) => `${BASE_URL}/api/leave/balances/${userId}`,
+    apply: `${BASE_URL}/api/leave/apply`,
+    cancel: `${BASE_URL}/api/leave/cancel`,
+    rollover: (year) => `${BASE_URL}/api/leave/rollover/${year}`,
+  },
 
   messages: {
     list: `${BASE_URL}/api/messages`,

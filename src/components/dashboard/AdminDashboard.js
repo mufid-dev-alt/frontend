@@ -286,6 +286,7 @@ const AdminDashboard = () => {
   const [searchName, setSearchName] = useState('');
   const [searchCode, setSearchCode] = useState('');
   const [userStats, setUserStats] = useState({});
+  const [userLeaveBalances, setUserLeaveBalances] = useState({});
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const stored = localStorage.getItem('adminSelectedMonth');
     return stored ? parseInt(stored) : new Date().getMonth() + 1;
@@ -414,6 +415,29 @@ const AdminDashboard = () => {
       });
 
       setUserStats(statsMap);
+
+      // Fetch leave balances for all users
+      const leavePromises = usersToProcess.map(async (user) => {
+        try {
+          const response = await fetch(API_ENDPOINTS.leave.balances(user.id));
+          if (response.ok) {
+            const data = await response.json();
+            return { userId: user.id, balances: data.success ? data.balances : { pl: 18, cl: 7, sl: 7 } };
+          }
+          return { userId: user.id, balances: { pl: 18, cl: 7, sl: 7 } };
+        } catch (error) {
+          console.error(`Error fetching leave balances for user ${user.id}:`, error);
+          return { userId: user.id, balances: { pl: 18, cl: 7, sl: 7 } };
+        }
+      });
+
+      const leaveResults = await Promise.all(leavePromises);
+      const leaveMap = {};
+      leaveResults.forEach(result => {
+        leaveMap[result.userId] = result.balances;
+      });
+
+      setUserLeaveBalances(leaveMap);
     } catch (error) {
       console.error('Error fetching user stats:', error);
       showNotification(`Error fetching attendance data: ${error.message}`, 'error');
@@ -1491,6 +1515,9 @@ const AdminDashboard = () => {
                       <th style={{ textAlign: 'left', padding: 8 }}>Present</th>
                       <th style={{ textAlign: 'left', padding: 8 }}>Absent</th>
                       <th style={{ textAlign: 'left', padding: 8 }}>Total Days</th>
+                      <th style={{ textAlign: 'left', padding: 8 }}>PL</th>
+                      <th style={{ textAlign: 'left', padding: 8 }}>CL</th>
+                      <th style={{ textAlign: 'left', padding: 8 }}>SL</th>
                       <th style={{ textAlign: 'left', padding: 8 }}>Actions</th>
                     </tr>
                   </thead>
@@ -1501,6 +1528,7 @@ const AdminDashboard = () => {
                       .map(user => {
                         const stats = userStats[user.id] || { present_days: 0, absent_days: 0, total_days: 0 };
                         const totalDays = stats.total_days || (stats.present_days + stats.absent_days);
+                        const leaveBalances = userLeaveBalances[user.id] || { pl: 18, cl: 7, sl: 7 };
                         return (
                           <tr key={user.id}>
                             <td style={{ padding: 8 }}>{user.employee_code || ''}</td>
@@ -1509,6 +1537,9 @@ const AdminDashboard = () => {
                             <td style={{ padding: 8 }}>{stats.present_days || 0}</td>
                             <td style={{ padding: 8 }}>{stats.absent_days || 0}</td>
                             <td style={{ padding: 8 }}>{totalDays || 0}</td>
+                            <td style={{ padding: 8 }}>{leaveBalances.pl || 18}</td>
+                            <td style={{ padding: 8 }}>{leaveBalances.cl || 7}</td>
+                            <td style={{ padding: 8 }}>{leaveBalances.sl || 7}</td>
                             <td style={{ padding: 8 }}>
                               <Button size="small" startIcon={<DownloadIcon />} onClick={() => exportUserData(user.id, user.full_name)}>
                                 Export

@@ -91,7 +91,6 @@ const Header = ({ onMenuClick }) => {
         </Typography>
         {user && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <NotificationDropdown currentUser={user} />
             <Typography 
               variant="subtitle1" 
               sx={{ 
@@ -333,8 +332,11 @@ const UserDashboard = () => {
   const [stats, setStats] = useState({
     presentDays: 0,
     absentDays: 0,
-    
-    
+  });
+  const [leaveBalances, setLeaveBalances] = useState({
+    pl: 18,
+    cl: 7,
+    sl: 7
   });
   const [userDepartment, setUserDepartment] = useState('');
   const [teamMembers, setTeamMembers] = useState([]);
@@ -469,7 +471,7 @@ const UserDashboard = () => {
       return;
     }
 
-    // Fetch user stats
+    // Fetch user stats and leave balances
     const fetchStats = async () => {
       setLoading(true);
       try {
@@ -493,13 +495,19 @@ const UserDashboard = () => {
         const attendanceData = await response.json();
         console.log('Attendance stats received:', attendanceData);
         
-        
-        
         setStats({
           presentDays: attendanceData.present_days || 0,
           absentDays: attendanceData.absent_days || 0,
-
         });
+
+        // Fetch leave balances
+        const leaveResponse = await fetch(API_ENDPOINTS.leave.balances(userData.id));
+        if (leaveResponse.ok) {
+          const leaveData = await leaveResponse.json();
+          if (leaveData.success) {
+            setLeaveBalances(leaveData.balances);
+          }
+        }
 
         // Fetch user department
         const deptResponse = await fetch(`${API_ENDPOINTS.teams.userDepartment.replace('{user_id}', userData.id)}`);
@@ -659,6 +667,33 @@ const UserDashboard = () => {
           </Box>
 
           <Grid container spacing={3}>
+            {/* Leave Balance Cards */}
+            <Grid item xs={12} sm={4} md={4}>
+              <StatCard
+                title="PL (Paid Leave)"
+                value={leaveBalances.pl}
+                icon={<EventAvailableIcon sx={{ color: '#FF9800' }} />}
+                color="#FF9800"
+              />
+            </Grid>
+            <Grid item xs={12} sm={4} md={4}>
+              <StatCard
+                title="CL (Casual Leave)"
+                value={leaveBalances.cl}
+                icon={<EventAvailableIcon sx={{ color: '#2196F3' }} />}
+                color="#2196F3"
+              />
+            </Grid>
+            <Grid item xs={12} sm={4} md={4}>
+              <StatCard
+                title="SL (Sick Leave)"
+                value={leaveBalances.sl}
+                icon={<EventAvailableIcon sx={{ color: '#F44336' }} />}
+                color="#F44336"
+              />
+            </Grid>
+
+            {/* Attendance Summary Cards */}
             <Grid item xs={12} sm={6} md={6}>
               <StatCard
                 title={`${months[selectedMonth - 1]} ${selectedYear} - Present`}
