@@ -32,6 +32,7 @@ export const API_ENDPOINTS = {
   messages: {
     list: `${BASE_URL}/api/messages`,
     create: `${BASE_URL}/api/messages`,
+    delete: (messageId) => `${BASE_URL}/api/messages/${messageId}`,
     getByUser: (userId) => `${BASE_URL}/api/messages/${userId}`,
     getConversation: (senderId, receiverId) => `${BASE_URL}/api/messages?sender_id=${senderId}&receiver_id=${receiverId}`,
   },

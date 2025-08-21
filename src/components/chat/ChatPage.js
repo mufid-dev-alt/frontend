@@ -534,7 +534,7 @@ const ChatPage = () => {
     
     setIsDeleting(true);
     try {
-      const response = await fetch(`${API_ENDPOINTS.messages.delete || API_ENDPOINTS.messages.list}/${selectedMessage.id}`, {
+      const response = await fetch(API_ENDPOINTS.messages.delete(selectedMessage.id), {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
