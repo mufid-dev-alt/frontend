@@ -308,15 +308,25 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
     };
 
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
         <Typography variant="body2" sx={{ 
           fontWeight: 600, 
-          color: 'text.secondary',
-          fontSize: { xs: '0.875rem', sm: '1rem' }
+          color: 'text.primary',
+          fontSize: { xs: '0.875rem', sm: '0.95rem' },
+          mb: 0.5
         }}>
           {label}
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 1,
+          p: 1.5,
+          bgcolor: 'grey.50',
+          borderRadius: 2,
+          border: '1px solid',
+          borderColor: 'grey.200'
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <TextField
               inputRef={hhRef}
@@ -324,46 +334,71 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
               onChange={handleHhChange}
               onBlur={handleBlur}
               onKeyDown={handleHhKeyDown}
-              placeholder="HH"
+              placeholder="00"
               inputProps={{ 
                 inputMode: 'numeric', 
                 pattern: '[0-9]*', 
                 maxLength: 2, 
                 style: { 
                   textAlign: 'center', 
-                  fontWeight: 600,
-                  fontSize: { xs: '0.875rem', sm: '1rem' }
+                  fontWeight: 700,
+                  fontSize: '1.1rem',
+                  color: '#1976D2'
                 } 
               }}
               sx={{ 
                 '& .MuiOutlinedInput-root': { 
-                  borderRadius: 2, 
-                  width: { xs: 60, sm: 70 },
-                  height: { xs: 40, sm: 48 }
+                  borderRadius: 1.5, 
+                  width: { xs: 65, sm: 75 },
+                  height: { xs: 45, sm: 50 },
+                  backgroundColor: 'white',
+                  '& fieldset': {
+                    borderColor: '#E0E0E0'
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#1976D2'
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#1976D2',
+                    borderWidth: 2
+                  }
                 } 
               }}
             />
-            <Box sx={{ display: 'flex', flexDirection: 'column', ml: { xs: 0.25, sm: 0.5 } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', ml: 0.5 }}>
               <IconButton 
                 size="small" 
                 onClick={() => handleArrowClick('hh', 'up')}
-                sx={{ padding: { xs: 0.5, sm: 1 } }}
+                sx={{ 
+                  padding: 0.5,
+                  color: '#1976D2',
+                  '&:hover': {
+                    backgroundColor: 'rgba(25, 118, 210, 0.08)'
+                  }
+                }}
               >
-                <KeyboardArrowUpIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
+                <KeyboardArrowUpIcon sx={{ fontSize: 18 }} />
               </IconButton>
               <IconButton 
                 size="small" 
                 onClick={() => handleArrowClick('hh', 'down')}
-                sx={{ padding: { xs: 0.5, sm: 1 } }}
+                sx={{ 
+                  padding: 0.5,
+                  color: '#1976D2',
+                  '&:hover': {
+                    backgroundColor: 'rgba(25, 118, 210, 0.08)'
+                  }
+                }}
               >
-                <KeyboardArrowDownIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
+                <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
               </IconButton>
             </Box>
           </Box>
           <Typography sx={{ 
             fontWeight: 700, 
-            color: 'text.disabled',
-            fontSize: { xs: '1rem', sm: '1.25rem' }
+            color: '#1976D2',
+            fontSize: '1.5rem',
+            mx: 1
           }}>
             :
           </Typography>
@@ -374,44 +409,67 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
               onChange={handleMmChange}
               onBlur={handleBlur}
               onKeyDown={handleMmKeyDown}
-              placeholder="MM"
+              placeholder="00"
               inputProps={{ 
                 inputMode: 'numeric', 
                 pattern: '[0-9]*', 
                 maxLength: 2, 
                 style: { 
                   textAlign: 'center', 
-                  fontWeight: 600,
-                  fontSize: { xs: '0.875rem', sm: '1rem' }
+                  fontWeight: 700,
+                  fontSize: '1.1rem',
+                  color: '#1976D2'
                 } 
               }}
               sx={{ 
                 '& .MuiOutlinedInput-root': { 
-                  borderRadius: 2, 
-                  width: { xs: 60, sm: 70 },
-                  height: { xs: 40, sm: 48 }
+                  borderRadius: 1.5, 
+                  width: { xs: 65, sm: 75 },
+                  height: { xs: 45, sm: 50 },
+                  backgroundColor: 'white',
+                  '& fieldset': {
+                    borderColor: '#E0E0E0'
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#1976D2'
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#1976D2',
+                    borderWidth: 2
+                  }
                 } 
               }}
             />
-            <Box sx={{ display: 'flex', flexDirection: 'column', ml: { xs: 0.25, sm: 0.5 } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', ml: 0.5 }}>
               <IconButton 
                 size="small" 
                 onClick={() => handleArrowClick('mm', 'up')}
-                sx={{ padding: { xs: 0.5, sm: 1 } }}
+                sx={{ 
+                  padding: 0.5,
+                  color: '#1976D2',
+                  '&:hover': {
+                    backgroundColor: 'rgba(25, 118, 210, 0.08)'
+                  }
+                }}
               >
-                <KeyboardArrowUpIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
+                <KeyboardArrowUpIcon sx={{ fontSize: 18 }} />
               </IconButton>
               <IconButton 
                 size="small" 
                 onClick={() => handleArrowClick('mm', 'down')}
-                sx={{ padding: { xs: 0.5, sm: 1 } }}
+                sx={{ 
+                  padding: 0.5,
+                  color: '#1976D2',
+                  '&:hover': {
+                    backgroundColor: 'rgba(25, 118, 210, 0.08)'
+                  }
+                }}
               >
-                <KeyboardArrowDownIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
+                <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
               </IconButton>
             </Box>
           </Box>
         </Box>
-
       </Box>
     );
   };
@@ -1379,24 +1437,49 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
           }
         }}
       >
-        <DialogTitle sx={{ pb: { xs: 1, sm: 2 } }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <TimeIcon color="primary" />
-            <Typography variant="h6" sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
-              Set In/Out Time
+        <DialogTitle sx={{ 
+          pb: { xs: 1, sm: 2 },
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          backgroundColor: 'grey.50'
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ 
+              p: 1, 
+              borderRadius: 1, 
+              backgroundColor: 'primary.main',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <TimeIcon sx={{ color: 'white', fontSize: 20 }} />
+            </Box>
+            <Typography variant="h6" sx={{ 
+              fontSize: { xs: '1.1rem', sm: '1.25rem' },
+              fontWeight: 600,
+              color: 'text.primary'
+            }}>
+              Attendance Entry
             </Typography>
           </Box>
         </DialogTitle>
-        <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1, sm: 2 } }}>
-          <Typography variant="body2" sx={{ 
+        <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2, sm: 3 } }}>
+          <Box sx={{ 
             mb: { xs: 2, sm: 3 }, 
-            p: { xs: 1.5, sm: 2 }, 
-            bgcolor: 'grey.50', 
-            borderRadius: 1,
-            fontSize: { xs: '0.875rem', sm: '1rem' }
+            p: { xs: 2, sm: 2.5 }, 
+            bgcolor: 'primary.50', 
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'primary.200'
           }}>
-            <strong>Date:</strong> {timeDialog.date}
-          </Typography>
+            <Typography variant="body1" sx={{ 
+              fontSize: { xs: '0.9rem', sm: '1rem' },
+              fontWeight: 500,
+              color: 'primary.main'
+            }}>
+              <strong>Selected Date:</strong> {timeDialog.date}
+            </Typography>
+          </Box>
           <Grid container spacing={{ xs: 2, sm: 3 }}>
             <Grid item xs={12} sm={6}>
               <TimeHMInput
@@ -1417,16 +1500,16 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
         <DialogActions sx={{ 
           p: { xs: 2, sm: 3 }, 
           pt: 0,
-          flexDirection: { xs: 'column', sm: 'row' },
-          gap: { xs: 1, sm: 0 }
+          flexDirection: 'column',
+          gap: 2
         }}>
+          {/* Primary Actions */}
           <Box sx={{ 
-            flex: 1, 
             display: 'flex', 
-            flexDirection: { xs: 'column', sm: 'row' },
-            gap: { xs: 1, sm: 1 }, 
-            alignItems: { xs: 'stretch', sm: 'center' },
-            width: { xs: '100%', sm: 'auto' }
+            gap: 1.5, 
+            justifyContent: 'center',
+            width: '100%',
+            flexWrap: 'wrap'
           }}>
             <Tooltip 
               title={!timeDialog.in_time ? "Please fill in the 'In Time' before marking present" : ""}
@@ -1434,35 +1517,68 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
             >
               <span>
                 <Button 
-                  size="small" 
+                  size="medium" 
                   color="success" 
-                  variant="outlined" 
+                  variant="contained" 
                   startIcon={<PresentIcon />} 
                   onClick={saveTimeEntry}
                   disabled={!timeDialog.in_time}
-                  sx={{ width: { xs: '100%', sm: 'auto' } }}
+                  sx={{ 
+                    minWidth: 140,
+                    height: 40,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    boxShadow: 2,
+                    '&:hover': {
+                      boxShadow: 4
+                    }
+                  }}
                 >
                   Mark Present
                 </Button>
               </span>
             </Tooltip>
             <Button 
-              size="small" 
+              size="medium" 
               color="error" 
-              variant="outlined" 
+              variant="contained" 
               startIcon={<AbsentIcon />} 
               onClick={() => updateStatusForDate(timeDialog.date, 'absent')}
-              sx={{ width: { xs: '100%', sm: 'auto' } }}
+              sx={{ 
+                minWidth: 140,
+                height: 40,
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                boxShadow: 2,
+                '&:hover': {
+                  boxShadow: 4
+                }
+              }}
             >
               Mark Absent
             </Button>
+          </Box>
+
+          {/* Leave Type Actions */}
+          <Box sx={{ 
+            display: 'flex', 
+            gap: 1.5, 
+            justifyContent: 'center',
+            width: '100%',
+            flexWrap: 'wrap'
+          }}>
             <Button 
-              size="small" 
-              color="warning" 
+              size="medium" 
               variant="outlined" 
               onClick={() => updateStatusForDate(timeDialog.date, 'PL')}
               sx={{ 
-                width: { xs: '100%', sm: 'auto' },
+                minWidth: 80,
+                height: 36,
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
                 color: '#FF9800',
                 borderColor: '#FF9800',
                 '&:hover': {
@@ -1474,12 +1590,15 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
               PL
             </Button>
             <Button 
-              size="small" 
-              color="warning" 
+              size="medium" 
               variant="outlined" 
               onClick={() => updateStatusForDate(timeDialog.date, 'CL')}
               sx={{ 
-                width: { xs: '100%', sm: 'auto' },
+                minWidth: 80,
+                height: 36,
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
                 color: '#2196F3',
                 borderColor: '#2196F3',
                 '&:hover': {
@@ -1491,12 +1610,15 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
               CL
             </Button>
             <Button 
-              size="small" 
-              color="warning" 
+              size="medium" 
               variant="outlined" 
               onClick={() => updateStatusForDate(timeDialog.date, 'SL')}
               sx={{ 
-                width: { xs: '100%', sm: 'auto' },
+                minWidth: 80,
+                height: 36,
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
                 color: '#F44336',
                 borderColor: '#F44336',
                 '&:hover': {
@@ -1507,25 +1629,53 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
             >
               SL
             </Button>
+          </Box>
+
+          {/* Utility Actions */}
+          <Box sx={{ 
+            display: 'flex', 
+            gap: 1.5, 
+            justifyContent: 'center',
+            width: '100%',
+            flexWrap: 'wrap'
+          }}>
             <Button 
-              size="small" 
-              color="warning" 
+              size="medium" 
               variant="outlined" 
               onClick={clearCalendarCell}
-              sx={{ width: { xs: '100%', sm: 'auto' } }}
+              sx={{ 
+                minWidth: 120,
+                height: 36,
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                color: '#757575',
+                borderColor: '#757575',
+                '&:hover': {
+                  borderColor: '#616161',
+                  backgroundColor: 'rgba(117, 117, 117, 0.04)'
+                }
+              }}
             >
               Clear Format
             </Button>
-          </Box>
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: { xs: 'column', sm: 'row' },
-            gap: { xs: 1, sm: 1 },
-            width: { xs: '100%', sm: 'auto' }
-          }}>
             <Button 
+              size="medium" 
+              variant="outlined" 
               onClick={() => setTimeDialog({ open: false, date: null, in_time: '', out_time: '' })}
-              sx={{ width: { xs: '100%', sm: 'auto' } }}
+              sx={{ 
+                minWidth: 100,
+                height: 36,
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                color: '#757575',
+                borderColor: '#757575',
+                '&:hover': {
+                  borderColor: '#616161',
+                  backgroundColor: 'rgba(117, 117, 117, 0.04)'
+                }
+              }}
             >
               Cancel
             </Button>
