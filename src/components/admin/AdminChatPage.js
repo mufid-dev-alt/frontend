@@ -463,260 +463,262 @@ const AdminChatPage = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AdminHeader onMenuClick={handleDrawerToggle} />
-      <Sidebar open={mobileOpen} onClose={handleDrawerToggle} />
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          mt: 8,
-          width: { sm: `calc(100% - 240px)` },
-          ml: { sm: '240px' },
-          backgroundColor: theme.palette.grey[50],
-          overflow: 'hidden',
-          maxWidth: '100vw'
-        }}
-      >
-        <Container maxWidth="xl">
-          <Typography 
-            variant="h4" 
-            sx={{ 
-              mb: 3,
-              fontFamily: "'Poppins', sans-serif",
-              fontWeight: 600,
-              color: theme.palette.text.primary
-            }}
-          >
-            Admin Chat
-          </Typography>
+    <>
+      <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+        <AdminHeader onMenuClick={handleDrawerToggle} />
+        <Sidebar open={mobileOpen} onClose={handleDrawerToggle} />
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: 3,
+            mt: 8,
+            width: { sm: `calc(100% - 240px)` },
+            ml: { sm: '240px' },
+            backgroundColor: theme.palette.grey[50],
+            overflow: 'hidden',
+            maxWidth: '100vw'
+          }}
+        >
+          <Container maxWidth="xl">
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                mb: 3,
+                fontFamily: "'Poppins', sans-serif",
+                fontWeight: 600,
+                color: theme.palette.text.primary
+              }}
+            >
+              Admin Chat
+            </Typography>
 
-          <Box sx={{ 
-            display: 'flex', 
-            gap: 3, 
-            height: { xs: 'auto', md: 'calc(100vh - 200px)' },
-            flexDirection: { xs: 'column', md: 'row' }
-          }}>
-            {/* Users List */}
-            <Card sx={{ 
-              width: { xs: '100%', md: 300 }, 
-              height: { xs: 'auto', md: 'fit-content' },
-              maxHeight: { xs: '300px', md: '500px' }
-            }}>
-              <CardHeader title="Users" />
-              <CardContent sx={{ 
-                p: 0, 
-                maxHeight: { xs: 250, md: 400 }, 
-                overflow: 'auto' 
-              }}>
-                <List>
-                  {users.map((user) => (
-                    <ListItem 
-                      key={user.id}
-                      button 
-                      selected={selectedUser?.id === user.id}
-                      onClick={() => handleUserSelect(user)}
-                    >
-                      <ListItemAvatar>
-                        <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
-                          {user.full_name.charAt(0)}
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText 
-                        primary={user.full_name}
-                        secondary={`Emp Code: ${user.employee_code} | ${user.department || '-'}`}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              </CardContent>
-            </Card>
-
-            {/* Chat Messages */}
-            <Card sx={{ 
-              flex: 1, 
+            <Box sx={{ 
               display: 'flex', 
-              flexDirection: 'column',
-              height: { xs: '500px', md: 'auto' }
+              gap: 3, 
+              height: { xs: 'auto', md: 'calc(100vh - 200px)' },
+              flexDirection: { xs: 'column', md: 'row' }
             }}>
-              <CardHeader 
-                title={selectedUser ? `Chat with ${selectedUser.full_name}` : 'Select a user to chat'}
-                subheader={selectedUser ? `${selectedUser.department || '-'} Department` : ''}
-              />
-              <CardContent sx={{ flex: 1, p: 0, display: 'flex', flexDirection: 'column' }}>
-                {selectedUser ? (
-                  <>
-                    <Box sx={{ 
-                      flex: 1, 
-                      p: 2, 
-                      overflow: 'auto', 
-                      maxHeight: { xs: '300px', md: '400px' }
-                    }}>
-                      {messages.length === 0 ? (
-                        <Box sx={{ textAlign: 'center', color: 'text.secondary', mt: 4 }}>
-                          <Typography>No messages yet. Start the conversation!</Typography>
-                        </Box>
-                      ) : (
-                        messages.map((message, index) => {
-                          const showDateHeader = index === 0 || 
-                            formatDate(message.timestamp) !== formatDate(messages[index - 1]?.timestamp);
-                          
-                          return (
-                            <Fragment key={message.id}>
-                              {showDateHeader && (
-                                <Box sx={{ textAlign: 'center', my: 2 }}>
-                                  <Typography 
-                                    variant="caption" 
-                                    sx={{ 
-                                      backgroundColor: theme.palette.grey[200],
-                                      px: 2,
-                                      py: 0.5,
-                                      borderRadius: 1,
-                                      color: theme.palette.text.secondary
-                                    }}
-                                  >
-                                    {formatDate(message.timestamp)}
-                                  </Typography>
-                                </Box>
-                              )}
-                              <Box
-                                sx={{
-                                  display: 'flex',
-                                  justifyContent: message.sender_id === 1 ? 'flex-end' : 'flex-start',
-                                  mb: 2
-                                }}
-                              >
-                                <Paper
-                                  sx={{
-                                    p: 2,
-                                    maxWidth: '70%',
-                                    backgroundColor: message.sender_id === 1 
-                                      ? theme.palette.primary.main 
-                                      : theme.palette.grey[100],
-                                    color: message.sender_id === 1 
-                                      ? 'white' 
-                                      : 'text.primary',
-                                    borderRadius: 2,
-                                    position: 'relative'
-                                  }}
-                                >
-                                  <Typography 
-                                    variant="body1" 
-                                    sx={{ 
-                                      whiteSpace: 'pre-wrap',
-                                      wordBreak: 'break-word'
-                                    }}
-                                  >
-                                    {message.content}
-                                  </Typography>
-                                  <Box sx={{ 
-                                    display: 'flex', 
-                                    justifyContent: 'space-between', 
-                                    alignItems: 'center',
-                                    mt: 0.5 
-                                  }}>
+              {/* Users List */}
+              <Card sx={{ 
+                width: { xs: '100%', md: 300 }, 
+                height: { xs: 'auto', md: 'fit-content' },
+                maxHeight: { xs: '300px', md: '500px' }
+              }}>
+                <CardHeader title="Users" />
+                <CardContent sx={{ 
+                  p: 0, 
+                  maxHeight: { xs: 250, md: 400 }, 
+                  overflow: 'auto' 
+                }}>
+                  <List>
+                    {users.map((user) => (
+                      <ListItem 
+                        key={user.id}
+                        button 
+                        selected={selectedUser?.id === user.id}
+                        onClick={() => handleUserSelect(user)}
+                      >
+                        <ListItemAvatar>
+                          <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
+                            {user.full_name.charAt(0)}
+                          </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText 
+                          primary={user.full_name}
+                          secondary={`Emp Code: ${user.employee_code} | ${user.department || '-'}`}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </CardContent>
+              </Card>
+
+              {/* Chat Messages */}
+              <Card sx={{ 
+                flex: 1, 
+                display: 'flex', 
+                flexDirection: 'column',
+                height: { xs: '500px', md: 'auto' }
+              }}>
+                <CardHeader 
+                  title={selectedUser ? `Chat with ${selectedUser.full_name}` : 'Select a user to chat'}
+                  subheader={selectedUser ? `${selectedUser.department || '-'} Department` : ''}
+                />
+                <CardContent sx={{ flex: 1, p: 0, display: 'flex', flexDirection: 'column' }}>
+                  {selectedUser ? (
+                    <>
+                      <Box sx={{ 
+                        flex: 1, 
+                        p: 2, 
+                        overflow: 'auto', 
+                        maxHeight: { xs: '300px', md: '400px' }
+                      }}>
+                        {messages.length === 0 ? (
+                          <Box sx={{ textAlign: 'center', color: 'text.secondary', mt: 4 }}>
+                            <Typography>No messages yet. Start the conversation!</Typography>
+                          </Box>
+                        ) : (
+                          messages.map((message, index) => {
+                            const showDateHeader = index === 0 || 
+                              formatDate(message.timestamp) !== formatDate(messages[index - 1]?.timestamp);
+                            
+                            return (
+                              <Fragment key={message.id}>
+                                {showDateHeader && (
+                                  <Box sx={{ textAlign: 'center', my: 2 }}>
                                     <Typography 
                                       variant="caption" 
                                       sx={{ 
-                                        opacity: 0.7
+                                        backgroundColor: theme.palette.grey[200],
+                                        px: 2,
+                                        py: 0.5,
+                                        borderRadius: 1,
+                                        color: theme.palette.text.secondary
                                       }}
                                     >
-                                      {formatTime(message.timestamp)}
+                                      {formatDate(message.timestamp)}
                                     </Typography>
-                                    {message.sender_id === 1 && (
-                                      <Tooltip title="Message options">
-                                        <IconButton
-                                          size="small"
-                                          onClick={(e) => handleMessageMenuOpen(e, message)}
-                                          sx={{ 
-                                            opacity: 0.7,
-                                            '&:hover': { opacity: 1 },
-                                            color: 'inherit'
-                                          }}
-                                        >
-                                          <MoreVertIcon fontSize="small" />
-                                        </IconButton>
-                                      </Tooltip>
-                                    )}
                                   </Box>
-                                </Paper>
-                              </Box>
-                            </Fragment>
-                          );
-                        })
-                      )}
-                      <div ref={messagesEndRef} />
-                    </Box>
-                    <Divider />
-                    <Box sx={{ p: 2 }}>
-                      <TextField
-                        fullWidth
-                        multiline
-                        maxRows={4}
-                        variant="outlined"
-                        placeholder="Type a message... (Shift+Enter for new line)"
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <Tooltip title="Send message">
-                                <IconButton
-                                  onClick={sendMessage}
-                                  disabled={!newMessage.trim()}
-                                  color="primary"
+                                )}
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    justifyContent: message.sender_id === 1 ? 'flex-end' : 'flex-start',
+                                    mb: 2
+                                  }}
                                 >
-                                  <SendIcon />
-                                </IconButton>
-                              </Tooltip>
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
+                                  <Paper
+                                    sx={{
+                                      p: 2,
+                                      maxWidth: '70%',
+                                      backgroundColor: message.sender_id === 1 
+                                        ? theme.palette.primary.main 
+                                        : theme.palette.grey[100],
+                                      color: message.sender_id === 1 
+                                        ? 'white' 
+                                        : 'text.primary',
+                                      borderRadius: 2,
+                                      position: 'relative'
+                                    }}
+                                  >
+                                    <Typography 
+                                      variant="body1" 
+                                      sx={{ 
+                                        whiteSpace: 'pre-wrap',
+                                        wordBreak: 'break-word'
+                                      }}
+                                    >
+                                      {message.content}
+                                    </Typography>
+                                    <Box sx={{ 
+                                      display: 'flex', 
+                                      justifyContent: 'space-between', 
+                                      alignItems: 'center',
+                                      mt: 0.5 
+                                    }}>
+                                      <Typography 
+                                        variant="caption" 
+                                        sx={{ 
+                                          opacity: 0.7
+                                        }}
+                                      >
+                                        {formatTime(message.timestamp)}
+                                      </Typography>
+                                      {message.sender_id === 1 && (
+                                        <Tooltip title="Message options">
+                                          <IconButton
+                                            size="small"
+                                            onClick={(e) => handleMessageMenuOpen(e, message)}
+                                            sx={{ 
+                                              opacity: 0.7,
+                                              '&:hover': { opacity: 1 },
+                                              color: 'inherit'
+                                            }}
+                                          >
+                                            <MoreVertIcon fontSize="small" />
+                                          </IconButton>
+                                        </Tooltip>
+                                      )}
+                                    </Box>
+                                  </Paper>
+                                </Box>
+                              </Fragment>
+                            );
+                          })
+                        )}
+                        <div ref={messagesEndRef} />
+                      </Box>
+                      <Divider />
+                      <Box sx={{ p: 2 }}>
+                        <TextField
+                          fullWidth
+                          multiline
+                          maxRows={4}
+                          variant="outlined"
+                          placeholder="Type a message... (Shift+Enter for new line)"
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          onKeyPress={handleKeyPress}
+                          InputProps={{
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <Tooltip title="Send message">
+                                  <IconButton
+                                    onClick={sendMessage}
+                                    disabled={!newMessage.trim()}
+                                    color="primary"
+                                  >
+                                    <SendIcon />
+                                  </IconButton>
+                                </Tooltip>
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+                      </Box>
+                    </>
+                  ) : (
+                    <Box sx={{ 
+                      flex: 1, 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      color: 'text.secondary'
+                    }}>
+                      <Typography>Select a user to start chatting</Typography>
                     </Box>
-                  </>
-                ) : (
-                  <Box sx={{ 
-                    flex: 1, 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    color: 'text.secondary'
-                  }}>
-                    <Typography>Select a user to start chatting</Typography>
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          </Box>
-        </Container>
+                  )}
+                </CardContent>
+              </Card>
+            </Box>
+          </Container>
+        </Box>
       </Box>
-    </Box>
 
-    {/* Message Options Menu */}
-    <Menu
-      anchorEl={messageMenuAnchor}
-      open={Boolean(messageMenuAnchor)}
-      onClose={handleMessageMenuClose}
-      anchorOrigin={{
-        vertical: 'top',
-        horizontal: 'right',
-      }}
-      transformOrigin={{
-        vertical: 'top',
-        horizontal: 'left',
-      }}
-    >
-      <MenuItem 
-        onClick={handleDeleteMessage}
-        disabled={isDeleting}
-        sx={{ color: 'error.main' }}
+      {/* Message Options Menu */}
+      <Menu
+        anchorEl={messageMenuAnchor}
+        open={Boolean(messageMenuAnchor)}
+        onClose={handleMessageMenuClose}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
       >
-        {isDeleting ? 'Deleting...' : 'Unsend'}
-      </MenuItem>
-    </Menu>
+        <MenuItem 
+          onClick={handleDeleteMessage}
+          disabled={isDeleting}
+          sx={{ color: 'error.main' }}
+        >
+          {isDeleting ? 'Deleting...' : 'Unsend'}
+        </MenuItem>
+      </Menu>
+    </>
   );
 };
 
