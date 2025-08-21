@@ -54,6 +54,7 @@ import Header from '../common/Header';
 import { API_ENDPOINTS } from '../../config/api';
 import userService from '../../config/userService';
 import eventService from '../../config/eventService';
+import ExcelJS from 'exceljs';
 
 const AttendanceRecords = () => {
   const theme = useTheme();
@@ -66,7 +67,7 @@ const AttendanceRecords = () => {
   const [downloading, setDownloading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [editDialog, setEditDialog] = useState({ open: false, date: null, status: 'present' });
+
   const [timeDialog, setTimeDialog] = useState({ open: false, date: null, in_time: '', out_time: '' });
   const [notification, setNotification] = useState({
     open: false,
@@ -161,42 +162,204 @@ const AttendanceRecords = () => {
     
     setDownloading(true);
     try {
-      const excelContent = convertToExcelFormat(attendanceData, selectedUser);
-      const blob = new Blob([excelContent], { type: 'text/csv;charset=utf-8;' });
-      const url = window.URL.createObjectURL(blob);
+      // Build formatted Excel workbook
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('Attendance');
+      
+      // Set font size to 7 for all cells
+      const fontSize = 7;
+      
+      const monthName = months[selectedMonth - 1];
+      const year = selectedYear;
+      
+      // Calculate date range
+      const startDate = new Date(year, selectedMonth - 1, 1);
+      const endDate = new Date(year, selectedMonth, 0);
+      const dateRange = `${monthName}-1-${year} to ${monthName}-${endDate.getDate()}-${year}`;
+      
+      // Create header rows matching the exact format
+      ws.mergeCells('A1:Z1');
+      ws.getRow(1).getCell('A').value = 'Monthly Status Report (Basic Work Duration)';
+      ws.getRow(1).getCell('A').alignment = { horizontal: 'center' };
+      ws.getRow(1).getCell('A').font = { bold: true, size: fontSize };
+      
+      ws.mergeCells('A2:Z2');
+      ws.getRow(2).getCell('A').value = dateRange;
+      ws.getRow(2).getCell('A').alignment = { horizontal: 'center' };
+      ws.getRow(2).getCell('A').font = { size: fontSize };
+      
+      ws.mergeCells('A3:Z3');
+      ws.getRow(3).getCell('A').value = 'COMPANY : DCM INFOTECH LIMITED';
+      ws.getRow(3).getCell('A').font = { size: fontSize };
+      
+      ws.mergeCells('A4:Z4');
+      ws.getRow(4).getCell('A').value = `DEPARTMENT NAME : ${selectedUser.department || 'General'}`;
+      ws.getRow(4).getCell('A').font = { bold: true, size: fontSize };
+      
+      // User info rows
+      ws.getRow(5).getCell('A').value = 'Emp. Code :';
+      ws.getRow(5).getCell('A').font = { size: fontSize };
+      ws.getRow(5).getCell('B').value = selectedUser.employee_code || '';
+      ws.getRow(5).getCell('B').font = { size: fontSize };
+      
+      ws.getRow(6).getCell('A').value = 'Emp. Name :';
+      ws.getRow(6).getCell('A').font = { size: fontSize };
+      ws.getRow(6).getCell('B').value = selectedUser.full_name;
+      ws.getRow(6).getCell('B').font = { size: fontSize };
+      
+      const headerRowIndex = 8;
+      const sorted = [...attendanceData].sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+      // Days header row
+      ws.getRow(headerRowIndex).getCell('A').value = 'Days';
+      ws.getRow(headerRowIndex).getCell('A').font = { bold: true, size: fontSize };
+      
+      // Add day columns (1 T, 2 W, 3 Th, etc.)
+      let colIndex = 1; // Start from B column
+      for (let day = 1; day <= endDate.getDate(); day++) {
+        const date = new Date(year, selectedMonth - 1, day);
+        const dayNames = ['S', 'M', 'T', 'W', 'Th', 'F', 'St'];
+        const dayName = dayNames[date.getDay()];
+        const colLetter = getColumnLetter(colIndex + 1); // +1 because A=1, B=2, etc.
+        
+        ws.getRow(headerRowIndex).getCell(colLetter).value = `${day} ${dayName}`;
+        ws.getRow(headerRowIndex).getCell(colLetter).font = { bold: true, size: fontSize };
+        colIndex++;
+      }
+      
+      // Status row
+      let currentRow = headerRowIndex + 1;
+      ws.getRow(currentRow).getCell('A').value = 'Status';
+      ws.getRow(currentRow).getCell('A').font = { size: fontSize };
+      
+      colIndex = 1;
+      for (let day = 1; day <= endDate.getDate(); day++) {
+        const dateStr = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const record = sorted.find(r => r.date === dateStr);
+        const colLetter = getColumnLetter(colIndex + 1);
+        
+        if (record) {
+          ws.getRow(currentRow).getCell(colLetter).value = record.status === 'present' ? 'P' : 'A';
+        } else {
+          ws.getRow(currentRow).getCell(colLetter).value = 'A';
+        }
+        ws.getRow(currentRow).getCell(colLetter).font = { size: fontSize };
+        colIndex++;
+      }
+      currentRow++;
+      
+      // InTime row
+      ws.getRow(currentRow).getCell('A').value = 'InTime';
+      ws.getRow(currentRow).getCell('A').font = { size: fontSize };
+      
+      colIndex = 1;
+      for (let day = 1; day <= endDate.getDate(); day++) {
+        const dateStr = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const record = sorted.find(r => r.date === dateStr);
+        const colLetter = getColumnLetter(colIndex + 1);
+        
+        if (record && record.in_time) {
+          ws.getRow(currentRow).getCell(colLetter).value = record.in_time;
+        }
+        ws.getRow(currentRow).getCell(colLetter).font = { size: fontSize };
+        colIndex++;
+      }
+      currentRow++;
+      
+      // OutTime row
+      ws.getRow(currentRow).getCell('A').value = 'OutTime';
+      ws.getRow(currentRow).getCell('A').font = { size: fontSize };
+      
+      colIndex = 1;
+      for (let day = 1; day <= endDate.getDate(); day++) {
+        const dateStr = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const record = sorted.find(r => r.date === dateStr);
+        const colLetter = getColumnLetter(colIndex + 1);
+        
+        if (record && record.out_time) {
+          ws.getRow(currentRow).getCell(colLetter).value = record.out_time;
+        }
+        ws.getRow(currentRow).getCell(colLetter).font = { size: fontSize };
+        colIndex++;
+      }
+      currentRow++;
+      
+      // Total row
+      ws.getRow(currentRow).getCell('A').value = 'Total';
+      ws.getRow(currentRow).getCell('A').font = { size: fontSize };
+      
+      colIndex = 1;
+      for (let day = 1; day <= endDate.getDate(); day++) {
+        const dateStr = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const record = sorted.find(r => r.date === dateStr);
+        const colLetter = getColumnLetter(colIndex + 1);
+        
+        if (record && record.in_time && record.out_time) {
+          // Calculate total hours
+          const [ih, im] = record.in_time.split(':').map(Number);
+          const [oh, om] = record.out_time.split(':').map(Number);
+          if (!isNaN(ih) && !isNaN(im) && !isNaN(oh) && !isNaN(om)) {
+            let mins = (oh * 60 + om) - (ih * 60 + im);
+            if (mins < 0) mins += 24 * 60;
+            const h = String(Math.floor(mins / 60)).padStart(2, '0');
+            const m = String(mins % 60).padStart(2, '0');
+            ws.getRow(currentRow).getCell(colLetter).value = `${h}:${m}`;
+          } else {
+            ws.getRow(currentRow).getCell(colLetter).value = '00:00';
+          }
+        } else {
+          ws.getRow(currentRow).getCell(colLetter).value = '00:00';
+        }
+        ws.getRow(currentRow).getCell(colLetter).font = { size: fontSize };
+        colIndex++;
+      }
+      
+      // Apply borders to all cells
+      ws.eachRow((row) => {
+        row.eachCell((cell) => {
+          cell.border = { 
+            top: { style: 'thin' }, 
+            left: { style: 'thin' }, 
+            bottom: { style: 'thin' }, 
+            right: { style: 'thin' } 
+          };
+        });
+      });
+      
+      // Set column widths
+      ws.getColumn('A').width = 12;
+      for (let i = 1; i <= endDate.getDate(); i++) {
+        const colLetter = getColumnLetter(i + 1);
+        ws.getColumn(colLetter).width = 8;
+      }
+      
+      const blob = await wb.xlsx.writeBuffer();
+      const url = window.URL.createObjectURL(new Blob([blob]));
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${selectedUser.full_name.replace(/\s+/g, '_')}_${months[selectedMonth - 1]}_${selectedYear}_Attendance.csv`;
-      
+      a.download = `${selectedUser.full_name.replace(/\s+/g, '_')}_${monthName}_${selectedYear}_Attendance.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       showNotification('Attendance exported successfully', 'success');
     } catch (error) {
+      console.error('Error exporting attendance:', error);
       showNotification('Error exporting attendance', 'error');
     } finally {
       setDownloading(false);
     }
   };
 
-  const convertToExcelFormat = (data, userDetails) => {
-    let csv = `USERNAME - ${userDetails.full_name}\n`;
-    csv += `USER-EMAIL - ${userDetails.email}\n`;
-    csv += `DATE,DAY,ATTENDANCE\n`;
-    
-    const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
-    
-    sortedData.forEach(record => {
-      const date = new Date(record.date);
-      const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()];
-      const formattedDate = `${date.getDate()}-${months[date.getMonth()].substr(0, 3)}-${date.getFullYear().toString().substr(-2)}`;
-      const status = record.status === 'present' ? 'PRESENT' : record.status === 'absent' ? 'ABSENT' : 'OFF';
-      
-      csv += `${formattedDate},${dayName},${status}\n`;
-    });
-    
-    return csv;
+  // Helper function to convert column index to Excel column letter
+  const getColumnLetter = (index) => {
+    let result = '';
+    while (index > 0) {
+      index--;
+      result = String.fromCharCode(65 + (index % 26)) + result;
+      index = Math.floor(index / 26);
+    }
+    return result;
   };
 
   const generateCalendarData = () => {
@@ -517,22 +680,7 @@ const AttendanceRecords = () => {
     setNotification(prev => ({ ...prev, open: false }));
   };
 
-  const handleEditAttendance = (date) => {
-    const record = attendanceData.find(r => r.date === date);
-    setEditDialog({ 
-      open: true, 
-      date, 
-      status: record?.status || 'present' 
-    });
-  };
 
-  const handleStatusChange = (event) => {
-    setEditDialog(prev => ({ ...prev, status: event.target.value }));
-  };
-
-  const handleSaveAttendance = () => {
-    updateAttendance(editDialog.date, editDialog.status);
-  };
 
   const calendarData = selectedUser ? generateCalendarData() : [];
   const presentDays = calendarData.filter(day => day.status === 'present').length;
@@ -861,27 +1009,7 @@ const AttendanceRecords = () => {
           )}
         </Container>
 
-        {/* Edit Attendance Dialog */}
-        <Dialog open={editDialog.open} onClose={() => setEditDialog({ ...editDialog, open: false })}>
-          <DialogTitle>Edit Attendance</DialogTitle>
-          <DialogContent>
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              Date: {editDialog.date ? new Date(editDialog.date).toLocaleDateString() : ''}
-            </Typography>
-            <Select
-              value={editDialog.status}
-              onChange={handleStatusChange}
-              fullWidth
-            >
-              <MenuItem value="present">Present</MenuItem>
-              <MenuItem value="absent">Absent</MenuItem>
-            </Select>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setEditDialog({ ...editDialog, open: false })}>Cancel</Button>
-            <Button onClick={handleSaveAttendance} variant="contained">Save</Button>
-          </DialogActions>
-        </Dialog>
+
 
         {/* Time Entry Dialog */}
         <Dialog 
