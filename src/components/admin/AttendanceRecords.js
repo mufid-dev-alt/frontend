@@ -29,7 +29,8 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  InputAdornment
+  InputAdornment,
+  Tooltip
 } from '@mui/material';
 import {
   Download as DownloadIcon,
@@ -574,9 +575,7 @@ const AttendanceRecords = () => {
             </Box>
           </Box>
         </Box>
-        <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-          Type HH then MM. Use arrows to adjust.
-        </Typography>
+
       </Box>
     );
   };
@@ -595,6 +594,12 @@ const AttendanceRecords = () => {
       const { date } = timeDialog;
       const in_time = normalizeTime(timeDialog.in_time);
       const out_time = normalizeTime(timeDialog.out_time);
+      
+      // Only allow saving if in_time is provided
+      if (!in_time) {
+        showNotification('Please fill in the In Time before saving', 'error');
+        return;
+      }
 
       const response = await fetch(`${API_ENDPOINTS.attendance.update}`, {
         method: 'PUT',
@@ -1092,6 +1097,15 @@ const AttendanceRecords = () => {
               >
                 Mark Absent
               </Button>
+              <Button 
+                size="small" 
+                color="warning" 
+                variant="outlined" 
+                onClick={() => setTimeDialog(prev => ({ ...prev, in_time: '', out_time: '' }))}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
+              >
+                Clear Format
+              </Button>
             </Box>
             <Box sx={{ 
               display: 'flex', 
@@ -1105,13 +1119,21 @@ const AttendanceRecords = () => {
               >
                 Cancel
               </Button>
-              <Button 
-                onClick={saveTimeEntry} 
-                variant="contained"
-                sx={{ width: { xs: '100%', sm: 'auto' } }}
+              <Tooltip 
+                title={!timeDialog.in_time ? "Please fill in the 'In Time' before saving" : ""}
+                placement="top"
               >
-                Save
-              </Button>
+                <span>
+                  <Button 
+                    onClick={saveTimeEntry} 
+                    variant="contained"
+                    disabled={!timeDialog.in_time}
+                    sx={{ width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    Save
+                  </Button>
+                </span>
+              </Tooltip>
             </Box>
           </DialogActions>
         </Dialog>
