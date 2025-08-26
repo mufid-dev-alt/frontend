@@ -34,6 +34,10 @@ export const API_ENDPOINTS = {
     cancel: `${BASE_URL}/api/leave/cancel`,
     rollover: (year) => `${BASE_URL}/api/leave/rollover/${year}`,
   },
+  system: {
+    simulateDate: `${BASE_URL}/api/system/simulate-date`,
+    clearAllData: `${BASE_URL}/api/system/clear-all-data`,
+  },
 
   messages: {
     list: `${BASE_URL}/api/messages`,

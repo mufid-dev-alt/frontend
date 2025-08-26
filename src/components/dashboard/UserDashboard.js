@@ -34,7 +34,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Chip
+  Chip,
+  TextField
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/ExitToApp';
@@ -367,6 +368,7 @@ const UserDashboard = () => {
     message: '',
     severity: 'info'
   });
+  const [testDate, setTestDate] = useState(new Date().toISOString().split('T')[0]);
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -383,6 +385,85 @@ const UserDashboard = () => {
       message,
       severity
     });
+  };
+
+  const handleGoToDate = async () => {
+    try {
+      const userData = JSON.parse(localStorage.getItem('user'));
+      if (!userData) {
+        showNotification('User data not found. Please log in again.', 'error');
+        navigate('/');
+        return;
+      }
+
+      const selectedDate = new Date(testDate);
+      const currentYear = selectedDate.getFullYear();
+
+      const response = await fetch(`${API_ENDPOINTS.leave.rollover}/${currentYear}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          showNotification(`Year-end rollover processed for ${currentYear}. New leave balances applied.`, 'success');
+          fetchStats(); // Refresh leave balances
+        } else {
+          showNotification(`Rollover failed: ${data.message}`, 'error');
+        }
+      } else {
+        showNotification('Failed to process year-end rollover', 'error');
+      }
+    } catch (error) {
+      console.error('Error processing year-end rollover:', error);
+      showNotification('Error processing year-end rollover', 'error');
+    }
+  };
+
+  const handleClearAllData = async () => {
+    try {
+      const userData = JSON.parse(localStorage.getItem('user'));
+      if (!userData) {
+        showNotification('User data not found. Please log in again.', 'error');
+        navigate('/');
+        return;
+      }
+
+      // Show confirmation dialog
+      const confirmed = window.confirm(
+        '⚠️ WARNING: This will permanently delete ALL attendance records and reset ALL leave balances for ALL users!\n\n' +
+        'This action cannot be undone. Are you sure you want to continue?'
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      const response = await fetch(API_ENDPOINTS.system.clearAllData, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          showNotification(
+            `✅ Successfully cleared ${data.attendance_deleted} attendance records and reset leave balances for ${data.users_modified} users.`, 
+            'success'
+          );
+          // Refresh the dashboard data
+          fetchStats();
+        } else {
+          showNotification(`Failed to clear data: ${data.message}`, 'error');
+        }
+      } else {
+        showNotification('Failed to clear data', 'error');
+      }
+    } catch (error) {
+      console.error('Error clearing data:', error);
+      showNotification('Error clearing data', 'error');
+    }
   };
 
   const handleLeaveCardClick = async (leaveType) => {
@@ -856,6 +937,63 @@ const UserDashboard = () => {
                 </Paper>
               </Grid>
             )}
+
+            {/* Go to Date Section */}
+            <Grid item xs={12}>
+              <Paper sx={{ p: 3, textAlign: 'center' }}>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                  Test Year-End Rollover
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                  <TextField
+                    type="date"
+                    label="Go to Date"
+                    value={testDate}
+                    onChange={(e) => setTestDate(e.target.value)}
+                    size="small"
+                    sx={{ minWidth: 200 }}
+                  />
+                  <Button
+                    variant="contained"
+                    onClick={handleGoToDate}
+                    sx={{
+                      backgroundColor: '#4CAF50',
+                      '&:hover': { backgroundColor: '#45a049' }
+                    }}
+                  >
+                    Go to Date
+                  </Button>
+                </Box>
+                <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>
+                  This button simulates the system date for testing year-end leave rollover
+                </Typography>
+              </Paper>
+            </Grid>
+
+            {/* Clear All Data Section */}
+            <Grid item xs={12}>
+              <Paper sx={{ p: 3, textAlign: 'center' }}>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#d32f2f' }}>
+                  ⚠️ Clear All Data
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                  This will remove all attendance records and reset leave balances for all users
+                </Typography>
+                <Button
+                  variant="contained"
+                  onClick={handleClearAllData}
+                  sx={{
+                    backgroundColor: '#d32f2f',
+                    '&:hover': { backgroundColor: '#b71c1c' }
+                  }}
+                >
+                  Clear All Attendance & Leave Data
+                </Button>
+                <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>
+                  ⚠️ This action cannot be undone!
+                </Typography>
+              </Paper>
+            </Grid>
           </Grid>
         </Container>
       </Box>
