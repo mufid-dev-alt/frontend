@@ -605,75 +605,81 @@ const UserDashboard = () => {
     return csv;
   };
 
-  useEffect(() => {
+  // Fetch user stats and leave balances
+  const fetchStats = async () => {
     const userData = JSON.parse(localStorage.getItem('user'));
     if (!userData) {
       navigate('/');
       return;
     }
 
-    // Fetch user stats and leave balances
-    const fetchStats = async () => {
-      setLoading(true);
-      try {
-        // Get attendance stats for current user
-        const params = new URLSearchParams();
-        params.append('user_id', userData.id);
-        params.append('month', selectedMonth);
-        params.append('year', selectedYear);
-        
-        console.log('Fetching attendance stats from:', `${API_ENDPOINTS.attendance.stats}?${params.toString()}`);
-        
-        const response = await fetch(`${API_ENDPOINTS.attendance.stats}?${params.toString()}`, {
-          headers: { 'Accept': 'application/json' }
-        });
+    setLoading(true);
+    try {
+      // Get attendance stats for current user
+      const params = new URLSearchParams();
+      params.append('user_id', userData.id);
+      params.append('month', selectedMonth);
+      params.append('year', selectedYear);
+      
+      console.log('Fetching attendance stats from:', `${API_ENDPOINTS.attendance.stats}?${params.toString()}`);
+      
+      const response = await fetch(`${API_ENDPOINTS.attendance.stats}?${params.toString()}`, {
+        headers: { 'Accept': 'application/json' }
+      });
 
-        if (!response.ok) {
-          console.error('Failed to fetch stats:', response.status);
-          throw new Error(`Failed to fetch stats: ${response.status}`);
+      if (!response.ok) {
+        console.error('Failed to fetch stats:', response.status);
+        throw new Error(`Failed to fetch stats: ${response.status}`);
+      }
+
+      const attendanceData = await response.json();
+      console.log('Attendance stats received:', attendanceData);
+      
+      setStats({
+        presentDays: attendanceData.present_days || 0,
+        absentDays: attendanceData.absent_days || 0,
+      });
+
+      // Fetch leave balances
+      const leaveResponse = await fetch(API_ENDPOINTS.leave.balances(userData.id));
+      if (leaveResponse.ok) {
+        const leaveData = await leaveResponse.json();
+        if (leaveData.success) {
+          setLeaveBalances(leaveData.balances);
         }
+      }
 
-        const attendanceData = await response.json();
-        console.log('Attendance stats received:', attendanceData);
-        
-        setStats({
-          presentDays: attendanceData.present_days || 0,
-          absentDays: attendanceData.absent_days || 0,
-        });
-
-        // Fetch leave balances
-        const leaveResponse = await fetch(API_ENDPOINTS.leave.balances(userData.id));
-        if (leaveResponse.ok) {
-          const leaveData = await leaveResponse.json();
-          if (leaveData.success) {
-            setLeaveBalances(leaveData.balances);
-          }
-        }
-
-        // Fetch user department
-        const deptResponse = await fetch(`${API_ENDPOINTS.teams.userDepartment.replace('{user_id}', userData.id)}`);
-        if (deptResponse.ok) {
-          const deptData = await deptResponse.json();
-          if (deptData.success) {
-            setUserDepartment(deptData.department);
-            
-            // Fetch team members
-            const teamResponse = await fetch(`${API_ENDPOINTS.teams.departmentMembers.replace('{department}', encodeURIComponent(deptData.department))}`);
-            if (teamResponse.ok) {
-              const teamData = await teamResponse.json();
-              if (teamData.success) {
-                setTeamMembers(teamData.members);
-              }
+      // Fetch user department
+      const deptResponse = await fetch(`${API_ENDPOINTS.teams.userDepartment.replace('{user_id}', userData.id)}`);
+      if (deptResponse.ok) {
+        const deptData = await deptResponse.json();
+        if (deptData.success) {
+          setUserDepartment(deptData.department);
+          
+          // Fetch team members
+          const teamResponse = await fetch(`${API_ENDPOINTS.teams.departmentMembers.replace('{department}', encodeURIComponent(deptData.department))}`);
+          if (teamResponse.ok) {
+            const teamData = await teamResponse.json();
+            if (teamData.success) {
+              setTeamMembers(teamData.members);
             }
           }
         }
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-        showNotification(`Error fetching data: ${error.message}`, 'error');
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      showNotification(`Error fetching data: ${error.message}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (!userData) {
+      navigate('/');
+      return;
+    }
 
     fetchStats();
     
@@ -692,12 +698,12 @@ const UserDashboard = () => {
       }
     });
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      unsubscribe();
-    };
-  }, [navigate, selectedMonth, selectedYear]);
+         window.addEventListener('storage', handleStorageChange);
+     return () => {
+       window.removeEventListener('storage', handleStorageChange);
+       unsubscribe();
+     };
+   }, [navigate, selectedMonth, selectedYear, fetchStats]);
 
   // In useEffect, after fetching teamMembers, also fetch admin and add to teamMembers if not present
   useEffect(() => {
