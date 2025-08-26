@@ -1410,10 +1410,10 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                                   py: 0.25
                                 }}>
                                   {calculateTotalHours(dayData.in_time, dayData.out_time)}
-                                </Typography>
-                              )}
-                            </Box>
+                             </Typography>
                            )}
+                        </Box>
+                      )}
                         </Box>
                       )}
                     </Box>
@@ -1535,8 +1535,8 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
                     }
                   }}
                 >
-                  Mark Present
-                </Button>
+              Mark Present
+            </Button>
               </span>
             </Tooltip>
             <Button 

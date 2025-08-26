@@ -641,30 +641,42 @@ const UserDashboard = () => {
       });
 
       // Fetch leave balances
-      const leaveResponse = await fetch(API_ENDPOINTS.leave.balances(userData.id));
-      if (leaveResponse.ok) {
-        const leaveData = await leaveResponse.json();
-        if (leaveData.success) {
-          setLeaveBalances(leaveData.balances);
+      try {
+        const leaveResponse = await fetch(API_ENDPOINTS.leave.balances(userData.id));
+        if (leaveResponse.ok) {
+          const leaveData = await leaveResponse.json();
+          if (leaveData.success) {
+            setLeaveBalances(leaveData.balances);
+          }
         }
+      } catch (error) {
+        console.warn('Failed to fetch leave balances:', error);
       }
 
       // Fetch user department
-      const deptResponse = await fetch(`${API_ENDPOINTS.teams.userDepartment.replace('{user_id}', userData.id)}`);
-      if (deptResponse.ok) {
-        const deptData = await deptResponse.json();
-        if (deptData.success) {
-          setUserDepartment(deptData.department);
-          
-          // Fetch team members
-          const teamResponse = await fetch(`${API_ENDPOINTS.teams.departmentMembers.replace('{department}', encodeURIComponent(deptData.department))}`);
-          if (teamResponse.ok) {
-            const teamData = await teamResponse.json();
-            if (teamData.success) {
-              setTeamMembers(teamData.members);
+      try {
+        const deptResponse = await fetch(`${API_ENDPOINTS.teams.userDepartment.replace('{user_id}', userData.id)}`);
+        if (deptResponse.ok) {
+          const deptData = await deptResponse.json();
+          if (deptData.success) {
+            setUserDepartment(deptData.department);
+            
+            // Fetch team members
+            try {
+              const teamResponse = await fetch(`${API_ENDPOINTS.teams.departmentMembers.replace('{department}', encodeURIComponent(deptData.department))}`);
+              if (teamResponse.ok) {
+                const teamData = await teamResponse.json();
+                if (teamData.success) {
+                  setTeamMembers(teamData.members);
+                }
+              }
+            } catch (error) {
+              console.warn('Failed to fetch team members:', error);
             }
           }
         }
+      } catch (error) {
+        console.warn('Failed to fetch user department:', error);
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -703,22 +715,26 @@ const UserDashboard = () => {
        window.removeEventListener('storage', handleStorageChange);
        unsubscribe();
      };
-   }, [navigate, selectedMonth, selectedYear, fetchStats]);
+   }, [navigate, selectedMonth, selectedYear]);
 
   // In useEffect, after fetching teamMembers, also fetch admin and add to teamMembers if not present
   useEffect(() => {
     const fetchAdmin = async () => {
-      const response = await fetch(API_ENDPOINTS.users.list);
-      if (response.ok) {
-        const data = await response.json();
-        const admin = (data.users || []).find(u => u.role === 'admin');
-        if (admin && !teamMembers.some(m => m.id === admin.id)) {
-          setTeamMembers(prev => [...prev, admin]);
+      try {
+        const response = await fetch(API_ENDPOINTS.users.list);
+        if (response.ok) {
+          const data = await response.json();
+          const admin = (data.users || []).find(u => u.role === 'admin');
+          if (admin && !teamMembers.some(m => m.id === admin.id)) {
+            setTeamMembers(prev => [...prev, admin]);
+          }
         }
+      } catch (error) {
+        console.warn('Failed to fetch admin user:', error);
       }
     };
     fetchAdmin();
-  }, [teamMembers]);
+  }, [teamMembers.length]); // Only depend on length to prevent infinite loop
 
   if (loading) {
     return (

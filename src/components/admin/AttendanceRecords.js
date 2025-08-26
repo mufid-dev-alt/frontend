@@ -1056,7 +1056,7 @@ const AttendanceRecords = () => {
           open={timeDialog.open} 
           onClose={() => setTimeDialog({ open: false, date: null, in_time: '', out_time: '' })} 
           maxWidth="sm" 
-          fullWidth
+              fullWidth
           sx={{
             '& .MuiDialog-paper': {
               margin: { xs: 1, sm: 2 },
