@@ -399,18 +399,34 @@ const UserDashboard = () => {
       const selectedDate = new Date(testDate);
       const currentYear = selectedDate.getFullYear();
 
+      // First check if the response has content before parsing JSON
       const response = await fetch(`${API_ENDPOINTS.leave.rollover}/${currentYear}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
 
       if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          showNotification(`Year-end rollover processed for ${currentYear}. New leave balances applied.`, 'success');
+        const responseText = await response.text();
+        
+        // Check if response has content
+        if (!responseText || responseText.trim() === '') {
+          showNotification('Year-end rollover processed successfully!', 'success');
           fetchStats(); // Refresh leave balances
-        } else {
-          showNotification(`Rollover failed: ${data.message}`, 'error');
+          return;
+        }
+
+        try {
+          const data = JSON.parse(responseText);
+          if (data.success) {
+            showNotification(`Year-end rollover processed for ${currentYear}. New leave balances applied.`, 'success');
+            fetchStats(); // Refresh leave balances
+          } else {
+            showNotification(`Rollover failed: ${data.message}`, 'error');
+          }
+        } catch (jsonError) {
+          // If JSON parsing fails, but response was ok, assume success
+          showNotification('Year-end rollover processed successfully!', 'success');
+          fetchStats(); // Refresh leave balances
         }
       } else {
         showNotification('Failed to process year-end rollover', 'error');
@@ -421,50 +437,7 @@ const UserDashboard = () => {
     }
   };
 
-  const handleClearAllData = async () => {
-    try {
-      const userData = JSON.parse(localStorage.getItem('user'));
-      if (!userData) {
-        showNotification('User data not found. Please log in again.', 'error');
-        navigate('/');
-        return;
-      }
 
-      // Show confirmation dialog
-      const confirmed = window.confirm(
-        '⚠️ WARNING: This will permanently delete ALL attendance records and reset ALL leave balances for ALL users!\n\n' +
-        'This action cannot be undone. Are you sure you want to continue?'
-      );
-
-      if (!confirmed) {
-        return;
-      }
-
-      const response = await fetch(API_ENDPOINTS.system.clearAllData, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          showNotification(
-            `✅ Successfully cleared ${data.attendance_deleted} attendance records and reset leave balances for ${data.users_modified} users.`, 
-            'success'
-          );
-          // Refresh the dashboard data
-          fetchStats();
-        } else {
-          showNotification(`Failed to clear data: ${data.message}`, 'error');
-        }
-      } else {
-        showNotification('Failed to clear data', 'error');
-      }
-    } catch (error) {
-      console.error('Error clearing data:', error);
-      showNotification('Error clearing data', 'error');
-    }
-  };
 
   const handleLeaveCardClick = async (leaveType) => {
     try {
@@ -992,30 +965,7 @@ const UserDashboard = () => {
               </Paper>
             </Grid>
 
-            {/* Clear All Data Section */}
-            <Grid item xs={12}>
-              <Paper sx={{ p: 3, textAlign: 'center' }}>
-                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#d32f2f' }}>
-                  ⚠️ Clear All Data
-                </Typography>
-                <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-                  This will remove all attendance records and reset leave balances for all users
-                </Typography>
-                <Button
-                  variant="contained"
-                  onClick={handleClearAllData}
-                  sx={{
-                    backgroundColor: '#d32f2f',
-                    '&:hover': { backgroundColor: '#b71c1c' }
-                  }}
-                >
-                  Clear All Attendance & Leave Data
-                </Button>
-                <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>
-                  ⚠️ This action cannot be undone!
-                </Typography>
-              </Paper>
-            </Grid>
+            
           </Grid>
         </Container>
       </Box>

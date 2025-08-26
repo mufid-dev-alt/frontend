@@ -36,7 +36,6 @@ export const API_ENDPOINTS = {
   },
   system: {
     simulateDate: `${BASE_URL}/api/system/simulate-date`,
-    clearAllData: `${BASE_URL}/api/system/clear-all-data`,
   },
 
   messages: {
