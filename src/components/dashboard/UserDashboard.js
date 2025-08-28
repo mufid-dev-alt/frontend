@@ -590,7 +590,7 @@ const UserDashboard = () => {
     try {
       // Get attendance stats for current user
       const params = new URLSearchParams();
-      params.append('user_id', userData.id);
+      params.append('employee_code', userData.employee_code);
       params.append('month', selectedMonth);
       params.append('year', selectedYear);
       
