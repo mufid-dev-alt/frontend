@@ -615,7 +615,7 @@ const UserDashboard = () => {
 
       // Fetch leave balances
       try {
-        const leaveResponse = await fetch(API_ENDPOINTS.leave.balances(userData.id));
+        const leaveResponse = await fetch(API_ENDPOINTS.leave.balances(userData.employee_code));
         if (leaveResponse.ok) {
           const leaveData = await leaveResponse.json();
           if (leaveData.success) {
@@ -959,9 +959,7 @@ const UserDashboard = () => {
                     Go to Date
                   </Button>
                 </Box>
-                <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>
-                  This button simulates the system date for testing year-end leave rollover
-                </Typography>
+                
               </Paper>
             </Grid>
 
