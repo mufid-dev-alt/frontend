@@ -615,12 +615,17 @@ const UserDashboard = () => {
 
       // Fetch leave balances
       try {
+        console.log('Fetching leave balances for employee_code:', userData.employee_code);
         const leaveResponse = await fetch(API_ENDPOINTS.leave.balances(userData.employee_code));
         if (leaveResponse.ok) {
           const leaveData = await leaveResponse.json();
+          console.log('Leave balances received:', leaveData);
           if (leaveData.success) {
             setLeaveBalances(leaveData.balances);
+            console.log('Updated leave balances state:', leaveData.balances);
           }
+        } else {
+          console.error('Leave balances response not ok:', leaveResponse.status);
         }
       } catch (error) {
         console.warn('Failed to fetch leave balances:', error);
