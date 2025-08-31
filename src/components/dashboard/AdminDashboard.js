@@ -353,7 +353,7 @@ const AdminDashboard = () => {
       }
       
       const data = await response.json();
-
+      
       // Handle the backend response structure {success: true, users: [...]}
       const usersArray = data.success && data.users ? data.users : (Array.isArray(data) ? data : []);
       
@@ -382,8 +382,6 @@ const AdminDashboard = () => {
         params.append('employee_code', user.employee_code);
         params.append('month', selectedMonth);
         params.append('year', selectedYear);
-        
-        }`);
         
         try {
           const response = await fetch(`${API_ENDPOINTS.attendance.stats}?${params.toString()}`, {
@@ -467,7 +465,7 @@ const AdminDashboard = () => {
       const data = await response.json();
       
       const records = data.success && data.records ? data.records : (Array.isArray(data) ? data : []);
-
+      
       if (records.length === 0) {
         showNotification(`No attendance data found for ${userName}`, 'warning');
         return;

@@ -692,26 +692,26 @@ const UserDashboard = () => {
       return;
     }
 
-    setLoading(true);
-    try {
-      // Get attendance stats for current user
-      const params = new URLSearchParams();
+      setLoading(true);
+      try {
+        // Get attendance stats for current user
+        const params = new URLSearchParams();
       params.append('employee_code', userData.employee_code);
-      params.append('month', selectedMonth);
-      params.append('year', selectedYear);
-      
-      }`);
-      
-      const response = await fetch(`${API_ENDPOINTS.attendance.stats}?${params.toString()}`, {
-        headers: { 'Accept': 'application/json' }
-      });
-
-      if (!response.ok) {
+        params.append('month', selectedMonth);
+        params.append('year', selectedYear);
         
-        throw new Error(`Failed to fetch stats: ${response.status}`);
-      }
+      }`);
+        
+        const response = await fetch(`${API_ENDPOINTS.attendance.stats}?${params.toString()}`, {
+          headers: { 'Accept': 'application/json' }
+        });
 
-      const attendanceData = await response.json();
+        if (!response.ok) {
+        
+          throw new Error(`Failed to fetch stats: ${response.status}`);
+        }
+
+        const attendanceData = await response.json();
 
       setStats({
         presentDays: attendanceData.present_days || 0,
@@ -759,15 +759,12 @@ const UserDashboard = () => {
           }
         }
       } catch (error) {
-        
+        console.error('Error fetching stats:', error);
+        showNotification(`Error fetching data: ${error.message}`, 'error');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-      showNotification(`Error fetching data: ${error.message}`, 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('user'));
@@ -793,12 +790,12 @@ const UserDashboard = () => {
       }
     });
 
-         window.addEventListener('storage', handleStorageChange);
-     return () => {
-       window.removeEventListener('storage', handleStorageChange);
-       unsubscribe();
-     };
-   }, [navigate, selectedMonth, selectedYear]);
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      unsubscribe();
+    };
+  }, [navigate, selectedMonth, selectedYear]);
 
   // In useEffect, after fetching teamMembers, also fetch admin and add to teamMembers if not present
   useEffect(() => {
@@ -962,23 +959,23 @@ const UserDashboard = () => {
 
             {/* Department Information */}
             {userDepartment && (
-              <Grid item xs={12}>
-                <Paper 
+            <Grid item xs={12}>
+              <Paper 
+                sx={{ 
+                  p: 3,
+                  mt: 3,
+                  backgroundColor: theme.palette.background.paper,
+                  boxShadow: theme.shadows[2]
+                }}
+              >
+                <Typography 
+                  variant="h6" 
                   sx={{ 
-                    p: 3,
-                    mt: 3,
-                    backgroundColor: theme.palette.background.paper,
-                    boxShadow: theme.shadows[2]
+                    mb: 2,
+                    fontFamily: "'Poppins', sans-serif",
+                    fontWeight: 600
                   }}
                 >
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      mb: 2,
-                      fontFamily: "'Poppins', sans-serif",
-                      fontWeight: 600
-                    }}
-                  >
                     Department: {userDepartment}
                   </Typography>
                   
@@ -994,8 +991,8 @@ const UserDashboard = () => {
                         }}
                       >
                         Team Members ({teamMembers.length})
-                      </Typography>
-                      <Grid container spacing={2}>
+                </Typography>
+                <Grid container spacing={2}>
                         {teamMembers.map((member) => (
                           <Grid item xs={12} sm={6} md={4} key={member.id}>
                             <Card 
@@ -1058,18 +1055,18 @@ const UserDashboard = () => {
                     size="small"
                     sx={{ minWidth: 200 }}
                   />
-                  <Button
-                    variant="contained"
+                    <Button
+                      variant="contained"
                     onClick={handleGoToDate}
-                    sx={{
+                      sx={{ 
                       backgroundColor: '#4CAF50',
                       '&:hover': { backgroundColor: '#45a049' }
-                    }}
-                  >
+                      }}
+                    >
                     Go to Date
-                  </Button>
+                    </Button>
                 </Box>
-                
+                  
               </Paper>
             </Grid>
 
@@ -1077,20 +1074,20 @@ const UserDashboard = () => {
         </Container>
       </Box>
 
-             <Snackbar
-         open={notification.open}
-         autoHideDuration={6000}
-         onClose={() => setNotification({ ...notification, open: false })}
-         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-       >
-         <Alert
-           onClose={() => setNotification({ ...notification, open: false })}
-           severity={notification.severity}
-           sx={{ width: '100%' }}
-         >
-           {notification.message}
-         </Alert>
-       </Snackbar>
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={() => setNotification({ ...notification, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setNotification({ ...notification, open: false })}
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
 
        {/* Leave History Dialog */}
        <Dialog
@@ -1153,8 +1150,8 @@ const UserDashboard = () => {
            </Button>
          </DialogActions>
        </Dialog>
-     </Box>
-   );
- };
+    </Box>
+  );
+};
 
 export default UserDashboard;

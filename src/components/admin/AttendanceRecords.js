@@ -703,9 +703,6 @@ const AttendanceRecords = () => {
   }, [selectedUser]);
 
   useEffect(() => {
-    
-    ));
-    
     const filtered = users.filter(user => 
       user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
