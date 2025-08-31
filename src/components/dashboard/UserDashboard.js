@@ -750,11 +750,13 @@ const UserDashboard = () => {
           }
         }
       } catch (error) {
-        console.error('Error fetching stats:', error);
-        showNotification(`Error fetching data: ${error.message}`, 'error');
-      } finally {
-        setLoading(false);
+        console.error('Error fetching user department:', error);
       }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      showNotification(`Error fetching data: ${error.message}`, 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
