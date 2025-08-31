@@ -44,12 +44,14 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import PersonIcon from '@mui/icons-material/Person';
 import ChatIcon from '@mui/icons-material/Chat';
 import GroupIcon from '@mui/icons-material/Group';
+import SettingsIcon from '@mui/icons-material/Settings';
 // Removed Todo navigation
 import DownloadIcon from '@mui/icons-material/Download';
 import { useNavigate, Link } from 'react-router-dom';
 import { API_ENDPOINTS } from '../../config/api';
 import eventService from '../../config/eventService';
 import NotificationDropdown from '../common/NotificationDropdown';
+import ExcelJS from 'exceljs';
 
 const Header = ({ onMenuClick }) => {
   const navigate = useNavigate();
@@ -152,7 +154,8 @@ const Sidebar = ({ open, onClose }) => {
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Attendance', icon: <EventAvailableIcon />, path: '/attendance' },
     { text: 'Chat', icon: <ChatIcon />, path: '/chat' },
-    { text: 'Team', icon: <GroupIcon />, path: '/team' }
+    { text: 'Team', icon: <GroupIcon />, path: '/team' },
+    { text: 'Settings', icon: <SettingsIcon />, path: '/settings' }
   ];
 
   const drawerWidth = 240;
@@ -437,8 +440,6 @@ const UserDashboard = () => {
     }
   };
 
-
-
   const handleLeaveCardClick = async (leaveType) => {
     try {
       const userData = JSON.parse(localStorage.getItem('user'));
@@ -489,11 +490,11 @@ const UserDashboard = () => {
       }
 
       const params = new URLSearchParams();
-      params.append('user_id', userData.id);
+      params.append('employee_code', userData.employee_code);
       params.append('month', selectedMonth);
       params.append('year', selectedYear);
       
-      console.log('Fetching attendance data from:', `${API_ENDPOINTS.attendance.list}?${params.toString()}`);
+      }`);
       
       const response = await fetch(`${API_ENDPOINTS.attendance.list}?${params.toString()}`, {
         headers: { 'Accept': 'application/json' }
@@ -509,16 +510,159 @@ const UserDashboard = () => {
           return;
         }
         
-        // Convert to Excel-like CSV format
-        const excelContent = convertToExcelFormat(records, userData);
-        const blob = new Blob([excelContent], { type: 'text/csv;charset=utf-8;' });
+        // Build formatted Excel workbook
+        const wb = new ExcelJS.Workbook();
+        const ws = wb.addWorksheet('Attendance');
+        
+        // Set font size to 7 for all cells
+        const fontSize = 7;
+        
+        const monthName = months[selectedMonth - 1];
+        const year = selectedYear;
+        
+        // Calculate date range
+        const startDate = new Date(year, selectedMonth - 1, 1);
+        const endDate = new Date(year, selectedMonth, 0);
+        const dateRange = `${monthName}-1-${year} to ${monthName}-${endDate.getDate()}-${year}`;
+        
+        // Create header rows matching the exact format
+        ws.mergeCells('A1:AF1');
+        ws.getRow(1).getCell('A').value = 'Monthly Status Report (Basic Work Duration)';
+        ws.getRow(1).getCell('A').alignment = { horizontal: 'center' };
+        ws.getRow(1).getCell('A').font = { bold: true, size: fontSize };
+        
+        ws.mergeCells('A2:AF2');
+        ws.getRow(2).getCell('A').value = dateRange;
+        ws.getRow(2).getCell('A').alignment = { horizontal: 'center' };
+        ws.getRow(2).getCell('A').font = { size: fontSize };
+        
+        ws.mergeCells('A3:AF3');
+        ws.getRow(3).getCell('A').value = 'COMPANY : DCM INFOTECH LIMITED';
+        ws.getRow(3).getCell('A').font = { size: fontSize };
+        
+        ws.mergeCells('A4:AF4');
+        ws.getRow(4).getCell('A').value = `DEPARTMENT NAME : ${userData.department || 'General'}`;
+        ws.getRow(4).getCell('A').font = { bold: true, size: fontSize };
+        
+        // User info rows
+        ws.getRow(5).getCell('A').value = 'Emp. Code :';
+        ws.getRow(5).getCell('A').font = { size: fontSize };
+        ws.getRow(5).getCell('B').value = userData.employee_code || '';
+        ws.getRow(5).getCell('B').font = { size: fontSize };
+        
+        ws.getRow(6).getCell('A').value = 'Emp. Name :';
+        ws.getRow(6).getCell('A').font = { size: fontSize };
+        ws.getRow(6).getCell('B').value = userData.full_name;
+        ws.getRow(6).getCell('B').font = { size: fontSize };
+        
+        const headerRowIndex = 8;
+        const sorted = [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        // Days header row
+        ws.getRow(headerRowIndex).getCell('A').value = 'Days';
+        ws.getRow(headerRowIndex).getCell('A').font = { bold: true, size: fontSize };
+        
+        // Add day columns (1 T, 2 W, 3 Th, etc.)
+        const dayAbbr = ['S', 'M', 'T', 'W', 'Th', 'F', 'S'];
+        let colIndex = 1; // Start from column B
+        
+        // Helper function to convert number to column letter
+        const getColumnLetter = (index) => {
+          let letter = '';
+          while (index > 0) {
+            let remainder = (index - 1) % 26;
+            letter = String.fromCharCode(65 + remainder) + letter;
+            index = Math.floor((index - 1) / 26);
+          }
+          return letter;
+        };
+        
+        for (let day = 1; day <= endDate.getDate(); day++) {
+          const date = new Date(year, selectedMonth - 1, day);
+          const dayOfWeek = date.getDay();
+          const colLetter = getColumnLetter(colIndex + 1);
+          
+          ws.getRow(headerRowIndex).getCell(colLetter).value = `${day} ${dayAbbr[dayOfWeek]}`;
+          ws.getRow(headerRowIndex).getCell(colLetter).font = { bold: true, size: fontSize };
+          colIndex++;
+        }
+        
+        // Attendance data row
+        let currentRow = headerRowIndex + 1;
+        colIndex = 0;
+        
+        for (let day = 1; day <= endDate.getDate(); day++) {
+          const dateStr = `${year}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const record = sorted.find(r => r.date === dateStr);
+          const colLetter = getColumnLetter(colIndex + 1);
+          
+          if (record) {
+            let statusValue = 'A';
+            if (record.status === 'present') {
+              statusValue = 'P';
+            } else if (record.status.toUpperCase() === 'PL') {
+              statusValue = 'PL';
+            } else if (record.status.toUpperCase() === 'CL') {
+              statusValue = 'CL';
+            } else if (record.status.toUpperCase() === 'SL') {
+              statusValue = 'SL';
+            }
+            ws.getRow(currentRow).getCell(colLetter).value = statusValue;
+          } else {
+            ws.getRow(currentRow).getCell(colLetter).value = 'A';
+          }
+          ws.getRow(currentRow).getCell(colLetter).font = { size: fontSize };
+          colIndex++;
+        }
+        currentRow++;
+        
+        // Summary section
+        currentRow += 2;
+        
+        ws.mergeCells(`A${currentRow}:AF${currentRow}`);
+        ws.getRow(currentRow).getCell('A').value = 'SUMMARY';
+        ws.getRow(currentRow).getCell('A').font = { bold: true, size: fontSize };
+        ws.getRow(currentRow).getCell('A').alignment = { horizontal: 'center' };
+        currentRow++;
+        
+        // Count statistics
+        const presentDays = sorted.filter(r => r.status === 'present').length;
+        const absentDays = sorted.filter(r => r.status === 'absent').length;
+        const plDays = sorted.filter(r => r.status.toUpperCase() === 'PL').length;
+        const clDays = sorted.filter(r => r.status.toUpperCase() === 'CL').length;
+        const slDays = sorted.filter(r => r.status.toUpperCase() === 'SL').length;
+        const totalDays = endDate.getDate();
+        
+        const summaryData = [
+          ['Total Days', totalDays],
+          ['Present Days', presentDays],
+          ['Absent Days', absentDays],
+          ['PL Days', plDays],
+          ['CL Days', clDays],
+          ['SL Days', slDays]
+        ];
+        
+        summaryData.forEach(([label, value]) => {
+          ws.getRow(currentRow).getCell('A').value = label;
+          ws.getRow(currentRow).getCell('A').font = { size: fontSize };
+          ws.getRow(currentRow).getCell('B').value = value;
+          ws.getRow(currentRow).getCell('B').font = { size: fontSize };
+          currentRow++;
+        });
+        
+        // Set column widths
+        ws.getColumn('A').width = 12;
+        for (let i = 2; i <= 32; i++) {
+          ws.getColumn(i).width = 4;
+        }
+        
+        // Generate Excel file
+        const buffer = await wb.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        
-        const monthName = months[selectedMonth - 1];
-        a.download = `${userData.full_name.replace(/\s+/g, '_')}_${monthName}_${selectedYear}_Attendance.csv`;
-        
+        a.download = `${userData.full_name.replace(/\s+/g, '_')}_${monthName}_${year}_Attendance.xlsx`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -540,44 +684,6 @@ const UserDashboard = () => {
     }
   };
 
-  const convertToExcelFormat = (data, userData) => {
-    // Create header rows matching the My Attendance format with department
-    let csv = `DCM Infotech\n`;
-    csv += `Department Name - ${userData.department || 'General'}\n`;
-    csv += `Employee Name,${userData.full_name}\n`;
-    csv += `Employee Code,${userData.employee_code || ''}\n`;
-    csv += `DATE,DAY,ATTENDANCE,IN-Time,OUT-Time,Total Hours\n`;
-    
-    // Sort data by date
-    const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
-    
-    // Add data rows with in/out times and total hours
-    const diffHours = (inT, outT) => {
-      if (!inT || !outT) return '';
-      const [ih, im] = inT.split(':').map(Number);
-      const [oh, om] = outT.split(':').map(Number);
-      if ([ih, im, oh, om].some((n) => isNaN(n))) return '';
-      let mins = (oh * 60 + om) - (ih * 60 + im);
-      if (mins < 0) mins += 24 * 60;
-      const h = String(Math.floor(mins / 60)).padStart(2, '0');
-      const m = String(mins % 60).padStart(2, '0');
-      return `${h}:${m} hrs`;
-    };
-    
-    sortedData.forEach(record => {
-      const date = new Date(record.date);
-      const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()];
-      const formattedDate = `${date.getDate()}-${months[date.getMonth()].substr(0, 3)}-${date.getFullYear().toString().substr(-2)}`;
-      const status = record.status === 'present' ? 'PRESENT' : record.status === 'absent' ? 'ABSENT' : 'OFF';
-      const inT = record.in_time || '';
-      const outT = record.out_time || '';
-      
-      csv += `${formattedDate},${dayName},${status},${inT},${outT},${diffHours(inT, outT)}\n`;
-    });
-    
-    return csv;
-  };
-
   // Fetch user stats and leave balances
   const fetchStats = async () => {
     const userData = JSON.parse(localStorage.getItem('user'));
@@ -594,20 +700,19 @@ const UserDashboard = () => {
       params.append('month', selectedMonth);
       params.append('year', selectedYear);
       
-      console.log('Fetching attendance stats from:', `${API_ENDPOINTS.attendance.stats}?${params.toString()}`);
+      }`);
       
       const response = await fetch(`${API_ENDPOINTS.attendance.stats}?${params.toString()}`, {
         headers: { 'Accept': 'application/json' }
       });
 
       if (!response.ok) {
-        console.error('Failed to fetch stats:', response.status);
+        
         throw new Error(`Failed to fetch stats: ${response.status}`);
       }
 
       const attendanceData = await response.json();
-      console.log('Attendance stats received:', attendanceData);
-      
+
       setStats({
         presentDays: attendanceData.present_days || 0,
         absentDays: attendanceData.absent_days || 0,
@@ -615,20 +720,20 @@ const UserDashboard = () => {
 
       // Fetch leave balances
       try {
-        console.log('Fetching leave balances for employee_code:', userData.employee_code);
+        
         const leaveResponse = await fetch(API_ENDPOINTS.leave.balances(userData.employee_code));
         if (leaveResponse.ok) {
           const leaveData = await leaveResponse.json();
-          console.log('Leave balances received:', leaveData);
+          
           if (leaveData.success) {
             setLeaveBalances(leaveData.balances);
-            console.log('Updated leave balances state:', leaveData.balances);
+            
           }
         } else {
-          console.error('Leave balances response not ok:', leaveResponse.status);
+          
         }
       } catch (error) {
-        console.warn('Failed to fetch leave balances:', error);
+        
       }
 
       // Fetch user department
@@ -649,12 +754,12 @@ const UserDashboard = () => {
                 }
               }
             } catch (error) {
-              console.warn('Failed to fetch team members:', error);
+              
             }
           }
         }
       } catch (error) {
-        console.warn('Failed to fetch user department:', error);
+        
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -683,7 +788,7 @@ const UserDashboard = () => {
     // Also listen for events from the event service
     const unsubscribe = eventService.listen((eventType, data) => {
       if (eventType === 'attendance_updated' && data.userId === userData.id) {
-        console.log('Attendance update detected via event service, refreshing stats');
+        
         fetchStats();
       }
     });
@@ -708,7 +813,7 @@ const UserDashboard = () => {
           }
         }
       } catch (error) {
-        console.warn('Failed to fetch admin user:', error);
+        
       }
     };
     fetchAdmin();
@@ -968,7 +1073,6 @@ const UserDashboard = () => {
               </Paper>
             </Grid>
 
-            
           </Grid>
         </Container>
       </Box>

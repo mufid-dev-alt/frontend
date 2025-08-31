@@ -56,8 +56,6 @@ export const handleApiError = async (response, showNotification = null, handleAu
   return { success: true };
 };
 
-
-
 /**
  * Handle fetch errors (network errors, etc.)
  * @param {Error} error - The error object
@@ -65,8 +63,7 @@ export const handleApiError = async (response, showNotification = null, handleAu
  * @returns {Object} - Object with error information
  */
 export const handleFetchError = (error, showNotification = null) => {
-  console.error('API request failed:', error);
-  
+
   const message = 'Network error. Please check your connection.';
   if (showNotification) {
     showNotification(message, 'error');

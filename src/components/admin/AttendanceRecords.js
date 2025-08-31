@@ -117,9 +117,9 @@ const AttendanceRecords = () => {
       const response = await fetch(`${API_ENDPOINTS.attendance.list}?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
-        console.log('Attendance data received:', data);
+        
         const records = Array.isArray(data.records) ? data.records : [];
-        console.log('Processed attendance records:', records);
+        
         setAttendanceData(records);
       }
     } catch (error) {
@@ -703,8 +703,8 @@ const AttendanceRecords = () => {
   }, [selectedUser]);
 
   useEffect(() => {
-    console.log('Search values:', { searchQuery, searchCode });
-    console.log('Users:', users.map(u => ({ name: u.full_name, code: u.employee_code })));
+    
+    ));
     
     const filtered = users.filter(user => 
       user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -712,15 +712,13 @@ const AttendanceRecords = () => {
       String(user.employee_code || '').includes(searchCode)
     );
     
-    console.log('Filtered users:', filtered.map(u => ({ name: u.full_name, code: u.employee_code })));
+    ));
     setFilteredUsers(filtered);
   }, [users, searchQuery, searchCode]);
 
   const handleCloseNotification = () => {
     setNotification(prev => ({ ...prev, open: false }));
   };
-
-
 
   const calendarData = selectedUser ? generateCalendarData() : [];
   const presentDays = calendarData.filter(day => day.status === 'present').length;
@@ -1048,8 +1046,6 @@ const AttendanceRecords = () => {
             </Box>
           )}
         </Container>
-
-
 
         {/* Time Entry Dialog */}
         <Dialog 

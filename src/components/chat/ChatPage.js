@@ -546,7 +546,7 @@ const ChatPage = () => {
         setMessages(prev => prev.filter(msg => msg.id !== selectedMessage.id));
         handleMessageMenuClose();
       } else {
-        console.error('Failed to delete message');
+        
       }
     } catch (error) {
       console.error('Error deleting message:', error);

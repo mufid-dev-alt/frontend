@@ -3,9 +3,7 @@ const BASE_URL = (process.env.REACT_APP_API_URL || 'https://backend-9z1y.onrende
 
 // Log the base URL being used (for debugging in development only)
 if (process.env.NODE_ENV === 'development') {
-  console.log('Using API base URL:', BASE_URL);
-  console.log('Environment:', process.env.NODE_ENV);
-  console.log('Raw REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+
 }
 
 export const API_ENDPOINTS = {
@@ -13,6 +11,8 @@ export const API_ENDPOINTS = {
   users: {
     list: `${BASE_URL}/api/users`,
     create: `${BASE_URL}/api/users`,
+    update: `${BASE_URL}/api/users`,
+    changePassword: `${BASE_URL}/api/users/change-password`,
     delete: (userId) => `${BASE_URL}/api/users/${userId}`,
     permanentDelete: (userId) => `${BASE_URL}/api/users/${userId}/permanent-delete`,
     undo: (userId) => `${BASE_URL}/api/users/${userId}/undo`,
@@ -64,15 +64,14 @@ export const API_ENDPOINTS = {
 
 // Debug login endpoint
 if (process.env.NODE_ENV === 'development') {
-  console.log('Login endpoint URL:', API_ENDPOINTS.auth.login);
+  
 }
 
 // API request utility
 export const apiRequest = async (url, options = {}) => {
   try {
     if (process.env.NODE_ENV === 'development') {
-      console.log('Making API request to:', url);
-      console.log('Request options:', options);
+
     }
     const response = await fetch(url, {
       ...options,

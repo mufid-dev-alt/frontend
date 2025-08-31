@@ -9,7 +9,7 @@ class UserService {
     this.initialized = false;
     this.sessionId = Date.now().toString();
     this.backendResetDetected = false;
-    console.log('🔄 User service initialized with session ID:', this.sessionId);
+    
   }
 
   // Load users

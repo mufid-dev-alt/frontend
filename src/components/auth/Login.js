@@ -29,7 +29,6 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -56,8 +55,6 @@ const Login = () => {
         }),
       });
 
-
-
       if (data && data.success && data.user) {
         localStorage.setItem('user', JSON.stringify(data.user));
         if (data.user.role === 'admin') {
@@ -68,7 +65,7 @@ const Login = () => {
       } else {
         const errorMessage = data.message || 'Invalid employee code or password';
         setError(errorMessage);
-        console.error('Login failed:', errorMessage);
+        
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -114,7 +111,6 @@ const Login = () => {
         overflow: 'hidden'
       }}
     >
-
 
       <Card 
         sx={{ 
@@ -214,7 +210,6 @@ const Login = () => {
 
               </Paper>
             )}
-            
 
           </Box>
 
@@ -260,8 +255,6 @@ const Login = () => {
               sx={{ mb: 3 }}
             />
 
-
-
             <Button
               fullWidth
               type="submit"
@@ -284,7 +277,6 @@ const Login = () => {
               )}
             </Button>
           </form>
-
 
         </CardContent>
       </Card>

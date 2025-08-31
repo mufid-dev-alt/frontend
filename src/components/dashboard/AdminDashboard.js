@@ -337,7 +337,7 @@ const AdminDashboard = () => {
 
   const fetchUsers = useCallback(async () => {
     try {
-      console.log('Fetching users from:', API_ENDPOINTS.users.list);
+      
       const response = await fetch(API_ENDPOINTS.users.list, {
         headers: { 'Accept': 'application/json' }
       });
@@ -353,8 +353,7 @@ const AdminDashboard = () => {
       }
       
       const data = await response.json();
-      console.log('Users data received:', data);
-      
+
       // Handle the backend response structure {success: true, users: [...]}
       const usersArray = data.success && data.users ? data.users : (Array.isArray(data) ? data : []);
       
@@ -380,11 +379,11 @@ const AdminDashboard = () => {
 
       const statsPromises = usersToProcess.map(async (user) => {
         const params = new URLSearchParams();
-        params.append('user_id', user.id);
+        params.append('employee_code', user.employee_code);
         params.append('month', selectedMonth);
         params.append('year', selectedYear);
         
-        console.log('Fetching stats for user:', user.id, 'from:', `${API_ENDPOINTS.attendance.stats}?${params.toString()}`);
+        }`);
         
         try {
           const response = await fetch(`${API_ENDPOINTS.attendance.stats}?${params.toString()}`, {
@@ -400,18 +399,18 @@ const AdminDashboard = () => {
           }
           
           const data = await response.json();
-          console.log('Stats received for user:', user.id, data);
-          return { userId: user.id, stats: data };
+          
+          return { employeeCode: user.employee_code, stats: data };
         } catch (error) {
           console.error(`Error fetching stats for user ${user.id}:`, error);
-          return { userId: user.id, stats: { present_days: 0, absent_days: 0, total_days: 0 } };
+          return { employeeCode: user.employee_code, stats: { present_days: 0, absent_days: 0, total_days: 0 } };
         }
       });
 
       const results = await Promise.all(statsPromises);
       const statsMap = {};
       results.forEach(result => {
-        statsMap[result.userId] = result.stats;
+        statsMap[result.employeeCode] = result.stats;
       });
 
       setUserStats(statsMap);
@@ -419,22 +418,22 @@ const AdminDashboard = () => {
       // Fetch leave balances for all users
       const leavePromises = usersToProcess.map(async (user) => {
         try {
-          const response = await fetch(API_ENDPOINTS.leave.balances(user.id));
+          const response = await fetch(API_ENDPOINTS.leave.balances(user.employee_code));
           if (response.ok) {
             const data = await response.json();
-            return { userId: user.id, balances: data.success ? data.balances : { pl: 18, cl: 7, sl: 7 } };
+            return { employeeCode: user.employee_code, balances: data.success ? data.balances : { pl: 18, cl: 7, sl: 7 } };
           }
-          return { userId: user.id, balances: { pl: 18, cl: 7, sl: 7 } };
+          return { employeeCode: user.employee_code, balances: { pl: 18, cl: 7, sl: 7 } };
         } catch (error) {
-          console.error(`Error fetching leave balances for user ${user.id}:`, error);
-          return { userId: user.id, balances: { pl: 18, cl: 7, sl: 7 } };
+          console.error(`Error fetching leave balances for user ${user.employee_code}:`, error);
+          return { employeeCode: user.employee_code, balances: { pl: 18, cl: 7, sl: 7 } };
         }
       });
 
       const leaveResults = await Promise.all(leavePromises);
       const leaveMap = {};
       leaveResults.forEach(result => {
-        leaveMap[result.userId] = result.balances;
+        leaveMap[result.employeeCode] = result.balances;
       });
 
       setUserLeaveBalances(leaveMap);
@@ -446,14 +445,12 @@ const AdminDashboard = () => {
     }
   }, [users, selectedMonth, selectedYear, showNotification]);
 
-  const exportUserData = async (userId, userName) => {
+  const exportUserData = async (employeeCode, userName) => {
     try {
       const params = new URLSearchParams();
-      params.append('user_id', userId);
+      params.append('employee_code', employeeCode);
       params.append('month', selectedMonth);
       params.append('year', selectedYear);
-      
-      console.log('Exporting attendance for user:', userId, 'from:', `${API_ENDPOINTS.attendance.list}?${params.toString()}`);
       
       const response = await fetch(`${API_ENDPOINTS.attendance.list}?${params.toString()}`, {
         headers: { 'Accept': 'application/json' }
@@ -468,18 +465,16 @@ const AdminDashboard = () => {
       }
 
       const data = await response.json();
-      console.log('Export data received:', data);
+      
       const records = data.success && data.records ? data.records : (Array.isArray(data) ? data : []);
-      
-      console.log('Processed records:', records);
-      
+
       if (records.length === 0) {
         showNotification(`No attendance data found for ${userName}`, 'warning');
         return;
       }
 
       // Find the user object
-      const user = users.find(u => u.id === userId);
+      const user = users.find(u => u.employee_code === employeeCode);
       if (!user) {
         throw new Error('User not found');
       }
@@ -500,21 +495,21 @@ const AdminDashboard = () => {
       const dateRange = `${monthName}-1-${year} to ${monthName}-${endDate.getDate()}-${year}`;
       
       // Create header rows matching the exact format
-      ws.mergeCells('A1:Z1');
+      ws.mergeCells('A1:AF1');
       ws.getRow(1).getCell('A').value = 'Monthly Status Report (Basic Work Duration)';
       ws.getRow(1).getCell('A').alignment = { horizontal: 'center' };
       ws.getRow(1).getCell('A').font = { bold: true, size: fontSize };
       
-      ws.mergeCells('A2:Z2');
+      ws.mergeCells('A2:AF2');
       ws.getRow(2).getCell('A').value = dateRange;
       ws.getRow(2).getCell('A').alignment = { horizontal: 'center' };
       ws.getRow(2).getCell('A').font = { size: fontSize };
       
-      ws.mergeCells('A3:Z3');
+      ws.mergeCells('A3:AF3');
       ws.getRow(3).getCell('A').value = 'COMPANY : DCM INFOTECH LIMITED';
       ws.getRow(3).getCell('A').font = { size: fontSize };
       
-      ws.mergeCells('A4:Z4');
+      ws.mergeCells('A4:AF4');
       ws.getRow(4).getCell('A').value = `DEPARTMENT NAME : ${user.department || 'General'}`;
       ws.getRow(4).getCell('A').font = { bold: true, size: fontSize };
       
@@ -561,7 +556,17 @@ const AdminDashboard = () => {
         const colLetter = getColumnLetter(colIndex + 1);
         
         if (record) {
-          ws.getRow(currentRow).getCell(colLetter).value = record.status === 'present' ? 'P' : 'A';
+          let statusValue = 'A';
+          if (record.status === 'present') {
+            statusValue = 'P';
+          } else if (record.status.toUpperCase() === 'PL') {
+            statusValue = 'PL';
+          } else if (record.status.toUpperCase() === 'CL') {
+            statusValue = 'CL';
+          } else if (record.status.toUpperCase() === 'SL') {
+            statusValue = 'SL';
+          }
+          ws.getRow(currentRow).getCell(colLetter).value = statusValue;
         } else {
           ws.getRow(currentRow).getCell(colLetter).value = 'A';
         }
@@ -696,17 +701,17 @@ const AdminDashboard = () => {
       const dateRange = `${monthName}-1-${year} to ${monthName}-${endDate.getDate()}-${year}`;
       
       // Create header rows
-      ws.mergeCells('A1:Z1');
+      ws.mergeCells('A1:AF1');
       ws.getCell('A1').value = 'Monthly Status Report (Basic Work Duration)';
       ws.getCell('A1').alignment = { horizontal: 'center' };
       ws.getCell('A1').font = { bold: true, size: fontSize };
       
-      ws.mergeCells('A2:Z2');
+      ws.mergeCells('A2:AF2');
       ws.getCell('A2').value = dateRange;
       ws.getCell('A2').alignment = { horizontal: 'center' };
       ws.getCell('A2').font = { size: fontSize };
       
-      ws.mergeCells('A3:Z3');
+      ws.mergeCells('A3:AF3');
       ws.getCell('A3').value = 'COMPANY : DCM INFOTECH LIMITED';
       ws.getCell('A3').font = { size: fontSize };
       
@@ -724,7 +729,7 @@ const AdminDashboard = () => {
       // Process each department
       for (const [departmentName, departmentUsers] of Object.entries(departmentGroups)) {
                  // Department header
-         ws.mergeCells(`A${currentRow}:Z${currentRow}`);
+         ws.mergeCells(`A${currentRow}:AF${currentRow}`);
          ws.getRow(currentRow).getCell('A').value = `DEPARTMENT NAME : ${departmentName}`;
          ws.getRow(currentRow).getCell('A').font = { bold: true, size: fontSize };
          currentRow++;
@@ -746,7 +751,7 @@ const AdminDashboard = () => {
           
           // Get attendance data for this user
         const params = new URLSearchParams();
-        params.append('user_id', user.id);
+        params.append('employee_code', user.employee_code);
         params.append('month', selectedMonth);
         params.append('year', selectedYear);
           
@@ -791,7 +796,17 @@ const AdminDashboard = () => {
                 const colLetter = getColumnLetter(colIndex + 1);
                 
                 if (record) {
-                  ws.getRow(currentRow).getCell(colLetter).value = record.status === 'present' ? 'P' : 'A';
+                  let statusValue = 'A';
+                  if (record.status === 'present') {
+                    statusValue = 'P';
+                  } else if (record.status.toUpperCase() === 'PL') {
+                    statusValue = 'PL';
+                  } else if (record.status.toUpperCase() === 'CL') {
+                    statusValue = 'CL';
+                  } else if (record.status.toUpperCase() === 'SL') {
+                    statusValue = 'SL';
+                  }
+                  ws.getRow(currentRow).getCell(colLetter).value = statusValue;
                 } else {
                   ws.getRow(currentRow).getCell(colLetter).value = 'A';
                 }
@@ -1025,22 +1040,22 @@ const AdminDashboard = () => {
       const dateRange = `${monthName}-1-${year} to ${monthName}-${endDate.getDate()}-${year}`;
       
       // Create header rows
-      ws.mergeCells('A1:Z1');
+      ws.mergeCells('A1:AF1');
       ws.getRow(1).getCell('A').value = 'Monthly Status Report (Basic Work Duration)';
       ws.getRow(1).getCell('A').alignment = { horizontal: 'center' };
       ws.getRow(1).getCell('A').font = { bold: true, size: fontSize };
       
-      ws.mergeCells('A2:Z2');
+      ws.mergeCells('A2:AF2');
       ws.getRow(2).getCell('A').value = dateRange;
       ws.getRow(2).getCell('A').alignment = { horizontal: 'center' };
       ws.getRow(2).getCell('A').font = { size: fontSize };
       
-      ws.mergeCells('A3:Z3');
+      ws.mergeCells('A3:AF3');
       ws.getRow(3).getCell('A').value = 'COMPANY : DCM INFOTECH LIMITED';
       ws.getRow(3).getCell('A').font = { size: fontSize };
       
       // Department header
-      ws.mergeCells('A4:Z4');
+      ws.mergeCells('A4:AF4');
       ws.getRow(4).getCell('A').value = `DEPARTMENT NAME : ${department.name}`;
       ws.getRow(4).getCell('A').font = { bold: true, size: fontSize };
       
@@ -1063,7 +1078,7 @@ const AdminDashboard = () => {
         
         // Get attendance data for this user
         const params = new URLSearchParams();
-        params.append('user_id', user.id);
+        params.append('employee_code', user.employee_code);
         params.append('month', selectedMonth);
         params.append('year', selectedYear);
         
@@ -1108,7 +1123,17 @@ const AdminDashboard = () => {
               const colLetter = getColumnLetter(colIndex + 1);
               
               if (record) {
-                ws.getRow(currentRow).getCell(colLetter).value = record.status === 'present' ? 'P' : 'A';
+                let statusValue = 'A';
+                if (record.status === 'present') {
+                  statusValue = 'P';
+                } else if (record.status.toUpperCase() === 'PL') {
+                  statusValue = 'PL';
+                } else if (record.status.toUpperCase() === 'CL') {
+                  statusValue = 'CL';
+                } else if (record.status.toUpperCase() === 'SL') {
+                  statusValue = 'SL';
+                }
+                ws.getRow(currentRow).getCell(colLetter).value = statusValue;
               } else {
                 ws.getRow(currentRow).getCell(colLetter).value = 'A';
               }
@@ -1225,8 +1250,8 @@ const AdminDashboard = () => {
     }
   };
 
-  const getAttendanceRate = (userId) => {
-    const stats = userStats[userId];
+  const getAttendanceRate = (employeeCode) => {
+    const stats = userStats[employeeCode];
     if (!stats) return 0;
     
     const totalDays = stats.total_days || (stats.present_days + stats.absent_days);
@@ -1252,10 +1277,10 @@ const AdminDashboard = () => {
     // Listen for user updates from other components
     const unsubscribe = eventService.listen((eventType, data) => {
       if (['user_added', 'user_deleted', 'user_updated'].includes(eventType)) {
-        console.log(`${eventType} event detected, refreshing users`);
+        
         loadData();
       } else if (eventType === 'attendance_updated') {
-        console.log('Attendance update detected, refreshing stats');
+        
         fetchUserStats();
       }
     });
@@ -1526,9 +1551,9 @@ const AdminDashboard = () => {
                       .filter(u => (searchName ? u.full_name.toLowerCase().includes(searchName.toLowerCase()) : true))
                       .filter(u => (searchCode ? String(u.employee_code || '').includes(searchCode) : true))
                       .map(user => {
-                        const stats = userStats[user.id] || { present_days: 0, absent_days: 0, total_days: 0 };
+                        const stats = userStats[user.employee_code] || { present_days: 0, absent_days: 0, total_days: 0 };
                         const totalDays = stats.total_days || (stats.present_days + stats.absent_days);
-                        const leaveBalances = userLeaveBalances[user.id] || { pl: 18, cl: 7, sl: 7 };
+                        const leaveBalances = userLeaveBalances[user.employee_code] || { pl: 18, cl: 7, sl: 7 };
                         return (
                           <tr key={user.id}>
                             <td style={{ padding: 8 }}>{user.employee_code || ''}</td>
@@ -1541,7 +1566,7 @@ const AdminDashboard = () => {
                             <td style={{ padding: 8 }}>{leaveBalances.cl || 7}</td>
                             <td style={{ padding: 8 }}>{leaveBalances.sl || 7}</td>
                             <td style={{ padding: 8 }}>
-                              <Button size="small" startIcon={<DownloadIcon />} onClick={() => exportUserData(user.id, user.full_name)}>
+                              <Button size="small" startIcon={<DownloadIcon />} onClick={() => exportUserData(user.employee_code, user.full_name)}>
                                 Export
                               </Button>
                             </td>
@@ -1592,8 +1617,8 @@ const AdminDashboard = () => {
                 </TableHead>
                 <TableBody>
                   {departmentMembers.map((member) => {
-                    const stats = userStats[member.id] || { present_days: 0, absent_days: 0 };
-                    const attendanceRate = getAttendanceRate(member.id);
+                    const stats = userStats[member.employee_code] || { present_days: 0, absent_days: 0 };
+                    const attendanceRate = getAttendanceRate(member.employee_code);
                     return (
                       <TableRow key={member.id}>
                         <TableCell>{member.employee_code || '-'}</TableCell>

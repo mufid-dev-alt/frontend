@@ -2,7 +2,7 @@
 class EventService {
   constructor() {
     this.sessionId = Date.now().toString();
-    console.log('🔄 Event service initialized with session ID:', this.sessionId);
+    
   }
 
   // Broadcast an event to all components
@@ -14,7 +14,7 @@ class EventService {
         timestamp: new Date().toISOString(),
         sessionId: this.sessionId
       }));
-      console.log(`📢 Broadcasting event: ${eventType}`);
+      
     } catch (error) {
       console.error('Error broadcasting event:', error);
     }

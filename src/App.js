@@ -9,6 +9,7 @@ import ManageUsers from './components/admin/ManageUsers';
 import AdminChatPage from './components/admin/AdminChatPage';
 import ChatPage from './components/chat/ChatPage';
 import TeamPage from './components/team/TeamPage';
+import UserSettings from './components/settings/UserSettings';
 import { ThemeProvider, createTheme } from '@mui/material';
 
 const theme = createTheme({
@@ -135,6 +136,14 @@ const App = () => {
             element={
               <PrivateRoute>
                 <TeamPage />
+              </PrivateRoute>
+            }
+      />
+      <Route
+            path="/settings"
+            element={
+              <PrivateRoute>
+                <UserSettings />
               </PrivateRoute>
             }
       />

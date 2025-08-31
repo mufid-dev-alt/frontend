@@ -42,98 +42,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
 import { useNavigate, Link } from 'react-router-dom';
 import { API_ENDPOINTS } from '../../config/api';
-
-const AdminHeader = ({ onMenuClick }) => {
-  const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user'));
-  const theme = useTheme();
-
-  const handleLogout = async () => {
-    try {
-      localStorage.removeItem('user');
-      navigate('/');
-    } catch (error) {
-      localStorage.removeItem('user');
-      navigate('/');
-    }
-  };
-
-  return (
-    <AppBar 
-      position="fixed" 
-      sx={{ 
-        zIndex: theme.zIndex.drawer + 1,
-        borderRadius: 0,
-        boxShadow: 'none',
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-      }}
-    >
-      <Toolbar sx={{ minHeight: '64px !important' }}>
-        <IconButton
-          color="inherit"
-          edge="start"
-          onClick={onMenuClick}
-          sx={{ mr: 2, display: { md: 'none' } }}
-        >
-          <MenuIcon />
-        </IconButton>
-        <Typography 
-          variant="h6" 
-          component="div" 
-          sx={{ 
-            flexGrow: 1, 
-            fontFamily: "'Poppins', sans-serif",
-            fontWeight: 600,
-            color: 'white'
-          }}
-        >
-          Admin Chat
-        </Typography>
-        {user && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography 
-              variant="subtitle1" 
-              sx={{ 
-                fontFamily: "'Poppins', sans-serif",
-                color: 'white',
-                fontWeight: 500,
-                display: { xs: 'none', sm: 'inline' }
-              }}
-            >
-              Welcome, {user.full_name}
-            </Typography>
-            <Button
-              color="inherit"
-              onClick={handleLogout}
-              startIcon={<LogoutIcon />}
-              sx={{ 
-                fontFamily: "'Poppins', sans-serif",
-                color: 'white',
-                borderRadius: '24px',
-                px: 3,
-                py: 1,
-                background: 'rgba(255,255,255,0.1)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.2)',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-                }
-              }}
-            >
-              Logout
-            </Button>
-          </Box>
-        )}
-      </Toolbar>
-    </AppBar>
-  );
-};
+import Header from '../common/Header';
 
 const Sidebar = ({ open, onClose }) => {
   const theme = useTheme();
@@ -431,7 +340,7 @@ const AdminChatPage = () => {
         setMessages(prev => prev.filter(msg => msg.id !== selectedMessage.id));
         handleMessageMenuClose();
       } else {
-        console.error('Failed to delete message');
+        
       }
     } catch (error) {
       console.error('Error deleting message:', error);
@@ -465,7 +374,7 @@ const AdminChatPage = () => {
   return (
     <>
       <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-        <AdminHeader onMenuClick={handleDrawerToggle} />
+        <Header onMenuClick={handleDrawerToggle} />
         <Sidebar open={mobileOpen} onClose={handleDrawerToggle} />
         <Box
           component="main"
