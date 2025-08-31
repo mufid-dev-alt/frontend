@@ -709,7 +709,6 @@ const AttendanceRecords = () => {
       String(user.employee_code || '').includes(searchCode)
     );
     
-    ));
     setFilteredUsers(filtered);
   }, [users, searchQuery, searchCode]);
 
