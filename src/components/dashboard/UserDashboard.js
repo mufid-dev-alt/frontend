@@ -690,15 +690,13 @@ const UserDashboard = () => {
       return;
     }
 
-      setLoading(true);
-      try {
+    setLoading(true);
+    try {
         // Get attendance stats for current user
         const params = new URLSearchParams();
-      params.append('employee_code', userData.employee_code);
+        params.append('employee_code', userData.employee_code);
         params.append('month', selectedMonth);
         params.append('year', selectedYear);
-        
-      }`);
         
         const response = await fetch(`${API_ENDPOINTS.attendance.stats}?${params.toString()}`, {
           headers: { 'Accept': 'application/json' }
@@ -711,10 +709,10 @@ const UserDashboard = () => {
 
         const attendanceData = await response.json();
 
-      setStats({
-        presentDays: attendanceData.present_days || 0,
-        absentDays: attendanceData.absent_days || 0,
-      });
+        setStats({
+          presentDays: attendanceData.present_days || 0,
+          absentDays: attendanceData.absent_days || 0,
+        });
 
       // Fetch leave balances
       try {
@@ -762,7 +760,8 @@ const UserDashboard = () => {
       } finally {
         setLoading(false);
       }
-    };
+    }
+  };
 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('user'));
