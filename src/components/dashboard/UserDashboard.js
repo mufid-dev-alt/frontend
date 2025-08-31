@@ -494,8 +494,6 @@ const UserDashboard = () => {
       params.append('month', selectedMonth);
       params.append('year', selectedYear);
       
-      }`);
-      
       const response = await fetch(`${API_ENDPOINTS.attendance.list}?${params.toString()}`, {
         headers: { 'Accept': 'application/json' }
       });
