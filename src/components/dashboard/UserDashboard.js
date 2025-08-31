@@ -692,44 +692,39 @@ const UserDashboard = () => {
 
     setLoading(true);
     try {
-        // Get attendance stats for current user
-        const params = new URLSearchParams();
-        params.append('employee_code', userData.employee_code);
-        params.append('month', selectedMonth);
-        params.append('year', selectedYear);
-        
-        const response = await fetch(`${API_ENDPOINTS.attendance.stats}?${params.toString()}`, {
-          headers: { 'Accept': 'application/json' }
-        });
+      // Get attendance stats for current user
+      const params = new URLSearchParams();
+      params.append('employee_code', userData.employee_code);
+      params.append('month', selectedMonth);
+      params.append('year', selectedYear);
+      
+      const response = await fetch(`${API_ENDPOINTS.attendance.stats}?${params.toString()}`, {
+        headers: { 'Accept': 'application/json' }
+      });
 
-        if (!response.ok) {
-        
-          throw new Error(`Failed to fetch stats: ${response.status}`);
-        }
+      if (!response.ok) {
+        throw new Error(`Failed to fetch stats: ${response.status}`);
+      }
 
-        const attendanceData = await response.json();
+      const attendanceData = await response.json();
 
-        setStats({
-          presentDays: attendanceData.present_days || 0,
-          absentDays: attendanceData.absent_days || 0,
-        });
+      setStats({
+        presentDays: attendanceData.present_days || 0,
+        absentDays: attendanceData.absent_days || 0,
+      });
 
       // Fetch leave balances
       try {
-        
         const leaveResponse = await fetch(API_ENDPOINTS.leave.balances(userData.employee_code));
         if (leaveResponse.ok) {
           const leaveData = await leaveResponse.json();
           
           if (leaveData.success) {
             setLeaveBalances(leaveData.balances);
-            
           }
-        } else {
-          
         }
       } catch (error) {
-        
+        console.error('Error fetching leave balances:', error);
       }
 
       // Fetch user department
