@@ -279,7 +279,7 @@ const TeamPage = () => {
         }
 
         // Get user's department
-        const deptResponse = await fetch(`${API_ENDPOINTS.teams.userDepartment.replace('{user_id}', userData.id)}`);
+        const deptResponse = await fetch(`${API_ENDPOINTS.teams.userDepartment(userData.id)}`);
         if (deptResponse.ok) {
           const deptData = await deptResponse.json();
           if (deptData.success) {

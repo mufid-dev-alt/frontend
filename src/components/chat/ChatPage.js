@@ -300,7 +300,7 @@ const ChatPage = () => {
           return;
         }
         // Get department
-        const deptResponse = await fetch(`${API_ENDPOINTS.teams.userDepartment.replace('{user_id}', userData.id)}`);
+        const deptResponse = await fetch(`${API_ENDPOINTS.teams.userDepartment(userData.id)}`);
         let members = [];
         if (deptResponse.ok) {
           const deptData = await deptResponse.json();

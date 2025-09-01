@@ -72,7 +72,7 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
   const [downloading, setDownloading] = useState(false);
   const [timeDialog, setTimeDialog] = useState({ open: false, date: null, in_time: '', out_time: '' });
 
-  // Get userId
+  // Get user id (numeric backend id) for attendance APIs
   const currentUserId = userId || JSON.parse(localStorage.getItem('user'))?.id;
 
   const handleDrawerToggle = () => {

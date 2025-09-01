@@ -3,7 +3,6 @@ const BASE_URL = (process.env.REACT_APP_API_URL || 'https://backend-9z1y.onrende
 
 // Log the base URL being used (for debugging in development only)
 if (process.env.NODE_ENV === 'development') {
-
 }
 
 export const API_ENDPOINTS = {
@@ -29,7 +28,7 @@ export const API_ENDPOINTS = {
     sync: `${BASE_URL}/api/attendance/force-sync`,
   },
   leave: {
-    balances: (userId) => `${BASE_URL}/api/leave/balances/${userId}`,
+    balances: (employeeCode) => `${BASE_URL}/api/leave/balances/${employeeCode}`,
     apply: `${BASE_URL}/api/leave/apply`,
     cancel: `${BASE_URL}/api/leave/cancel`,
     rollover: (year) => `${BASE_URL}/api/leave/rollover/${year}`,
@@ -51,7 +50,7 @@ export const API_ENDPOINTS = {
   },
   teams: {
     departmentMembers: `${BASE_URL}/api/teams/department/{department}`,
-    userDepartment: `${BASE_URL}/api/teams/user/{user_id}/department`,
+    userDepartment: (userId) => `${BASE_URL}/api/teams/user/${userId}/department`,
   },
   notifications: {
     list: (userId) => `${BASE_URL}/api/notifications/${userId}`,
@@ -64,14 +63,12 @@ export const API_ENDPOINTS = {
 
 // Debug login endpoint
 if (process.env.NODE_ENV === 'development') {
-  
 }
 
 // API request utility
 export const apiRequest = async (url, options = {}) => {
   try {
     if (process.env.NODE_ENV === 'development') {
-
     }
     const response = await fetch(url, {
       ...options,
