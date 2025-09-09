@@ -426,7 +426,8 @@ const ChatPage = () => {
         sender_id: currentUser.id,
         receiver_id: selectedChat.id,
         content: newMessage.trim(),
-        type: 'personal'
+        type: 'personal',
+        timestamp: new Date().toISOString() // Ensure proper timestamp
       };
 
       const response = await fetch(API_ENDPOINTS.messages.create, {
@@ -439,7 +440,10 @@ const ChatPage = () => {
 
       if (response.ok) {
         setNewMessage('');
-        fetchMessages();
+        // Fetch messages immediately to show the new message
+        setTimeout(() => fetchMessages(), 100);
+      } else {
+        console.error('Failed to send message');
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -499,23 +503,46 @@ const ChatPage = () => {
 
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    try {
+      const date = new Date(timestamp);
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid time';
+      }
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return 'Invalid time';
+    }
   };
 
   const formatDate = (timestamp) => {
     if (!timestamp) return '';
-    const date = new Date(timestamp);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    } else {
-      return date.toLocaleDateString();
+    try {
+      const date = new Date(timestamp);
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid date';
+      }
+      
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      if (date.toDateString() === today.toDateString()) {
+        return 'Today';
+      } else if (date.toDateString() === yesterday.toDateString()) {
+        return 'Yesterday';
+      } else {
+        return date.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric', 
+          year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined 
+        });
+      }
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
     }
   };
 

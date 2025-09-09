@@ -12,16 +12,237 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
-  Divider
+  Divider,
+  AppBar,
+  Toolbar,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  useTheme
 } from '@mui/material';
-import { Visibility, VisibilityOff, Save, Person, Email, Lock, Badge } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { 
+  Visibility, 
+  VisibilityOff, 
+  Save, 
+  Person, 
+  Email, 
+  Lock, 
+  Badge,
+  Menu as MenuIcon,
+  ExitToApp as LogoutIcon,
+  Dashboard as DashboardIcon,
+  EventAvailable as EventAvailableIcon,
+  Chat as ChatIcon,
+  Group as GroupIcon,
+  Settings as SettingsIcon,
+  CalendarToday as CalendarIcon
+} from '@mui/icons-material';
+import { useNavigate, Link } from 'react-router-dom';
 import { API_ENDPOINTS } from '../../config/api';
 
+// Header Component
+const Header = ({ onMenuClick }) => {
+  const theme = useTheme();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate('/');
+  };
+
+  return (
+    <AppBar 
+      position="fixed" 
+      sx={{ 
+        zIndex: (theme) => theme.zIndex.drawer + 1,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.1)'
+      }}
+    >
+      <Toolbar>
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          edge="start"
+          onClick={onMenuClick}
+          sx={{ mr: 2, display: { sm: 'none' } }}
+        >
+          <MenuIcon />
+        </IconButton>
+        <Typography 
+          variant="h6" 
+          noWrap 
+          component="div" 
+          sx={{ 
+            flexGrow: 1, 
+            fontFamily: "'Poppins', sans-serif", 
+            fontWeight: 600 
+          }}
+        >
+          Settings
+        </Typography>
+        <Button
+          color="inherit"
+          onClick={handleLogout}
+          startIcon={<LogoutIcon />}
+          sx={{
+            ml: 2,
+            borderRadius: 2,
+            px: 3,
+            textTransform: 'none',
+            fontFamily: "'Poppins', sans-serif",
+            fontWeight: 500,
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              backgroundColor: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              transform: 'translateY(-2px)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+            }
+          }}
+        >
+          Logout
+        </Button>
+      </Toolbar>
+    </AppBar>
+  );
+};
+
+// Sidebar Component
+const Sidebar = ({ open, onClose }) => {
+  const theme = useTheme();
+
+  const menuItems = [
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
+    { text: 'Attendance', icon: <EventAvailableIcon />, path: '/attendance' },
+    { text: 'Chat', icon: <ChatIcon />, path: '/chat' },
+    { text: 'Team', icon: <GroupIcon />, path: '/team' },
+    { text: 'Settings', icon: <SettingsIcon />, path: '/settings' }
+  ];
+
+  const drawerWidth = 240;
+
+  return (
+    <>
+      {/* Mobile Drawer */}
+      <Drawer
+        variant="temporary"
+        open={open}
+        onClose={onClose}
+        ModalProps={{
+          keepMounted: true,
+        }}
+        sx={{
+          display: { xs: 'block', sm: 'none' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+          },
+        }}
+      >
+        <Toolbar />
+        <Box sx={{ overflow: 'auto', overflowX: 'hidden' }}>
+          <List>
+            {menuItems.map((item) => (
+              <ListItem
+                button
+                key={item.text}
+                component={Link}
+                to={item.path}
+                onClick={onClose}
+                sx={{
+                  mb: 1,
+                  mx: 1,
+                  borderRadius: 1,
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.light,
+                    '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
+                      color: theme.palette.primary.main
+                    }
+                  }
+                }}
+              >
+                <ListItemIcon sx={{ color: theme.palette.text.secondary }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.text} 
+                  sx={{ 
+                    '& .MuiTypography-root': { 
+                      fontFamily: "'Poppins', sans-serif",
+                      fontWeight: 500
+                    } 
+                  }} 
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+      </Drawer>
+
+      {/* Desktop Drawer */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: 'none', sm: 'block' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+          },
+        }}
+        open
+      >
+        <Toolbar />
+        <Box sx={{ overflow: 'auto', overflowX: 'hidden' }}>
+          <List>
+            {menuItems.map((item) => (
+              <ListItem
+                button
+                key={item.text}
+                component={Link}
+                to={item.path}
+                sx={{
+                  mb: 1,
+                  mx: 1,
+                  borderRadius: 1,
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.light,
+                    '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
+                      color: theme.palette.primary.main
+                    }
+                  }
+                }}
+              >
+                <ListItemIcon sx={{ color: theme.palette.text.secondary }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.text} 
+                  sx={{ 
+                    '& .MuiTypography-root': { 
+                      fontFamily: "'Poppins', sans-serif",
+                      fontWeight: 500
+                    } 
+                  }} 
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+      </Drawer>
+    </>
+  );
+};
+
 const UserSettings = () => {
+  const theme = useTheme();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -39,6 +260,11 @@ const UserSettings = () => {
     open: false,
     message: '',
     severity: 'info'
+  });
+  const [yearEndDialog, setYearEndDialog] = useState({
+    open: false,
+    year: new Date().getFullYear(),
+    processing: false
   });
 
   useEffect(() => {
@@ -66,12 +292,44 @@ const UserSettings = () => {
     setShowPassword({ ...showPassword, [field]: !showPassword[field] });
   };
 
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
   const showNotification = (message, severity = 'info') => {
     setNotification({ open: true, message, severity });
   };
 
   const handleCloseNotification = () => {
     setNotification({ ...notification, open: false });
+  };
+
+  const handleYearEndRollover = async () => {
+    setYearEndDialog({ ...yearEndDialog, processing: true });
+    try {
+      const response = await fetch(API_ENDPOINTS.leave.rollover(yearEndDialog.year), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process year-end rollover');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        showNotification(`Year-end rollover completed successfully for ${data.processed_users} users`, 'success');
+        setYearEndDialog({ open: false, year: new Date().getFullYear(), processing: false });
+      } else {
+        throw new Error(data.message || 'Failed to process year-end rollover');
+      }
+    } catch (error) {
+      console.error('Error processing year-end rollover:', error);
+      showNotification(error.message || 'Failed to process year-end rollover', 'error');
+      setYearEndDialog({ ...yearEndDialog, processing: false });
+    }
   };
 
   const validateEmail = (email) => {
@@ -198,19 +456,33 @@ const UserSettings = () => {
   }
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Person /> User Settings
-        </Typography>
-        
-        <Divider sx={{ my: 3 }} />
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+      <Header onMenuClick={handleDrawerToggle} />
+      <Sidebar open={mobileOpen} onClose={handleDrawerToggle} />
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          mt: 8,
+          width: { sm: `calc(100% - 240px)` },
+          ml: { sm: '240px' },
+          backgroundColor: theme.palette.grey[50]
+        }}
+      >
+        <Container maxWidth="md">
+          <Paper elevation={3} sx={{ p: 4, mb: 4 }}>
+            <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Person /> User Settings
+            </Typography>
+            
+            <Divider sx={{ my: 3 }} />
 
-        {/* Profile Information Section */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-            <Person /> Profile Information
-          </Typography>
+            {/* Profile Information Section */}
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                <Person /> Profile Information
+              </Typography>
           
           <Grid container spacing={3}>
             <Grid item xs={12} sm={6}>
@@ -385,6 +657,81 @@ const UserSettings = () => {
         </Box>
       </Paper>
 
+      {/* Year-End Rollover Section - Only show for admin users */}
+      {user?.role === 'admin' && (
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+            <CalendarIcon /> Year-End Leave Rollover
+          </Typography>
+          
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Process year-end rollover for all users. This will:
+          </Typography>
+          
+          <Box component="ul" sx={{ mb: 3, pl: 2 }}>
+            <Typography component="li" variant="body2" color="text.secondary">
+              Add new annual leave allocation (PL: 18, CL: 7)
+            </Typography>
+            <Typography component="li" variant="body2" color="text.secondary">
+              Carry forward unused PL and CL from previous year
+            </Typography>
+            <Typography component="li" variant="body2" color="text.secondary">
+              Reset Sick Leave (SL) to 7 days
+            </Typography>
+          </Box>
+
+          <Grid container spacing={2} alignItems="center">
+            <Grid item>
+              <TextField
+                label="Year"
+                type="number"
+                value={yearEndDialog.year}
+                onChange={(e) => setYearEndDialog({ ...yearEndDialog, year: parseInt(e.target.value) })}
+                disabled={yearEndDialog.processing}
+                sx={{ width: 120 }}
+              />
+            </Grid>
+            <Grid item>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setYearEndDialog({ ...yearEndDialog, open: true })}
+                disabled={yearEndDialog.processing}
+                startIcon={yearEndDialog.processing ? <CircularProgress size={20} /> : <CalendarIcon />}
+              >
+                Process Rollover
+              </Button>
+            </Grid>
+          </Grid>
+        </Paper>
+      )}
+
+      {/* Year-End Rollover Confirmation Dialog */}
+      <Dialog open={yearEndDialog.open} onClose={() => setYearEndDialog({ ...yearEndDialog, open: false })}>
+        <DialogTitle>Confirm Year-End Rollover</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to process year-end rollover for year {yearEndDialog.year}? 
+            This action will update leave balances for all users and cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setYearEndDialog({ ...yearEndDialog, open: false })}
+            disabled={yearEndDialog.processing}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleYearEndRollover}
+            disabled={yearEndDialog.processing}
+            variant="contained"
+          >
+            {yearEndDialog.processing ? <CircularProgress size={20} /> : 'Confirm'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Snackbar
         open={notification.open}
         autoHideDuration={6000}
@@ -395,7 +742,9 @@ const UserSettings = () => {
           {notification.message}
         </Alert>
       </Snackbar>
-    </Container>
+        </Container>
+      </Box>
+    </Box>
   );
 };
 

@@ -837,6 +837,36 @@ const UserDashboard = () => {
       >
 
         <Container maxWidth="lg">
+          {/* Company Header */}
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <Typography 
+              variant="h3" 
+              sx={{ 
+                fontFamily: "'Poppins', sans-serif",
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                color: 'transparent',
+                textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                mb: 1
+              }}
+            >
+              DCM INFOTECH
+            </Typography>
+            <Typography 
+              variant="subtitle1" 
+              sx={{ 
+                fontFamily: "'Poppins', sans-serif",
+                fontWeight: 400,
+                color: theme.palette.text.secondary,
+                fontSize: '1.1rem'
+              }}
+            >
+              Office Attendance Management System
+            </Typography>
+          </Box>
+
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexWrap: 'wrap', gap: 2 }}>
           <Typography 
             variant="h4" 
