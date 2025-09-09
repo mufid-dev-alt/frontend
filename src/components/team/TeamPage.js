@@ -37,6 +37,7 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import PersonIcon from '@mui/icons-material/Person';
 import ChatIcon from '@mui/icons-material/Chat';
 import GroupIcon from '@mui/icons-material/Group';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { API_ENDPOINTS } from '../../config/api';
 import AttendancePage from '../attendance/AttendancePage';
@@ -81,13 +82,13 @@ const Header = ({ onMenuClick }) => {
           variant="h6" 
           component="div" 
           sx={{ 
-            flexGrow: 1, 
+            flexGrow: 1,
             fontFamily: "'Poppins', sans-serif",
             fontWeight: 600,
             color: 'white'
           }}
         >
-          Team Members
+          Office Attendance Management
         </Typography>
         {user && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -141,7 +142,8 @@ const Sidebar = ({ open, onClose }) => {
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Attendance', icon: <EventAvailableIcon />, path: '/attendance' },
     { text: 'Chat', icon: <ChatIcon />, path: '/chat' },
-    { text: 'Team', icon: <GroupIcon />, path: '/team' }
+    { text: 'Team', icon: <GroupIcon />, path: '/team' },
+    { text: 'Settings', icon: <SettingsIcon />, path: '/settings' }
   ];
 
   const drawerWidth = 240;

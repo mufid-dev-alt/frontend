@@ -48,6 +48,7 @@ import {
   EventAvailable as EventAvailableIcon,
   Chat as ChatIcon,
   Group as GroupIcon,
+  Settings as SettingsIcon,
   ExitToApp as LogoutIcon
 } from '@mui/icons-material';
 import { useNavigate, Link } from 'react-router-dom';
@@ -811,7 +812,8 @@ const AttendancePage = ({ userId, readOnly = false, onClose }) => {
       { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
       { text: 'Attendance', icon: <EventAvailableIcon />, path: '/attendance' },
       { text: 'Chat', icon: <ChatIcon />, path: '/chat' },
-      { text: 'Team', icon: <GroupIcon />, path: '/team' }
+      { text: 'Team', icon: <GroupIcon />, path: '/team' },
+      { text: 'Settings', icon: <SettingsIcon />, path: '/settings' }
     ];
 
     const drawerWidth = 240;

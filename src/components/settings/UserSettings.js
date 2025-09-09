@@ -311,6 +311,7 @@ const UserSettings = () => {
   const handleYearEndRollover = async () => {
     setYearEndDialog({ ...yearEndDialog, processing: true });
     try {
+      console.log('Processing year-end rollover for year:', yearEndDialog.year);
       const response = await fetch(API_ENDPOINTS.leave.rollover(yearEndDialog.year), {
         method: 'POST',
         headers: {
@@ -318,11 +319,17 @@ const UserSettings = () => {
         }
       });
 
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to process year-end rollover');
+        const errorText = await response.text();
+        console.error('Response error:', errorText);
+        throw new Error(`HTTP ${response.status}: Failed to process year-end rollover`);
       }
 
       const data = await response.json();
+      console.log('Response data:', data);
+      
       if (data.success) {
         showNotification(`Year-end rollover completed successfully for ${data.processed_users} users`, 'success');
         setYearEndDialog({ open: false, year: new Date().getFullYear(), processing: false });
@@ -331,7 +338,7 @@ const UserSettings = () => {
       }
     } catch (error) {
       console.error('Error processing year-end rollover:', error);
-      showNotification(error.message || 'Failed to process year-end rollover', 'error');
+      showNotification(`Error: ${error.message}`, 'error');
       setYearEndDialog({ ...yearEndDialog, processing: false });
     }
   };
@@ -659,6 +666,13 @@ const UserSettings = () => {
             </Grid>
           </Grid>
         </Box>
+      </Paper>
+
+      {/* Debug info - remove in production */}
+      <Paper elevation={1} sx={{ p: 2, mb: 2, backgroundColor: '#f5f5f5' }}>
+        <Typography variant="caption" color="text.secondary">
+          Debug: Current user role: {user?.role} | Employee Code: {user?.employee_code}
+        </Typography>
       </Paper>
 
       {/* Year-End Rollover Section - Only show for admin users */}

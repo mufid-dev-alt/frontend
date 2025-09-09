@@ -41,6 +41,7 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import PersonIcon from '@mui/icons-material/Person';
 import ChatIcon from '@mui/icons-material/Chat';
 import GroupIcon from '@mui/icons-material/Group';
+import SettingsIcon from '@mui/icons-material/Settings';
 import SendIcon from '@mui/icons-material/Send';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -93,13 +94,13 @@ const Header = ({ onMenuClick }) => {
           variant="h6" 
           component="div" 
           sx={{ 
-            flexGrow: 1, 
+            flexGrow: 1,
             fontFamily: "'Poppins', sans-serif",
             fontWeight: 600,
             color: 'white'
           }}
         >
-          Team Chat
+          Office Attendance Management
         </Typography>
         {user && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -153,7 +154,8 @@ const Sidebar = ({ open, onClose }) => {
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Attendance', icon: <EventAvailableIcon />, path: '/attendance' },
     { text: 'Chat', icon: <ChatIcon />, path: '/chat' },
-    { text: 'Team', icon: <GroupIcon />, path: '/team' }
+    { text: 'Team', icon: <GroupIcon />, path: '/team' },
+    { text: 'Settings', icon: <SettingsIcon />, path: '/settings' }
   ];
 
   const drawerWidth = 240;
@@ -426,8 +428,8 @@ const ChatPage = () => {
         sender_id: currentUser.id,
         receiver_id: selectedChat.id,
         content: newMessage.trim(),
-        type: 'personal',
-        timestamp: new Date().toISOString() // Ensure proper timestamp
+        type: 'personal'
+        // Let backend handle timestamp to ensure server time
       };
 
       const response = await fetch(API_ENDPOINTS.messages.create, {

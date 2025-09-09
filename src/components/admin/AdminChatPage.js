@@ -262,8 +262,8 @@ const AdminChatPage = () => {
         sender_id: 1, // Admin ID
         receiver_id: selectedUser.id,
         content: newMessage.trim(),
-        type: 'personal',
-        timestamp: new Date().toISOString() // Ensure proper timestamp
+        type: 'personal'
+        // Let backend handle timestamp to ensure server time
       };
 
       const response = await fetch(API_ENDPOINTS.messages.create, {
