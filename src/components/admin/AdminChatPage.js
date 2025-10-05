@@ -303,7 +303,13 @@ const AdminChatPage = () => {
       if (isNaN(date.getTime())) {
         return 'Invalid time';
       }
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+      // Use India timezone for consistent display
+      return date.toLocaleTimeString('en-IN', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: true,
+        timeZone: 'Asia/Kolkata'
+      });
     } catch (error) {
       console.error('Error formatting time:', error);
       return 'Invalid time';
@@ -319,19 +325,27 @@ const AdminChatPage = () => {
         return 'Invalid date';
       }
       
+      // Use India timezone for consistent date comparison
+      const indiaTz = 'Asia/Kolkata';
       const today = new Date();
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
       
-      if (date.toDateString() === today.toDateString()) {
+      // Convert dates to India timezone for comparison
+      const dateInIndia = new Date(date.toLocaleString('en-US', { timeZone: indiaTz }));
+      const todayInIndia = new Date(today.toLocaleString('en-US', { timeZone: indiaTz }));
+      const yesterdayInIndia = new Date(yesterday.toLocaleString('en-US', { timeZone: indiaTz }));
+      
+      if (dateInIndia.toDateString() === todayInIndia.toDateString()) {
         return 'Today';
-      } else if (date.toDateString() === yesterday.toDateString()) {
+      } else if (dateInIndia.toDateString() === yesterdayInIndia.toDateString()) {
         return 'Yesterday';
       } else {
-        return date.toLocaleDateString('en-US', { 
+        return date.toLocaleDateString('en-IN', { 
           month: 'short', 
           day: 'numeric', 
-          year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined 
+          year: dateInIndia.getFullYear() !== todayInIndia.getFullYear() ? 'numeric' : undefined,
+          timeZone: indiaTz
         });
       }
     } catch (error) {

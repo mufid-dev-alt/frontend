@@ -138,7 +138,7 @@ const AttendanceRecords = () => {
           user_id: selectedUser.id,
           status: status,
           date: date,
-          notes: `Updated by admin on ${new Date().toLocaleString()}`
+          notes: `Updated by admin on ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
         })
       });
 
